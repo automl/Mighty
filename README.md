@@ -18,6 +18,7 @@ Then install the needed packages.
 
 ```bash
 conda install pytorch torchvision torchaudio cpuonly -c pytorch -c=conda-forge
+conda install ignite -c pytorch
 pip install -r requirements.txt
 ```
 

@@ -11,7 +11,7 @@ setup(
     install_requires=requirements,
     package_data={'mighty': ['requirements.txt']},
     author="TODO",
-    version="TODO",
+    version="0.0.1",
     test_suite="nose.collector",
     tests_require=["mock", "nose"],
     long_description_content_type='text/markdown',

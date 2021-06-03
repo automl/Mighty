@@ -13,7 +13,7 @@ def prepare_output_dir(args, user_specified_dir=None, argv=None,
     """
     Largely inspired by chainerRLs prepare output dir (also copied parts of it).
     Differences: We also allow to index experiment subfolders by experiment seeds and we do not check if the repo
-    is under git control but always asume this to be true. Lastly we also print to stdout where data will be stored.
+    is under git control but always assume this to be true. Lastly we also print to stdout where data will be stored.
 
     For the original code see:
     (https://github.com/chainer/chainerrl/blob/018a29132d77e5af0f92161250c72aba10c6ce29/chainerrl/experiments/prepare_output_dir.py)

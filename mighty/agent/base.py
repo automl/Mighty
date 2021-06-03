@@ -1,12 +1,12 @@
 import numpy as np
-
+from mighty.env.env_handling import DACENV
 
 class AbstractAgent:
     """
     Any mighty agent should implement this class
     """
 
-    def __init__(self, env: dacbench.AbstractEnv, gamma: float, logger):
+    def __init__(self, env: DACENV, gamma: float, logger):
         """
         Initialize an Agent
         :param gamma: discount factor
@@ -17,10 +17,13 @@ class AbstractAgent:
         self.env = env
         self.logger = logger
         #TODO: make util function that can detect this correctly for all kinds of gym spaces and use it here
-        self.action_dim = self.env.action.space.n
-        self.state_shape = self.env.observation_space.shape
+        self._action_dim = self.env.action_space.n
+        self._state_shape = self.env.observation_space.shape[0]
 
-    def get_action(self, state: np.ndarray, epsilon:float = 0.0):
+        self.last_state = None
+        self.total_steps = 0
+
+    def get_action(self, state: np.ndarray, epsilon: float):
         """
         Return action given a state and policy epsilon (NOTE: epsilon only makes sense in certain cases)
         :param state: environment state
@@ -29,14 +32,20 @@ class AbstractAgent:
         """
         raise NotImplementedError
 
-    def train(self, episodes: int = 1):
+    def step(self):
+        """
+        Execute a single number of environment and training step
+        """
+        raise NotImplementedError
+
+    def run_episode(self, episodes: int = 1):
         """
         Trains the agent for a given amount of episodes
         :param episodes: Training episodes
         """
         raise NotImplementedError
 
-    def eval(self, env: dacbench.AbstractEnv, episodes: int = 1):
+    def eval(self, env: DACENV, episodes: int = 1):
         """
         Evaluates the agent on a given environment
         :param env: evaluation environment
@@ -48,6 +57,13 @@ class AbstractAgent:
         """
         Save agent policy
         :param filepath: path to save point
+        """
+        raise NotImplementedError
+
+    def load_agent(self, filepath: str):
+        """
+        Load agent from file
+        :param filepath: path to agent
         """
         raise NotImplementedError
 
