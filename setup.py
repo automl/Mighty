@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+from setuptools import setup
+
+
+with open('requirements.txt') as fh:
+    requirements = [line.strip() for line in fh.readlines()]
+
+
+setup(
+    python_requires=">=3.9",
+    install_requires=requirements,
+    package_data={'mighty': ['requirements.txt']},
+    author="TODO",
+    version="TODO",
+    test_suite="nose.collector",
+    tests_require=["mock", "nose"],
+    long_description_content_type='text/markdown',
+)
