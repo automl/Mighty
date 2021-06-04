@@ -56,6 +56,12 @@ class ScenarioConfigParser(BaseConfigParser):
             type=int,
             help='Seed'
         )
+        self._p.add_argument(
+            '--max-train-steps', '-t',  # TODO should this be called training_steps?
+            default=1_000_000,
+            type=int,
+            help='(Maximum) number of training steps.'
+        )
 
         # Output/Saving
         # TODO discuss output dir structure / how to save what
@@ -103,7 +109,7 @@ class ScenarioConfigParser(BaseConfigParser):
             default=0.2,
             type=float,
             help='Fixed epsilon to use during training',
-            dest='epsilon'
+            dest='epsilon'  # TODO should we be more clear about naming and aliases?
         )
 
 

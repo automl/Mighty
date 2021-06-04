@@ -59,12 +59,12 @@ if __name__ == "__main__":
     eval_logger.set_additional_info(seed=args.seed)
     # Setup agent
     #state_dim = env.observation_space.shape[0]
-    agent = DDQNAgent(gamma=0.99, env=env, env_eval=eval_env, eval_logger=eval_logger, epsilon=args.agent_epsilon, logger=train_logger, batch_size=64)
+    agent = DDQNAgent(gamma=0.99, env=env, env_eval=eval_env, eval_logger=eval_logger, epsilon=args.epsilon, logger=train_logger, batch_size=64)
     #TODO: parse args additional hooks into agent
 
     episodes = args.episodes
     max_env_time_steps = args.env_max_steps
-    epsilon = args.agent_epsilon
+    epsilon = args.epsilon
 
     if args.load_model is None:
         print('#'*80)
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         print('#'*80)
         num_eval_episodes = 100  # 10  # use 10 for faster debugging but also set it in the eval method above
         agent.train(episodes, epsilon, max_env_time_steps, num_eval_episodes, args.eval_after_n_steps,
-                    max_train_time_steps=args.training_steps)
+                    max_train_time_steps=args.max_train_steps)
         os.mkdir(os.path.join(train_logger.log_dir, 'final'))
         agent.checkpoint(os.path.join(train_logger.log_dir, 'final'))
         agent.save_replay_buffer(os.path.join(train_logger.log_dir, 'final'))
