@@ -14,24 +14,20 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+  ubuntu:
+
+    runs-on: ubuntu-18.04
     strategy:
       matrix:
         python-version: [3.9]
         use-conda: [false]
+        include:
+          - python-version: 3.9
+            code-cov: true
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        ref: ${{ github.ref }}
-    - name: Echo branch
-      run: |
-        git branch
     - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       # A note on checkout: When checking out the repository that
@@ -44,8 +40,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest
-        python setup.py develop
+        python setup.py install
     - name: Store repository status
       id: status-before
       run: |
@@ -54,7 +49,8 @@ jobs:
       timeout-minutes: 45
       if: matrix.use-conda == false
       run: |
-        pytest -v --durations=20 test
+        if [ ${{ matrix.code-cov }} ]; then codecov='--cov=mighty --cov-report=xml'; fi
+        pytest --durations=20 --timeout=300 --timeout-method=thread -v $codecov test
     - name: Check for files left behind by test
       if: ${{ always() }}
       run: |
