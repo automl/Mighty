@@ -27,6 +27,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.ref }}
     - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       # A note on checkout: When checking out the repository that
