@@ -8,10 +8,10 @@ import torch.nn as nn
 import torch.optim as optim
 from itertools import count
 from torch.autograd import Variable
+from torch.utils.tensorboard import SummaryWriter
 
-# TODO we might need to remove this dependency to be more lightweight. Can we do that?
-from dacbench.logger import Logger
-
+from mighty.utils.logger import Logger
+from mighty.utils.rollout_worker import RolloutWorker
 from mighty.utils.replay_buffer import ReplayBuffer
 from mighty.utils.value_function import FullyConnectedQ
 from mighty.utils.weight_updates import soft_update
@@ -45,9 +45,11 @@ class DDQNAgent(AbstractAgent):
             env_eval: DACENV,
             gamma: float,
             logger: Logger,
+            #The eval logger should be removed as soon as the logger is reconstructed
+            eval_logger: Logger,
             epsilon: float, 
             batch_size: int,
-            output_dir: str = ""
+            log_tensorboard: bool = True
     ):
         """
         Initialize the DQN Agent
@@ -57,12 +59,14 @@ class DDQNAgent(AbstractAgent):
         """
         super().__init__(env=env, gamma=gamma, logger=logger)
         self._env_eval = env_eval  # TODO: should the abstract agent get this?
-        
+        self.eval_logger = eval_logger
+
         self._q = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
         self._q_target = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
 
         self._loss_function = nn.MSELoss()
-        self._q_optimizer = optim.Adam(self._q.parameters(), lr=0.001)
+        self.lr = 0.001
+        self._q_optimizer = optim.Adam(self._q.parameters(), lr=self.lr)
 
         self._replay_buffer = ReplayBuffer(1e6)
         self._epsilon = epsilon
@@ -70,10 +74,16 @@ class DDQNAgent(AbstractAgent):
         self._begin_updating_weights = 1
         self._soft_update_weight = 0.01  # type: float
         self._max_env_time_steps = 1_000_000  # type: int
-        self._n_episodes_eval = 1  # type: int  # TODO: should be the number of instances @André
+        self._n_episodes_eval = len(self.env.instance_set.keys())  # type: int
+        self.output_dir = self.logger.output_path
+        self.model_dir = os.path.join(self.output_dir, 'models')
         
-        self.output_dir = output_dir
-        self.model_dir = os.path.join(output_dir, 'models')
+        self.writer = None
+        if log_tensorboard:
+            self.writer = SummaryWriter(self.logger.log_dir)
+            self.writer.add_scalar('lr/Hyperparameter', self.lr)
+            self.writer.add_scalar('batch_size/Hyperparameter', self._batch_size)
+            self.writer.add_scalar('policy_epsilon/Hyperparameter', self._epsilon)
 
     def save_replay_buffer(self, path):
         self._replay_buffer.save(path)
@@ -117,7 +127,15 @@ class DDQNAgent(AbstractAgent):
             current_prediction = self._q(batch_states)[torch.arange(self._batch_size).long(), batch_actions.long()]
     
             loss = self._loss_function(current_prediction, target.detach())
-    
+            
+            if self.writer is not None:
+                self.writer.add_scalar('Loss/train', loss, self.total_steps)
+                self.writer.add_scalar('Action/train', a, self.total_steps)
+                #This apparently requires a module named "past" that the docs don't mention. 
+                #Also this is not how arrays should be logged, I think, so it should be fixed
+                #self.writer.add_embedding('State/train', self.last_state, self.total_steps)
+                self.writer.add_scalar('Reward/train', r, self.total_steps)
+
             self._q_optimizer.zero_grad()
             loss.backward()
             self._q_optimizer.step()
@@ -127,6 +145,7 @@ class DDQNAgent(AbstractAgent):
         if d:
             if engine is not None:
                 engine.terminate_epoch()
+            self.end_logger_episode()
 
         state = 0  # stored in engine.state # TODO
         return state
@@ -154,7 +173,7 @@ class DDQNAgent(AbstractAgent):
             eval_every_n_steps: int = 1, 
             max_train_time_steps: int = 1_000_000,
     ):
-        self._n_episodes_eval = n_episodes_eval
+        #self._n_episodes_eval = n_episodes_eval
         
         # Init Engine
         trainer = Engine(self.step)
@@ -171,14 +190,13 @@ class DDQNAgent(AbstractAgent):
         # ITERATION_COMPLETED
         eval_kwargs = dict(
             env=self._env_eval,
-            episodes=n_episodes_eval,
+            episodes=self._n_episodes_eval,
             max_env_time_steps=self._max_env_time_steps,
         )
-        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.evaluate, **eval_kwargs)
+        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.run_rollout, **eval_kwargs)
         trainer.add_event_handler(Events.ITERATION_COMPLETED, self.check_termination)
 
         # EPOCH_COMPLETED
-        trainer.add_event_handler(Events.EPOCH_COMPLETED, self.end_logger_episode)
 
         checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='', n_saved=None, create_dir=True)
         # TODO: add log mode saving everything (trainer, optimizer, etc.)
@@ -189,11 +207,24 @@ class DDQNAgent(AbstractAgent):
         # order of registering matters! first in, first out
         # we need to save the model first before evaluating
         trainer.add_event_handler(Events.COMPLETED, checkpoint_handler, to_save={"model": self._q})
-        trainer.add_event_handler(Events.COMPLETED, self.evaluate, **eval_kwargs)
+        trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
 
         # RUN
         iterations = range(self._max_env_time_steps)
         trainer.run(iterations, max_epochs=episodes)
+
+    #TODO: max_env_time_steps is and env option
+    def run_rollout(self, env, episodes, max_env_time_steps):
+        #TODO: check for existing current checkpoint
+        self.checkpoint(self.output_dir)
+        #TODO: for this to be nice we want to separate policy and agent
+        #agent = DDQN(self.env)
+        #TODO: this should be easier
+        for _, m in self.eval_logger.module_logger.items():
+            m.episode = self.logger.module_logger["train_performance"].episode
+        worker = RolloutWorker(self, self.output_dir, self.eval_logger)
+        worker.evaluate(env, episodes)
+        os.remove(self.output_dir / "Q")
 
     def evaluate(self, engine, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
         eval_s, eval_r, eval_d, pols = self.eval(
