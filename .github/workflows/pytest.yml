@@ -49,7 +49,7 @@ jobs:
       timeout-minutes: 45
       if: matrix.use-conda == false
       run: |
-        pytest -v --cov=mighty --durations=20 --timeout=300 test
+        pytest -v --durations=20 test
     - name: Check for files left behind by test
       if: ${{ always() }}
       run: |
