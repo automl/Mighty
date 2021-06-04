@@ -34,17 +34,6 @@ jobs:
       # Otherwise, uses the default branch (master) is used.
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Conda Install test dependencies
-      if: matrix.use-conda == true
-      run: |
-        # Miniconda is available in $CONDA env var
-        $CONDA/bin/conda create -n testenv --yes python=${{ matrix.python-version }}
-        $CONDA/envs/testenv/bin/python3 -m pip install --upgrade pip
-        $CONDA/envs/testenv/bin/pip3 install pytorch torchvision torchaudio cpuonly -c pytorch -c=conda-forge
-        $CONDA/envs/testenv/bin/pip3 install ignite -c pytorch
-        $CONDA/envs/testenv/bin/pip3 install -r requirements.txt
-        $CONDA/envs/testenv/bin/pip3 install pytest
-        $CONDA/envs/testenv/bin/python3 setup.py develop
     - name: Install test dependencies
       if: matrix.use-conda == false
       run: |
@@ -56,19 +45,11 @@ jobs:
       id: status-before
       run: |
         echo "::set-output name=BEFORE::$(git status --porcelain -b)"
-    - name: Conda Run tests
-      timeout-minutes: 45
-      if: matrix.use-conda == true
-      run: |
-        # We activate conda as metalearning uses python directly, so we need
-        # to change the default python
-        export PATH="$CONDA/envs/testenv/bin:$PATH"
-        $CONDA/envs/testenv/bin/python3 -m pytest -v --cov=mighty --durations=20 --timeout=300 --timeout-method=thread test
     - name: Run tests
       timeout-minutes: 45
       if: matrix.use-conda == false
       run: |
-        pytest -v --cov=mighty --durations=20 --timeout=300 --timeout-method=thread test
+        pytest -v --cov=mighty --durations=20 --timeout=300 test
     - name: Check for files left behind by test
       if: ${{ always() }}
       run: |
