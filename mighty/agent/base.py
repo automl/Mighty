@@ -1,12 +1,13 @@
 import numpy as np
 from mighty.env.env_handling import DACENV
+from mighty.utils.logger import Logger
 
 class AbstractAgent:
     """
     Any mighty agent should implement this class
     """
 
-    def __init__(self, env: DACENV, gamma: float, logger):
+    def __init__(self, env: DACENV, gamma: float, logger: Logger):
         """
         Initialize an Agent
         :param gamma: discount factor
