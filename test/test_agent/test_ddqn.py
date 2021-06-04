@@ -34,12 +34,13 @@ class MyTestCase(unittest.TestCase):
 
         # See if we uniformly sample action given epsilon = 1
         acts = []
+        repeats = 10000
         for _ in range(10000):
             acts.append(self.ddqn.get_action(np.array([0, 0]), 1))
         vals, counts = np.unique(acts, return_counts=True)
-        print(vals, counts)
         for a in vals:
             self.assertTrue(0 <= a < self.env.action_space.n)
+        self.assertTrue(np.allclose(counts, [repeats/self.env.action_space.n], rtol=100, atol=50))
 
     def testEvalOnce(self):
         steps, rewards, decisions, policies = self.ddqn.eval(self.env, episodes=1)
