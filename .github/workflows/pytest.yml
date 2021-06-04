@@ -54,7 +54,7 @@ jobs:
       timeout-minutes: 45
       if: matrix.use-conda == false
       run: |
-        if [ ${{ matrix.code-cov }} ]; then codecov='--cov=mighty --cov-report=xml'; fi
+        if [ ${{ matrix.code-cov }} ]; then codecov='--cov=mighty'; fi
         pytest --durations=20 --timeout=300 --timeout-method=thread -v $codecov test
     - name: Check for files left behind by test
       if: ${{ always() }}
