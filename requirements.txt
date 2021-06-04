@@ -4,3 +4,4 @@ torch~=1.8.1
 pytorch-ignite~=0.4.4
 matplotlib~=3.4.1
 seaborn~=0.11.1
+tensorboard~=2.5.0

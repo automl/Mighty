@@ -8,10 +8,10 @@ import torch.nn as nn
 import torch.optim as optim
 from itertools import count
 from torch.autograd import Variable
+from torch.utils.tensorboard import SummaryWriter
 
-# TODO we might need to remove this dependency to be more lightweight. Can we do that?
-from dacbench.logger import Logger
-
+from mighty.utils.logger import Logger
+from mighty.utils.rollout_worker import RolloutWorker
 from mighty.utils.replay_buffer import ReplayBuffer
 from mighty.utils.value_function import FullyConnectedQ
 from mighty.utils.weight_updates import soft_update
@@ -45,9 +45,11 @@ class DDQNAgent(AbstractAgent):
             env_eval: DACENV,
             gamma: float,
             logger: Logger,
+            #The eval logger should be removed as soon as the logger is reconstructed
+            eval_logger: Logger,
             epsilon: float, 
             batch_size: int,
-            output_dir: str = ""
+            log_tensorboard: bool = True
     ):
         """
         Initialize the DQN Agent
@@ -57,12 +59,14 @@ class DDQNAgent(AbstractAgent):
         """
         super().__init__(env=env, gamma=gamma, logger=logger)
         self._env_eval = env_eval  # TODO: should the abstract agent get this?
-        
+        self.eval_logger = eval_logger
+
         self._q = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
         self._q_target = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
 
         self._loss_function = nn.MSELoss()
-        self._q_optimizer = optim.Adam(self._q.parameters(), lr=0.001)
+        self.lr = 0.001
+        self._q_optimizer = optim.Adam(self._q.parameters(), lr=self.lr)
 
         self._replay_buffer = ReplayBuffer(1e6)
         self._epsilon = epsilon
@@ -70,10 +74,16 @@ class DDQNAgent(AbstractAgent):
         self._begin_updating_weights = 1
         self._soft_update_weight = 0.01  # type: float
         self._max_env_time_steps = 1_000_000  # type: int
-        self._n_episodes_eval = 1  # type: int  # TODO: should be the number of instances @André
+        self._n_episodes_eval = len(self.env.instance_set.keys())  # type: int
+        self.output_dir = self.logger.output_path
+        self.model_dir = os.path.join(self.output_dir, 'models')
         
-        self.output_dir = output_dir
-        self.model_dir = os.path.join(output_dir, 'models')
+        self.writer = None
+        if log_tensorboard:
+            self.writer = SummaryWriter(self.logger.log_dir)
+            self.writer.add_scalar('lr/Hyperparameter', self.lr)
+            self.writer.add_scalar('batch_size/Hyperparameter', self._batch_size)
+            self.writer.add_scalar('policy_epsilon/Hyperparameter', self._epsilon)
 
     def save_replay_buffer(self, path):
         self._replay_buffer.save(path)
@@ -117,7 +127,15 @@ class DDQNAgent(AbstractAgent):
             current_prediction = self._q(batch_states)[torch.arange(self._batch_size).long(), batch_actions.long()]
     
             loss = self._loss_function(current_prediction, target.detach())
-    
+            
+            if self.writer is not None:
+                self.writer.add_scalar('Loss/train', loss, self.total_steps)
+                self.writer.add_scalar('Action/train', a, self.total_steps)
+                #This apparently requires a module named "past" that the docs don't mention. 
+                #Also this is not how arrays should be logged, I think, so it should be fixed
+                #self.writer.add_embedding('State/train', self.last_state, self.total_steps)
+                self.writer.add_scalar('Reward/train', r, self.total_steps)
+
             self._q_optimizer.zero_grad()
             loss.backward()
             self._q_optimizer.step()
@@ -127,8 +145,10 @@ class DDQNAgent(AbstractAgent):
         if d:
             if engine is not None:
                 engine.terminate_epoch()
+            self.end_logger_episode()
 
-        state = 0  # stored in engine.state # TODO
+        state = ns  # stored in engine.state # TODO
+        self.last_state = state
         return state
 
     def start_episode(self, engine):
@@ -154,7 +174,7 @@ class DDQNAgent(AbstractAgent):
             eval_every_n_steps: int = 1, 
             max_train_time_steps: int = 1_000_000,
     ):
-        self._n_episodes_eval = n_episodes_eval
+        #self._n_episodes_eval = n_episodes_eval
         
         # Init Engine
         trainer = Engine(self.step)
@@ -171,14 +191,13 @@ class DDQNAgent(AbstractAgent):
         # ITERATION_COMPLETED
         eval_kwargs = dict(
             env=self._env_eval,
-            episodes=n_episodes_eval,
+            episodes=self._n_episodes_eval,
             max_env_time_steps=self._max_env_time_steps,
         )
-        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.evaluate, **eval_kwargs)
+        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.run_rollout, **eval_kwargs)
         trainer.add_event_handler(Events.ITERATION_COMPLETED, self.check_termination)
 
         # EPOCH_COMPLETED
-        trainer.add_event_handler(Events.EPOCH_COMPLETED, self.end_logger_episode)
 
         checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='', n_saved=None, create_dir=True)
         # TODO: add log mode saving everything (trainer, optimizer, etc.)
@@ -189,11 +208,24 @@ class DDQNAgent(AbstractAgent):
         # order of registering matters! first in, first out
         # we need to save the model first before evaluating
         trainer.add_event_handler(Events.COMPLETED, checkpoint_handler, to_save={"model": self._q})
-        trainer.add_event_handler(Events.COMPLETED, self.evaluate, **eval_kwargs)
+        trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
 
         # RUN
         iterations = range(self._max_env_time_steps)
         trainer.run(iterations, max_epochs=episodes)
+
+    #TODO: max_env_time_steps is and env option
+    def run_rollout(self, env, episodes, max_env_time_steps):
+        #TODO: check for existing current checkpoint
+        self.checkpoint(self.output_dir)
+        #TODO: for this to be nice we want to separate policy and agent
+        #agent = DDQN(self.env)
+        #TODO: this should be easier
+        for _, m in self.eval_logger.module_logger.items():
+            m.episode = self.logger.module_logger["train_performance"].episode
+        worker = RolloutWorker(self, self.output_dir, self.eval_logger)
+        worker.evaluate(env, episodes)
+        os.remove(self.output_dir / "Q")
 
     def evaluate(self, engine, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
         eval_s, eval_r, eval_d, pols = self.eval(
@@ -227,177 +259,6 @@ class DDQNAgent(AbstractAgent):
         episode = engine.state.epoch
         n_episodes = engine.state.max_epochs
         print("%s/%s" % (episode + 1, n_episodes))
-
-    def train_deprecated(self, episodes: int, max_env_time_steps: int, epsilon: float, eval_eps: int = 1,
-              eval_every_n_steps: int = 1, max_train_time_steps: int = 1_000_000):
-        """
-        Training loop
-        :param episodes: maximum number of episodes to train for
-        :param max_env_time_steps: maximum number of steps in the environment to perform per episode
-        :param epsilon: constant epsilon for exploration when selecting actions
-        :param eval_eps: number of episodes to run for evaluation
-        :param eval_every_n_steps: interval of steps after which to evaluate the trained agent
-        :param max_train_time_steps: maximum number of steps to train
-        :return:
-        """
-        total_steps = 0
-        start_time = time.time()
-        print(f'Start training at {start_time}')
-        for e in range(episodes):  # TODO: init trainer with max_epochs=n_episodes --> DONE
-            # print('\033c')
-            # print('\x1bc')
-            if e % 100 == 0:  # TODO: register function to log every 100 episodes  --> DONE
-                print("%s/%s" % (e + 1, episodes))
-            s = self.env.reset()  # TODO: event: on episode start  --> DONE
-            for t in range(max_env_time_steps):  # TODO: add function to execute every start of step (iteration) Events.ITERATION_STARTED --> DONE
-                a = self.get_action(s, epsilon)
-                ns, r, d, _ = self.env.step(a)
-                total_steps += 1
-
-                ########### Begin Evaluation
-                if (total_steps % eval_every_n_steps) == 0:  # TODO: register function to evaluate every n steps
-                    print('Begin Evaluation')
-                    eval_s, eval_r, eval_d, pols = self.eval(eval_eps, max_env_time_steps)
-                    eval_stats = dict(
-                        elapsed_time=time.time() - start_time,
-                        training_steps=total_steps,
-                        training_eps=e,
-                        avg_num_steps_per_eval_ep=float(np.mean(eval_s)),
-                        avg_num_decs_per_eval_ep=float(np.mean(eval_d)),
-                        avg_rew_per_eval_ep=float(np.mean(eval_r)),
-                        std_rew_per_eval_ep=float(np.std(eval_r)),
-                        eval_eps=eval_eps
-                    )
-                    per_inst_stats = dict(
-                            # eval_insts=self._train_eval_env.instances,
-                            reward_per_isnts=eval_r,
-                            steps_per_insts=eval_s,
-                            policies=pols
-                        )
-
-                    with open(os.path.join(self.out_dir, 'eval_scores.json'), 'a+') as out_fh:
-                        json.dump(eval_stats, out_fh)
-                        out_fh.write('\n')
-                    with open(os.path.join(self.out_dir, 'eval_scores_per_inst.json'), 'a+') as out_fh:
-                        json.dump(per_inst_stats, out_fh)
-                        out_fh.write('\n')
-
-                    if self._train_eval_env is not None:
-                        eval_s, eval_r, eval_d, pols = self.eval(eval_eps, max_env_time_steps, train_set=True)
-                        eval_stats = dict(
-                            elapsed_time=time.time() - start_time,
-                            training_steps=total_steps,
-                            training_eps=e,
-                            avg_num_steps_per_eval_ep=float(np.mean(eval_s)),
-                            avg_num_decs_per_eval_ep=float(np.mean(eval_d)),
-                            avg_rew_per_eval_ep=float(np.mean(eval_r)),
-                            std_rew_per_eval_ep=float(np.std(eval_r)),
-                            eval_eps=eval_eps
-                        )
-                        per_inst_stats = dict(
-                            # eval_insts=self._train_eval_env.instances,
-                            reward_per_isnts=eval_r,
-                            steps_per_insts=eval_s,
-                            policies=pols
-                        )
-
-                        with open(os.path.join(self.out_dir, 'train_scores.json'), 'a+') as out_fh:
-                            json.dump(eval_stats, out_fh)
-                            out_fh.write('\n')
-                        with open(os.path.join(self.out_dir, 'train_scores_per_inst.json'), 'a+') as out_fh:
-                            json.dump(per_inst_stats, out_fh)
-                            out_fh.write('\n')
-                    print('End Evaluation')
-                ########### End Evaluation
-
-                # Update replay buffer
-                self._replay_buffer.add_transition(s, a, ns, r, d)
-
-
-                ########### Begin double Q-learning update
-                batch_states, batch_actions, batch_next_states, batch_rewards, batch_terminal_flags = \
-                    self._replay_buffer.random_next_batch(64)  # TODO don't use hardcoded hypers
-                batch_states = self.tt(batch_states)
-                batch_actions = self.tt(batch_actions)
-                batch_next_states = self.tt(batch_next_states)
-                batch_rewards = self.tt(batch_rewards)
-                batch_terminal_flags = self.tt(batch_terminal_flags)
-
-                # TODO use a "begin_training" hyperparameter to allow for random initial experience collection
-                target = batch_rewards + (1 - batch_terminal_flags) * self.gamma * \
-                         self._q_target(batch_next_states)[torch.arange(64).long(), torch.argmax(  # TODO don't hardcode the batch size  --> DONE
-                             self._q(batch_next_states), dim=1)]
-                current_prediction = self._q(batch_states)[torch.arange(64).long(), batch_actions.long()]
-
-                loss = self._loss_function(current_prediction, target.detach())
-
-                self._q_optimizer.zero_grad()
-                loss.backward()
-                self._q_optimizer.step()
-
-                soft_update(self._q_target, self._q, 0.01)  # TODO don't use hardcoded hyperparameters
-                ########### End double Q-learning update
-
-                if d:
-                    break
-                s = ns
-                if total_steps >= max_train_time_steps:
-                    break
-            if total_steps >= max_train_time_steps:
-                break
-
-        # Final evaluation
-        # TODO: register eval function at the very end: Events.COMPLETED
-        eval_s, eval_r, eval_d, pols = self.eval(eval_eps, max_env_time_steps)
-        eval_stats = dict(
-            elapsed_time=time.time() - start_time,
-            training_steps=total_steps,
-            training_eps=e,
-            avg_num_steps_per_eval_ep=float(np.mean(eval_s)),
-            avg_num_decs_per_eval_ep=float(np.mean(eval_d)),
-            avg_rew_per_eval_ep=float(np.mean(eval_r)),
-            std_rew_per_eval_ep=float(np.std(eval_r)),
-            eval_eps=eval_eps
-        )
-        per_inst_stats = dict(
-                # eval_insts=self._train_eval_env.instances,
-                reward_per_isnts=eval_r,
-                steps_per_insts=eval_s,
-                policies=pols
-            )
-
-        with open(os.path.join(self.out_dir, 'eval_scores.json'), 'a+') as out_fh:
-            json.dump(eval_stats, out_fh)
-            out_fh.write('\n')
-        with open(os.path.join(self.out_dir, 'eval_scores_per_inst.json'), 'a+') as out_fh:
-            json.dump(per_inst_stats, out_fh)
-            out_fh.write('\n')
-
-        if self._train_eval_env is not None:
-            eval_s, eval_r, eval_d, pols = self.eval(eval_eps, max_env_time_steps, train_set=True)
-            eval_stats = dict(
-                elapsed_time=time.time() - start_time,
-                training_steps=total_steps,
-                training_eps=e,
-                avg_num_steps_per_eval_ep=float(np.mean(eval_s)),
-                avg_num_decs_per_eval_ep=float(np.mean(eval_d)),
-                avg_rew_per_eval_ep=float(np.mean(eval_r)),
-                std_rew_per_eval_ep=float(np.std(eval_r)),
-                eval_eps=eval_eps
-            )
-            per_inst_stats = dict(
-                # eval_insts=self._train_eval_env.instances,
-                reward_per_isnts=eval_r,
-                steps_per_insts=eval_s,
-                policies=pols
-            )
-
-            with open(os.path.join(self.out_dir, 'train_scores.json'), 'a+') as out_fh:
-                json.dump(eval_stats, out_fh)
-                out_fh.write('\n')
-            with open(os.path.join(self.out_dir, 'train_scores_per_inst.json'), 'a+') as out_fh:
-                json.dump(per_inst_stats, out_fh)
-                out_fh.write('\n')
 
     def __repr__(self):
         return 'DoubleDQN'
