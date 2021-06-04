@@ -75,7 +75,7 @@ class DDQNAgent(AbstractAgent):
         self._soft_update_weight = 0.01  # type: float
         self._max_env_time_steps = 1_000_000  # type: int
         self._n_episodes_eval = len(self.env.instance_set.keys())  # type: int
-        self.output_dir = self.logger.output_path
+        self.output_dir = self.logger.log_dir
         self.model_dir = os.path.join(self.output_dir, 'models')
         
         self.writer = None

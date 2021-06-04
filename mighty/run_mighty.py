@@ -62,7 +62,7 @@ if __name__ == "__main__":
     
     #TODO: this should not be separate! Extend the logger to support multiple envs
     eval_logger = Logger(
-            experiment_name="sigmoid_example",
+            experiment_name=f"sigmoid_example_s{args.seed}",
             output_path=Path(out_dir),
             step_write_frequency=None,
             episode_write_frequency=1,
@@ -102,9 +102,9 @@ if __name__ == "__main__":
         num_eval_episodes = 100  # 10  # use 10 for faster debugging but also set it in the eval method above
         agent.train(episodes, epsilon, max_env_time_steps, num_eval_episodes, args.eval_after_n_steps,
                     max_train_time_steps=args.training_steps)
-        os.mkdir(os.path.join(out_dir, 'final'))
-        agent.checkpoint(os.path.join(out_dir, 'final'))
-        agent.save_replay_buffer(os.path.join(out_dir, 'final'))
+        os.mkdir(os.path.join(train_logger.log_dir, 'final'))
+        agent.checkpoint(os.path.join(train_logger.log_dir, 'final'))
+        agent.save_replay_buffer(os.path.join(train_logger.log_dir, 'final'))
     else:
         print('#'*80)
         print(f'Loading {agent} from {args.load_model}')
