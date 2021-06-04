@@ -12,8 +12,11 @@ import numpy as np
 import pandas as pd
 
 from typing import Callable, Iterable
-from dacbench import AbstractEnv, AbstractBenchmark
-from dacbench.abstract_agent import AbstractDACBenchAgent
+# from dacbench import AbstractEnv, AbstractBenchmark
+# from dacbench.abstract_agent import AbstractDACBenchAgent
+
+from mighty.env.env_handling import DACENV as AbstractEnv
+from mighty.agent.base import AbstractAgent as AbstractDACBenchAgent
 
 
 def load_logs(log_file: Path) -> List[Dict]:
@@ -865,7 +868,7 @@ class Logger(AbstractLogger):
         self.env = env
         self.__update_auto_additional_info()
 
-    def add_benchmark(self, benchmark: AbstractBenchmark) -> None:
+    def add_benchmark(self, benchmark) -> None:
         """
         Writes the config to the experiment path
         Parameters
