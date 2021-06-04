@@ -67,3 +67,9 @@ jobs:
             echo "Not all generated files have been deleted!"
             exit 1
         fi
+    - name: Upload coverage
+      if: matrix.code-cov && always()
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
+        verbose: true
