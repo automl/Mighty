@@ -51,10 +51,10 @@ def parse_arguments():
 if __name__ == "__main__":
     args = parse_arguments()
     if not args.load_model:
-        out_dir = prepare_output_dir(args, user_specified_dir=args.out_dir,
-                                     subfolder_naming_scheme=args.out_dir_suffix)
+        out_dir = prepare_output_dir(args, user_specified_dir=args.out_dir)
+                                     #subfolder_naming_scheme=args.out_dir_suffix)
     logger = Logger(
-        experiment_name="sigmoid_example",
+        experiment_name=f"sigmoid_example_s{args.seed}",
         output_path=Path(out_dir),
         step_write_frequency=None,
         episode_write_frequency=None,

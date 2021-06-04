@@ -48,52 +48,54 @@ def prepare_output_dir(args, user_specified_dir=None, argv=None,
             if not os.path.isdir(user_specified_dir):
                 raise RuntimeError(
                     '{} is not a directory'.format(user_specified_dir))
-        outdir = os.path.join(user_specified_dir, subfolder_str)
+        outdir = user_specified_dir#os.path.join(user_specified_dir, subfolder_str)
         if os.path.exists(outdir):
-            raise RuntimeError('{} exists'.format(outdir))
+            print("Warning: this directory already exists. Only log into the same directory if you use the exact same code version!")
         else:
             os.makedirs(outdir)
     else:
         outdir = tempfile.mkdtemp(prefix=datetime.datetime.now().strftime('%Y%m%dT%H%M%S.%f'))
 
-    # Save all the arguments
-    with open(os.path.join(outdir, 'args.txt'), 'w') as f:
-        if isinstance(args, argparse.Namespace):
-            args = vars(args)
-        f.write(json.dumps(args))
+    if not os.path.exists(outdir):
+        # Save all the arguments
+        with open(os.path.join(outdir, 'args.txt'), 'w') as f:
+            if isinstance(args, argparse.Namespace):
+                args = vars(args)
+            f.write(json.dumps(args))
 
-    # Save all the environment variables
-    with open(os.path.join(outdir, 'environ.txt'), 'w') as f:
-        f.write(json.dumps(dict(os.environ)))
+        # Save all the environment variables
+        with open(os.path.join(outdir, 'environ.txt'), 'w') as f:
+            f.write(json.dumps(dict(os.environ)))
 
-    # Save the command
-    with open(os.path.join(outdir, 'command.txt'), 'w') as f:
-        if argv is None:
-            argv = sys.argv
-        f.write(' '.join(argv))
+        # Save the command
+        with open(os.path.join(outdir, 'command.txt'), 'w') as f:
+            if argv is None:
+                argv = sys.argv
+            f.write(' '.join(argv))
 
-    try:
-        cwd = os.getcwd()
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        os.chdir(dir_path)
-        # Save `git rev-parse HEAD` (SHA of the current commit)
-        with open(os.path.join(outdir, 'git-head.txt'), 'wb') as f:
-            f.write(subprocess.check_output('git rev-parse HEAD'.split()))
+        try:
+            cwd = os.getcwd()
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+            os.chdir(dir_path)
+            os.chdir("../..")
+            # Save `git rev-parse HEAD` (SHA of the current commit)
+            with open(os.path.join(outdir, 'git-head.txt'), 'wb') as f:
+                f.write(subprocess.check_output('git rev-parse HEAD'.split()))
 
-        # Save `git status`
-        with open(os.path.join(outdir, 'git-status.txt'), 'wb') as f:
-            f.write(subprocess.check_output('git status'.split()))
+            # Save `git status`
+            with open(os.path.join(outdir, 'git-status.txt'), 'wb') as f:
+                f.write(subprocess.check_output('git status'.split()))
 
-        # Save `git log`
-        with open(os.path.join(outdir, 'git-log.txt'), 'wb') as f:
-            f.write(subprocess.check_output('git log'.split()))
+            # Save `git log`
+            with open(os.path.join(outdir, 'git-log.txt'), 'wb') as f:
+                f.write(subprocess.check_output('git log'.split()))
 
-        # Save `git diff`
-        with open(os.path.join(outdir, 'git-diff.txt'), 'wb') as f:
-            f.write(subprocess.check_output('git diff'.split()))
-        os.chdir(cwd)
-    except subprocess.CalledProcessError:
-        print('Not in a git environment')
+            # Save `git diff`
+            with open(os.path.join(outdir, 'git-diff.txt'), 'wb') as f:
+                f.write(subprocess.check_output('git diff'.split()))
+            os.chdir(cwd)
+        except subprocess.CalledProcessError:
+            print('Not in a git environment')
 
     print('Results stored in {:s}'.format(os.path.abspath(outdir)))
     return outdir
