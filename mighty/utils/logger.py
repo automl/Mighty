@@ -12,11 +12,6 @@ import numpy as np
 import pandas as pd
 
 from typing import Callable, Iterable
-# from dacbench import AbstractEnv, AbstractBenchmark
-# from dacbench.abstract_agent import AbstractDACBenchAgent
-
-from mighty.env.env_handling import DACENV as AbstractEnv
-from mighty.agent.base import AbstractAgent as AbstractDACBenchAgent
 
 
 def load_logs(log_file: Path) -> List[Dict]:
@@ -736,7 +731,7 @@ class Logger(AbstractLogger):
         super(Logger, self).__init__(
             experiment_name, output_path, step_write_frequency, episode_write_frequency
         )
-        self.env: AbstractEnv = None
+        self.env = None
         self.module_logger: Dict[str, ModuleLogger] = dict()
 
     def close(self):
@@ -840,7 +835,7 @@ class Logger(AbstractLogger):
 
         return self.module_logger[module_name]
 
-    def add_agent(self, agent: AbstractDACBenchAgent):
+    def add_agent(self, agent):
         """
          Writes information about the agent
         Parameters
@@ -854,7 +849,7 @@ class Logger(AbstractLogger):
         with open(self.log_dir / "agent.json", "w") as f:
             json.dump(agent_config, f)
 
-    def set_env(self, env: AbstractEnv) -> None:
+    def set_env(self, env) -> None:
         """
         Needed to infer automatically logged information like the instance id
         Parameters
