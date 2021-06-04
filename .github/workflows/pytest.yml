@@ -3,16 +3,7 @@
 name: Pytest
 
 # Controls when the action will run. 
-on:
-  # Triggers the workflow on push or pull request events
-  push:
-  pull_request:
-  #schedule:
-  #  # Every Monday at 7AM UTC
-  #  - cron: '0 07 * * 1'
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   ubuntu:
@@ -28,6 +19,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.ref }}
     - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       # A note on checkout: When checking out the repository that
