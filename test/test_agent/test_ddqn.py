@@ -22,23 +22,23 @@ class MyTestCase(unittest.TestCase):
         self.env = env
         mocked_optimizer.assert_called_once()
 
-    # @patch('mighty.agent.ddqn.FullyConnectedQ.forward',
-    #        return_value=Variable(tensor_from_numpy(np.array([0, 1, 100, 3, 4])).float(), requires_grad=False),
-    #        autospec=True)
-    # def testEpsilonGreedy(self, mocked_forward):
-    #     # check if epsilon 0 we return the action with the highest Q value
-    #     a = self.ddqn.get_action(np.array([0, 0]), 0)
-    #     self.assertEqual(a, 2)
-    #     self.assertTrue(mocked_forward.called)
-    #
-    #     # See if we uniformly sample action given epsilon = 1
-    #     acts = []
-    #     for _ in range(10000):
-    #         acts.append(self.ddqn.get_action(np.array([0, 0]), 1))
-    #     vals, counts = np.unique(acts, return_counts=True)
-    #     print(vals, counts)
-    #     for a in vals:
-    #         self.assertTrue(0 <= a < self.env.action_space.n)
+    @patch('mighty.agent.ddqn.FullyConnectedQ.forward',
+           return_value=Variable(tensor_from_numpy(np.array([0, 1, 100, 3, 4])).float(), requires_grad=False),
+           autospec=True)
+    def testEpsilonGreedy(self, mocked_forward):
+        # check if epsilon 0 we return the action with the highest Q value
+        a = self.ddqn.get_action(np.array([0, 0]), 0)
+        self.assertEqual(a, 2)
+        self.assertTrue(mocked_forward.called)
+
+        # See if we uniformly sample action given epsilon = 1
+        acts = []
+        for _ in range(10000):
+            acts.append(self.ddqn.get_action(np.array([0, 0]), 1))
+        vals, counts = np.unique(acts, return_counts=True)
+        print(vals, counts)
+        for a in vals:
+            self.assertTrue(0 <= a < self.env.action_space.n)
 
     def testEvalOnce(self):
         steps, rewards, decisions, policies = self.ddqn.eval(self.env, episodes=1)
@@ -86,8 +86,8 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(np.all(s == np.array([4, 0])))
 
         for i in range(6):  # Run until episode end and see if it correctly is marked as done
-            self.ddqn.step()
             self.assertFalse(self.ddqn._replay_buffer._data.terminal_flags[-1])
+            self.ddqn.step()
         self.assertTrue(self.ddqn._replay_buffer._data.terminal_flags[-1])
 
 
