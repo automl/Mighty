@@ -10,6 +10,7 @@ class MockEnvDiscreteActions:
                                      high=np.array([10., 1.], dtype=np.float32),
                                      dtype=np.float32)
         self.__count = 0
+        self.instance_set = {0: [0]}
 
     def step(self, action):
         self.__count += 1
