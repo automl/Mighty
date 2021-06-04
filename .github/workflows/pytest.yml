@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9]
-        use-conda: [true, false]
+        use-conda: [false]
 
     steps:
     - uses: actions/checkout@v2
