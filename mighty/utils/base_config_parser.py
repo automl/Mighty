@@ -73,7 +73,7 @@ class BaseConfigParser(object):
             raise ValueError(msg)
 
         opts_to_disk = namespace if namespace else self.opts
-        output_file_paths =  [filename]
+        output_file_paths = [filename]
         for fp in output_file_paths:
             fp = Path(fp)
             fp.parent.mkdir(parents=True, exist_ok=True)
