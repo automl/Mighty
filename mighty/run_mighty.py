@@ -10,10 +10,15 @@ from mighty.iohandling.experiment_tracking import prepare_output_dir
 from mighty.utils.logger import Logger
 
 from utils.scenario_config_parser import ScenarioConfigParser
+from agent.ddqn_config_parser import DDQNConfigParser
 
 if __name__ == "__main__":
-    parser = ScenarioConfigParser()
-    args = parser.parse()
+    parser_scenario = ScenarioConfigParser()  # TODO add master parser :)
+    # By using unknown args we can sequentially parse all arguments.
+    args, unknown_args = parser_scenario.parse()
+
+    parser_agent = DDQNConfigParser()
+    args_agent, unknown_args = parser_agent.parse(unknown_args)
 
     if not args.load_model:
         out_dir = prepare_output_dir(args, user_specified_dir=args.out_dir)
@@ -58,14 +63,22 @@ if __name__ == "__main__":
     eval_logger.set_additional_info(seed=args.seed)
     # Setup agent
     # state_dim = env.observation_space.shape[0]
-    agent = DDQNAgent(gamma=0.99, env=env, env_eval=eval_env, eval_logger=eval_logger, epsilon=args.epsilon,
-                      logger=train_logger, batch_size=64)
+    agent = DDQNAgent(
+        env=env,
+        env_eval=eval_env,
+        logger=train_logger,
+        eval_logger=eval_logger,
+        args=args_agent,  # by using args we can build a general interface
+    )
+    agent_cfg_fn = Path(out_dir) / "agent.ini"
+    args_agent.agent_type = "DDQN"
+    parser_agent.to_ini(agent_cfg_fn, args_agent)
     # TODO: parse args additional hooks into agent
 
     # save scenario
     scenario_fn = Path(out_dir) / "scenario.ini"  # TODO: where exactly to save this?
-    parser.to_ini(scenario_fn, args)  # TODO: should we pass args? args might have been modified after creation
-    
+    parser_scenario.to_ini(scenario_fn, args)  # TODO: should we pass args? args might have been modified after creation
+
     episodes = args.episodes
     max_env_time_steps = args.env_max_steps
     epsilon = args.epsilon
