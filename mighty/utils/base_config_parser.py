@@ -77,4 +77,5 @@ class BaseConfigParser(object):
         for fp in output_file_paths:
             fp = Path(fp)
             fp.parent.mkdir(parents=True, exist_ok=True)
+        output_file_paths = [str(p) for p in output_file_paths]  # configargparse does not like PosixPaths for printing
         self._p.write_config_file(parsed_namespace=opts_to_disk, output_file_paths=output_file_paths)
