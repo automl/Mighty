@@ -61,6 +61,10 @@ if __name__ == "__main__":
     agent = DDQNAgent(gamma=0.99, env=env, env_eval=eval_env, eval_logger=eval_logger, epsilon=args.epsilon,
                       logger=train_logger, batch_size=64)
     # TODO: parse args additional hooks into agent
+
+    # save scenario
+    scenario_fn = Path(out_dir) / "scenario.ini"  # TODO: where exactly to save this?
+    parser.to_ini(scenario_fn, args)  # TODO: should we pass args? args might have been modified after creation
     
     episodes = args.episodes
     max_env_time_steps = args.env_max_steps
