@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import argparse
 
 import numpy as np
 import torch
@@ -43,20 +44,40 @@ class DDQNAgent(AbstractAgent):
             self, 
             env: DACENV,
             env_eval: DACENV,
-            gamma: float,
             logger: Logger,
             #The eval logger should be removed as soon as the logger is reconstructed
             eval_logger: Logger,
-            epsilon: float, 
-            batch_size: int,
-            log_tensorboard: bool = True
+            gamma: float = 0.99,
+            epsilon: float = 0.2,
+            batch_size: int = 64,
+            learning_rate: float = 0.001,
+            max_size_replay_buffer: int = 1_000_000,
+            begin_updating_weights: int = 1,
+            soft_update_weight: float = 0.01,
+            max_env_time_steps: int = 1_000_000,
+            log_tensorboard: bool = True,
+            args: argparse.Namespace = None  # from DDQNConfigParser
     ):
         """
         Initialize the DQN Agent
+
+        args overrides all hyperparams if given.
+
         :param gamma: discount factor
         :param env: environment to train on
         :param logger: logging functionality of some sort #FIXME
         """
+        if args:
+            # overwrite defaults
+            gamma = args.gamma
+            epsilon = args.epsilon
+            batch_size = args.batch_size
+            learning_rate = args.learning_rate
+            max_size_replay_buffer = args.max_size_replay_buffer
+            begin_updating_weights = args.begin_updating_weights
+            soft_update_weight = args.soft_update_weight
+            max_env_time_steps = args.max_env_time_steps
+
         super().__init__(env=env, gamma=gamma, logger=logger)
         self._env_eval = env_eval  # TODO: should the abstract agent get this?
         self.eval_logger = eval_logger
@@ -65,15 +86,15 @@ class DDQNAgent(AbstractAgent):
         self._q_target = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
 
         self._loss_function = nn.MSELoss()
-        self.lr = 0.001
+        self.lr = learning_rate
         self._q_optimizer = optim.Adam(self._q.parameters(), lr=self.lr)
 
-        self._replay_buffer = ReplayBuffer(1e6)
+        self._replay_buffer = ReplayBuffer(max_size_replay_buffer)
         self._epsilon = epsilon
         self._batch_size = batch_size
-        self._begin_updating_weights = 1
-        self._soft_update_weight = 0.01  # type: float
-        self._max_env_time_steps = 1_000_000  # type: int
+        self._begin_updating_weights = begin_updating_weights
+        self._soft_update_weight = soft_update_weight  # type: float  # TODO add description
+        self._max_env_time_steps = max_env_time_steps  # type: int
         self._n_episodes_eval = len(self.env.instance_set.keys())  # type: int
         self.output_dir = self.logger.log_dir
         self.model_dir = os.path.join(self.output_dir, 'models')
