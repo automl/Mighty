@@ -30,6 +30,7 @@ class BaseConfigParser(object):
             config_file_parser_class=configargparse.ConfigparserConfigFileParser
         )
         self.opts = None
+        self.unknown_args = None
 
     def parse(self, args: list[str] = None, config_filename: str = ""):
         """
@@ -64,8 +65,9 @@ class BaseConfigParser(object):
         if config_filename:
             with open(config_filename, 'r') as file:
                 config_file_contents = file.read()
-        self.opts = self._p.parse_args(args=args, config_file_contents=config_file_contents)
-        return self.opts
+        self.opts, unknown_args = self._p.parse_known_args(args=args, config_file_contents=config_file_contents)
+        self.unknown_args = unknown_args
+        return self.opts, self.unknown_args
 
     def to_ini(self, filename: str, namespace: configargparse.Namespace = None):
         if not namespace and not self.opts:
@@ -73,8 +75,9 @@ class BaseConfigParser(object):
             raise ValueError(msg)
 
         opts_to_disk = namespace if namespace else self.opts
-        output_file_paths =  [filename]
+        output_file_paths = [filename]
         for fp in output_file_paths:
             fp = Path(fp)
             fp.parent.mkdir(parents=True, exist_ok=True)
+        output_file_paths = [str(p) for p in output_file_paths]  # configargparse does not like PosixPaths for printing
         self._p.write_config_file(parsed_namespace=opts_to_disk, output_file_paths=output_file_paths)
