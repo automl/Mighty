@@ -18,7 +18,10 @@ class AbstractAgent:
         self.env = env
         self.logger = logger
         #TODO: make util function that can detect this correctly for all kinds of gym spaces and use it here
-        self._action_dim = self.env.action_space.n
+        try:
+            self._action_dim = self.env.action_space.n
+        except AttributeError:
+            self._action_dim = self.env.action_space.shape[0]
         self._state_shape = self.env.observation_space.shape[0]
 
         self.last_state = None
