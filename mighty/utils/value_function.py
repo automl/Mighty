@@ -18,3 +18,5 @@ class FullyConnectedQ(nn.Module):
         x = self._non_linearity(self.fc1(x))
         x = self._non_linearity(self.fc2(x))
         return self.fc3(x)
+
+
