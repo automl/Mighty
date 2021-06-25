@@ -85,32 +85,9 @@ class ScenarioConfigParser(BaseConfigParser):
             help='After how many steps to evaluate'
         )
         self._p.add_argument(
-            '--env-max-steps',
-            default=200,
-            type=int,
-            help='Maximal steps in environment before termination.'
-        )
-        self._p.add_argument(
             '--load-model',
             default=None
         )  # TODO: add help and type
-
-        self._p.add_argument(
-            '--agent-type',
-            default="DDQN",
-            type=str,
-            choices=["DDQN"],
-            help="Specify the agent type."
-        )
-
-        # TODO move to agent_parser
-        self._p.add_argument(
-            '--agent-epsilon',
-            default=0.2,
-            type=float,
-            help='Fixed epsilon to use during training',
-            dest='epsilon'  # TODO should we be more clear about naming and aliases?
-        )
 
 
 if __name__ == "__main__":
