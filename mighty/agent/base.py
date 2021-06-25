@@ -275,7 +275,11 @@ class AbstractAgent:
         trainer.add_event_handler(
             Events.EPOCH_COMPLETED(every=save_model_every_n_episodes), checkpoint_handler, to_save=self._mapping_save_components)
         trainer.add_event_handler(Events.EPOCH_COMPLETED(every=human_log_every_n_episodes), print_epoch)
-        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=save_model_every_n_episodes), self.save_agent_state, **{filepath: self.output_dir, checkpoint_mode: self.checkpoint_mode})
+        agent_state_kwargs = dict(
+            filepath=self.output_dir,
+            checkpoint_mode=self.checkpoint_mode,
+        )
+        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=save_model_every_n_episodes), self.save_agent_state, **agent_state_kwargs)
 
         # COMPLETED
         # order of registering matters! first in, first out
