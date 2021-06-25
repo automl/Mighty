@@ -99,9 +99,6 @@ class DDQNAgent(AbstractAgent):
         self._mapping_save_components = {"model": self._q,
                                          "targets": self._q_target,
                                          "optimizer": self._q_optimizer}
-                                         #"replay_buffer": self._replay_buffer,
-                                         #"step": self.total_steps}
-
         self.writer = None
         if log_tensorboard:
             self.writer = SummaryWriter(self.logger.log_dir)
