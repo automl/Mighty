@@ -48,7 +48,7 @@ class AbstractAgent:
             logger: Logger,
             output_dir: str,
             max_env_time_steps: int = 1_000_000,
-
+            checkpoint_mode: str = None
     ):
         """
         Initialize an Agent
@@ -59,6 +59,7 @@ class AbstractAgent:
         self.gamma = gamma
         self.env = env
         self.logger = logger
+        self.checkpoint_mode = checkpoint_mode
         #TODO: make util function that can detect this correctly for all kinds of gym spaces and use it here
         self._action_dim = self.env.action_space.n
         self._state_shape = self.env.observation_space.shape[0]
@@ -207,6 +208,9 @@ class AbstractAgent:
         worker = RolloutWorker(self, self.output_dir, self.logger)
         worker.evaluate(env=env, episodes=episodes)
 
+    def save_agent_state(self, , filepath: str, checkpoint_mode: str = 'latest'):
+        raise NotImplementedError
+
     def train(
             self,
             n_episodes: int,
@@ -271,6 +275,7 @@ class AbstractAgent:
         trainer.add_event_handler(
             Events.EPOCH_COMPLETED(every=save_model_every_n_episodes), checkpoint_handler, to_save=self._mapping_save_components)
         trainer.add_event_handler(Events.EPOCH_COMPLETED(every=human_log_every_n_episodes), print_epoch)
+        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=save_model_every_n_episodes), self.save_agent_state, **(self.output_dir, self.checkpoint_mode))
 
         # COMPLETED
         # order of registering matters! first in, first out
