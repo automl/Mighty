@@ -46,7 +46,6 @@ class AbstractAgent:
             env_eval: DACENV,
             gamma: float,
             logger: Logger,
-            eval_logger: Logger,
             output_dir: str,
             max_env_time_steps: int = 1_000_000,
 
@@ -60,7 +59,6 @@ class AbstractAgent:
         self.gamma = gamma
         self.env = env
         self.logger = logger
-        self.eval_logger = eval_logger
         #TODO: make util function that can detect this correctly for all kinds of gym spaces and use it here
         self._action_dim = self.env.action_space.n
         self._state_shape = self.env.observation_space.shape[0]
@@ -205,9 +203,9 @@ class AbstractAgent:
         # TODO: for this to be nice we want to separate policy and agent
         # agent = DDQN(self.env)
         # TODO: this should be easier
-        for _, m in self.eval_logger.module_logger.items():
+        for _, m in self.logger.module_logger.items():
             m.episode = self.logger.module_logger["train_performance"].episode
-        worker = RolloutWorker(self, self.output_dir, self.eval_logger)
+        worker = RolloutWorker(self, self.output_dir, self.logger)
         worker.evaluate(env=env, episodes=episodes)
 
     def train(
