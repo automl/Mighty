@@ -208,7 +208,7 @@ class AbstractAgent:
         worker = RolloutWorker(self, self.output_dir, self.logger)
         worker.evaluate(env=env, episodes=episodes)
 
-    def save_agent_state(self, , filepath: str, checkpoint_mode: str = 'latest'):
+    def save_agent_state(self, filepath: str, checkpoint_mode: str = 'latest'):
         raise NotImplementedError
 
     def train(
