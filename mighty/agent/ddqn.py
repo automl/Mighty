@@ -45,8 +45,6 @@ class DDQNAgent(AbstractAgent):
             env: DACENV,
             env_eval: DACENV,
             logger: Logger,
-            #The eval logger should be removed as soon as the logger is reconstructed
-            eval_logger: Logger,
             gamma: float = 0.99,
             epsilon: float = 0.2,
             batch_size: int = 64,
@@ -80,7 +78,6 @@ class DDQNAgent(AbstractAgent):
 
         super().__init__(env=env, gamma=gamma, logger=logger)
         self._env_eval = env_eval  # TODO: should the abstract agent get this?
-        self.eval_logger = eval_logger
 
         self._q = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
         self._q_target = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
@@ -242,9 +239,9 @@ class DDQNAgent(AbstractAgent):
         #TODO: for this to be nice we want to separate policy and agent
         #agent = DDQN(self.env)
         #TODO: this should be easier
-        for _, m in self.eval_logger.module_logger.items():
+        for _, m in self.logger.module_logger.items():
             m.episode = self.logger.module_logger["train_performance"].episode
-        worker = RolloutWorker(self, self.output_dir, self.eval_logger)
+        worker = RolloutWorker(self, self.output_dir, self.logger)
         worker.evaluate(env, episodes)
         os.remove(self.output_dir / "Q")
 
