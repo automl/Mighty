@@ -88,5 +88,4 @@ if __name__ == "__main__":
         np.save(os.path.join(out_dir, 'eval_results.npy'), [steps, rewards, decisions])
     # TODO: this should go in a general cleanup function
     agent.writer.close()
-    train_logger.close()
-    eval_logger.close()
+    logger.close()
