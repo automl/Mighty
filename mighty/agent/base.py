@@ -203,10 +203,15 @@ class AbstractAgent:
         # TODO: this should be easier
         for _, m in self.logger.module_logger.items():
             m.episode = self.logger.module_logger["train_performance"].episode
-        worker = RolloutWorker(self, self.output_dir, self.logger)
+        f = None
+        for fname in os.listdir(self.model_dir):
+            if fname.startswith("eval_checkpoint"):
+                f = fname
+        if f is None:
+            msg = "No suitable checkpoint for eval"
+            raise ValueError(msg)
+        worker = RolloutWorker(self, os.path.join(self.model_dir, f), self.logger)
         worker.evaluate(env=env, episodes=episodes)
-        for filename in glob.glob(os.path.join(self.model_dir, "eval_checkpoint*")):
-            os.remove(filename)
 
     def load_checkpoint(self, path: str):
         msg = "Please implement loading from checkpoints in the child agent."
@@ -262,6 +267,8 @@ class AbstractAgent:
             env=self._env_eval,
             episodes=n_episodes_eval,
         )
+        eval_checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='eval_checkpoint', n_saved=1, create_dir=True)
+        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), eval_checkpoint_handler, to_save=self._mapping_save_components)
         trainer.add_event_handler(
             Events.ITERATION_COMPLETED(every=eval_every_n_steps),
             self.run_rollout,
@@ -292,7 +299,6 @@ class AbstractAgent:
         # COMPLETED
         # order of registering matters! first in, first out
         # we need to save the model first before evaluating
-        eval_checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='eval_checkpoint', n_saved=n_saved, create_dir=True)
         trainer.add_event_handler(Events.COMPLETED, eval_checkpoint_handler, to_save=self._mapping_save_components)
         trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
 

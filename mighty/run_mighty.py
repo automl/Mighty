@@ -82,9 +82,9 @@ if __name__ == "__main__":
             human_log_every_n_episodes=100,
             save_model_every_n_episodes=save_model_every_n_episodes,
         )
-        os.mkdir(os.path.join(logger.log_dir, 'final'))
-        agent.checkpoint(os.path.join(logger.log_dir, 'final'))
-        agent.save_replay_buffer(os.path.join(logger.log_dir, 'final'))
+        #TODO: integrate this into trainer
+        #os.mkdir(os.path.join(logger.log_dir, 'final'))
+        #agent.checkpoint(os.path.join(logger.log_dir, 'final'))
     else:
         print('#' * 80)
         print(f'Loading {agent} from {args.load_model}')
