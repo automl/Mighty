@@ -198,8 +198,6 @@ class AbstractAgent:
         None
 
         """
-        # TODO parallelize / detach from this process/thread/core if possible
-        self.checkpoint(self.output_dir)
         # TODO: for this to be nice we want to separate policy and agent
         # agent = DDQN(self.env)
         # TODO: this should be easier
@@ -207,6 +205,12 @@ class AbstractAgent:
             m.episode = self.logger.module_logger["train_performance"].episode
         worker = RolloutWorker(self, self.output_dir, self.logger)
         worker.evaluate(env=env, episodes=episodes)
+        for filename in glob.glob(os.path.join(self.model_dir, "eval_checkpoint*")):
+            os.remove(filename)
+
+    def load_checkpoint(self, path: str):
+        msg = "Please implement loading from checkpoints in the child agent."
+        raise NotImplementedError(msg)
 
     def train(
             self,
@@ -288,7 +292,8 @@ class AbstractAgent:
         # COMPLETED
         # order of registering matters! first in, first out
         # we need to save the model first before evaluating
-        #trainer.add_event_handler(Events.COMPLETED, checkpoint_handler, to_save=self._mapping_save_components)
+        eval_checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='eval_checkpoint', n_saved=n_saved, create_dir=True)
+        trainer.add_event_handler(Events.COMPLETED, eval_checkpoint_handler, to_save=self._mapping_save_components)
         trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
 
         # RUN
