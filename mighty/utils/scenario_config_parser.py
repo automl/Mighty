@@ -79,8 +79,8 @@ class ScenarioConfigParser(BaseConfigParser):
             help='Created suffix of directory to save results.'
         )
         self._p.add_argument(
-            '--eval-after-n-steps',
-            default=10 ** 3,
+            '--eval_every_n_steps',
+            default=1_000,
             type=int,
             help='After how many steps to evaluate'
         )
@@ -88,6 +88,12 @@ class ScenarioConfigParser(BaseConfigParser):
             '--load-model',
             default=None
         )  # TODO: add help and type
+        self._p.add_argument(
+            '--save_model_every_n_episodes',
+            default=100,
+            type=int,
+            help="Save modevery n episodes."
+        )
 
 
 if __name__ == "__main__":
