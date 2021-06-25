@@ -278,9 +278,11 @@ class AbstractAgent:
                 Events.EPOCH_COMPLETED(every=save_model_every_n_episodes), checkpoint_handler, to_save=self._mapping_save_components)
             if hasattr(self, '_replay_buffer'):
                 if self.checkpoint_mode == 'debug':
-                    self._replay_buffer.save(self.model_dir)
-                elif self.checkpoint_mode == 'latest':
                     self._replay_buffer.save(self.model_dir, self.total_steps)
+                elif self.checkpoint_mode == 'latest':
+                    if os.path.exists(os.path.join(self.model_dir, 'rpb.pkl')):
+                        os.remove(os.path.join(self.model_dir, 'rpb.pkl'))
+                    self._replay_buffer.save(self.model_dir)
         trainer.add_event_handler(Events.EPOCH_COMPLETED(every=human_log_every_n_episodes), print_epoch)
 
         # COMPLETED
