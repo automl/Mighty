@@ -253,7 +253,7 @@ class DDQNAgent(AbstractAgent):
         else:
             name = 'agent_state'
 
-        if not checkpoint == None:
+        if not checkpoint_mode == None:
             torch.save({'epoch': self.total_steps,
                         'q_state_dict': self._q.state_dict(),
                         'target_state_dict': self._q_target.state_dict(),
