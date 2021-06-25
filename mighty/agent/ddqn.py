@@ -172,7 +172,7 @@ class DDQNAgent(AbstractAgent):
     def start_episode(self, engine):
         self.last_state = self.env.reset()
         self.logger.reset_episode()
-        self.logger.set_env(self.env)
+        self.logger.set_train_env(self.env)
 
     def end_logger_episode(self):
         self.logger.next_episode()
