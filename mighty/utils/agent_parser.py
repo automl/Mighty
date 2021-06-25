@@ -1,9 +1,10 @@
 import os
-from utils.base_config_parser import BaseConfigParser
+from typing import List, Optional
+from mighty.utils.base_config_parser import BaseConfigParser
 
 
-class DDQNConfigParser(BaseConfigParser):
-    def __init__(self, default_config_files: list[str] = []):
+class AgentConfigParser(BaseConfigParser):
+    def __init__(self, default_config_files: Optional[List[str]] = None):
         """
         Initialize the scenario configuration parser.
 
@@ -29,14 +30,14 @@ class DDQNConfigParser(BaseConfigParser):
             dir_path = os.path.dirname(os.path.realpath(__file__))
             # we are in ROOT/utils so we need to go one folder up --> ".."
             default_config_path = os.path.join(dir_path, "..", "data/configs/default")
-            default_config_filename = os.path.join(default_config_path, "default_ddqn.ini")
+            default_config_filename = os.path.join(default_config_path, "default_agent.ini")
             default_config_files = [default_config_filename]
-        super(DDQNConfigParser, self).__init__(default_config_files=default_config_files)
+        super(AgentConfigParser, self).__init__(default_config_files=default_config_files)
         self._add_arguments()
 
     def _add_arguments(self):
         """
-        Adds DDQN arguments.
+        Adds agent arguments.
 
         Returns
         -------
@@ -47,15 +48,8 @@ class DDQNConfigParser(BaseConfigParser):
             '--agent_type',
             default="DDQN",
             type=str,
-            choices=["DDQN"],
-            help='Name of agent. Read-only.'
-        )
-        self._p.add_argument(
-            '--parser_name',
-            default=type(self).__name__,
-            choices=[type(self).__name__],
-            type=str,
-            help='Name of configuration parser. Read-only.'
+            choices=["DDQN", "TD3"],
+            help='Name of agent.'
         )
 
         # Hyperparameters
@@ -109,4 +103,3 @@ class DDQNConfigParser(BaseConfigParser):
             type=int,
             help="Maximum number of steps in the environment before episode ends."
         )
-
