@@ -48,7 +48,7 @@ class AbstractAgent:
             logger: Logger,
             output_dir: str,
             max_env_time_steps: int = 1_000_000,
-            checkpoint_mode: str = None
+            checkpoint_mode: str = 'latest'
     ):
         """
         Initialize an Agent
