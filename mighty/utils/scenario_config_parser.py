@@ -95,21 +95,3 @@ class ScenarioConfigParser(BaseConfigParser):
             help="Save modevery n episodes."
         )
 
-
-if __name__ == "__main__":
-    # custom train file we want to load
-    fn = "data/configs/custom/custom_train.ini"
-
-    # init parser
-    scenario_parser = ScenarioConfigParser()
-
-    # simulate command line args
-    args = ["--episodes", "42"]
-
-    # parse
-    opts = scenario_parser.parse(args=args, config_filename=fn)
-    print(opts)
-
-    # we want to save parsed args, probably in the output folder
-    # fn_out = "data/test/custom_train_new.ini"
-    # scenario_parser.to_ini(filename=fn_out, namespace=opts)
