@@ -242,9 +242,11 @@ class DDQNAgent(AbstractAgent):
         #TODO: log this somehow
         return steps, rewards, decisions, policies
 
-    def checkpoint(self, filepath: str):
-        torch.save(self._q.state_dict(), os.path.join(filepath, 'Q'))
-
-    def load(self, filepath: str):
-        self._q.load_state_dict(torch.load(os.path.join(filepath, 'Q')))
+    def load_checkpoint(self, path: str, replay_path: str = None):
+        checkpoint = torch.load(path)
+        self._q.load_state_dict(checkpoint['model'])
+        self._q_target.load_state_dict(checkpoint['targets'])
+        self._q_optimizer.load_state_dict(checkpoint['optimizer'])
+        if replay_path is not None:
+            self._replay_buffer.load(replay_path)
 

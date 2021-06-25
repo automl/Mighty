@@ -198,15 +198,24 @@ class AbstractAgent:
         None
 
         """
-        # TODO parallelize / detach from this process/thread/core if possible
-        self.checkpoint(self.output_dir)
         # TODO: for this to be nice we want to separate policy and agent
         # agent = DDQN(self.env)
         # TODO: this should be easier
         for _, m in self.logger.module_logger.items():
             m.episode = self.logger.module_logger["train_performance"].episode
-        worker = RolloutWorker(self, self.output_dir, self.logger)
+        f = None
+        for fname in os.listdir(self.model_dir):
+            if fname.startswith("eval_checkpoint"):
+                f = fname
+        if f is None:
+            msg = "No suitable checkpoint for eval"
+            raise ValueError(msg)
+        worker = RolloutWorker(self, os.path.join(self.model_dir, f), self.logger)
         worker.evaluate(env=env, episodes=episodes)
+
+    def load_checkpoint(self, path: str):
+        msg = "Please implement loading from checkpoints in the child agent."
+        raise NotImplementedError(msg)
 
     def train(
             self,
@@ -258,6 +267,8 @@ class AbstractAgent:
             env=self._env_eval,
             episodes=n_episodes_eval,
         )
+        eval_checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='eval_checkpoint', n_saved=1, create_dir=True)
+        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), eval_checkpoint_handler, to_save=self._mapping_save_components)
         trainer.add_event_handler(
             Events.ITERATION_COMPLETED(every=eval_every_n_steps),
             self.run_rollout,
@@ -278,15 +289,17 @@ class AbstractAgent:
                 Events.EPOCH_COMPLETED(every=save_model_every_n_episodes), checkpoint_handler, to_save=self._mapping_save_components)
             if hasattr(self, '_replay_buffer'):
                 if self.checkpoint_mode == 'debug':
-                    self._replay_buffer.save(self.model_dir)
-                elif self.checkpoint_mode == 'latest':
                     self._replay_buffer.save(self.model_dir, self.total_steps)
+                elif self.checkpoint_mode == 'latest':
+                    if os.path.exists(os.path.join(self.model_dir, 'rpb.pkl')):
+                        os.remove(os.path.join(self.model_dir, 'rpb.pkl'))
+                    self._replay_buffer.save(self.model_dir)
         trainer.add_event_handler(Events.EPOCH_COMPLETED(every=human_log_every_n_episodes), print_epoch)
 
         # COMPLETED
         # order of registering matters! first in, first out
         # we need to save the model first before evaluating
-        #trainer.add_event_handler(Events.COMPLETED, checkpoint_handler, to_save=self._mapping_save_components)
+        trainer.add_event_handler(Events.COMPLETED, eval_checkpoint_handler, to_save=self._mapping_save_components)
         trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
 
         # RUN

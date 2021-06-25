@@ -1,7 +1,7 @@
 class RolloutWorker:
     def __init__(self, agent, agent_checkpoint, logger):
         self.agent = agent
-        self.agent.load(agent_checkpoint)
+        self.agent.load_checkpoint(agent_checkpoint)
         self.logger = logger
 
     def evaluate(self, env, episodes):
