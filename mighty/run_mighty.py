@@ -5,23 +5,27 @@ import numpy as np
 from dacbench.benchmarks import SigmoidBenchmark
 from dacbench.wrappers import PerformanceTrackingWrapper
 
-from mighty.agent.ddqn import DDQNAgent
+from mighty.agent.factory import get_agent_class
 from mighty.iohandling.experiment_tracking import prepare_output_dir
 from mighty.utils.logger import Logger
 
-from utils.scenario_config_parser import ScenarioConfigParser
-from agent.ddqn_config_parser import DDQNConfigParser
+from mighty.utils.scenario_config_parser import ScenarioConfigParser
+from mighty.agent.ddqn_config_parser import DDQNConfigParser
+import importlib
+import mighty.utils.main_parser
+importlib.reload(mighty.utils.main_parser)
+from mighty.utils.main_parser import MainParser
 
 if __name__ == "__main__":
-    parser_scenario = ScenarioConfigParser()  # TODO add master parser :)
-    # By using unknown args we can sequentially parse all arguments.
-    args, unknown_args = parser_scenario.parse()
+    parser = MainParser()
+    args_dict = parser.parse()
+    args = args_dict["scenario"]
+    args_agent = args_dict["agent"]
 
-    parser_agent = DDQNConfigParser()
-    args_agent, unknown_args = parser_agent.parse(unknown_args)
+    # Save configuration
+    parser.to_ini()  # TODO do we want to modify args after parsing?
 
-    if not args.load_model:
-        out_dir = prepare_output_dir(args, user_specified_dir=args.out_dir)
+    out_dir = args.out_dir
 
     train_logger = Logger(
         experiment_name=f"sigmoid_example_s{args.seed}",
@@ -40,9 +44,9 @@ if __name__ == "__main__":
     )
     eval_module = eval_logger.add_module(PerformanceTrackingWrapper, "eval_performance")
 
-    if not args.load_model:
-        out_dir = prepare_output_dir(args, user_specified_dir=args.out_dir,
-                                     subfolder_naming_scheme=args.out_dir_suffix)
+    # if not args.load_model:
+    #     out_dir = prepare_output_dir(args, user_specified_dir=args.out_dir,
+    #                                  subfolder_naming_scheme=args.out_dir_suffix)
 
     # create the benchmark
     benchmark = SigmoidBenchmark()
@@ -63,25 +67,19 @@ if __name__ == "__main__":
     eval_logger.set_additional_info(seed=args.seed)
     # Setup agent
     # state_dim = env.observation_space.shape[0]
-    agent = DDQNAgent(
+
+    agent_class = get_agent_class(args_agent.agent_type)
+    agent = agent_class(
         env=env,
         env_eval=eval_env,
         logger=train_logger,
         eval_logger=eval_logger,
         args=args_agent,  # by using args we can build a general interface
     )
-    agent_cfg_fn = Path(out_dir) / "agent.ini"
-    args_agent.agent_type = "DDQN"
-    parser_agent.to_ini(agent_cfg_fn, args_agent)
-    # TODO: parse args additional hooks into agent
-
-    # save scenario
-    scenario_fn = Path(out_dir) / "scenario.ini"  # TODO: where exactly to save this?
-    parser_scenario.to_ini(scenario_fn, args)  # TODO: should we pass args? args might have been modified after creation
 
     episodes = args.episodes
-    max_env_time_steps = args.env_max_steps
-    epsilon = args.epsilon
+    max_env_time_steps = args_agent.max_env_time_steps
+    epsilon = args_agent.epsilon
 
     if args.load_model is None:
         print('#' * 80)
