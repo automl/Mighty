@@ -9,9 +9,9 @@ class RolloutWorker:
         for i in range(episodes):
             done = False
             s = env.reset()
-            self.logger.reset_episode()
-            self.logger.set_env(env)
+            self.logger.set_eval_env(env)
             while not done:
                 a = self.agent.get_action(s, 0)
                 ns, r, done, _ = env.step(a)
+            self.logger.reset_episode()
             self.logger.write()

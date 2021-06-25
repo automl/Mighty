@@ -44,8 +44,6 @@ class DDQNAgent(AbstractAgent):
             env: DACENV,
             env_eval: DACENV,
             logger: Logger,
-            #The eval logger should be removed as soon as the logger is reconstructed
-            eval_logger: Logger,
             gamma: float = 0.99,
             epsilon: float = 0.2,
             batch_size: int = 64,
@@ -81,7 +79,6 @@ class DDQNAgent(AbstractAgent):
             env=env,
             gamma=gamma,
             logger=logger,
-            eval_logger=eval_logger,
             max_env_time_steps=max_env_time_steps,
             env_eval=env_eval,
             output_dir=logger.log_dir
