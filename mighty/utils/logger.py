@@ -713,6 +713,8 @@ class Logger(AbstractLogger):
     def reset_episode(self):
         for _, module_logger in self.module_logger.items():
             module_logger.reset_episode()
+        for _, module_logger in self.module_logger.items():
+            print(module_logger.episode)
 
     def write(self):
         """
@@ -724,7 +726,7 @@ class Logger(AbstractLogger):
         for _, module_logger in self.module_logger.items():
             module_logger.write()
 
-    def add_module(self, module: Union[str, type], module_name: str = None) -> ModuleLogger:
+    def add_module(self, module: Union[str, type], env: DACENV, module_name: str = None) -> ModuleLogger:
         """
         Creates a sub-logger. For more details see class level documentation
         Parameters
@@ -756,8 +758,8 @@ class Logger(AbstractLogger):
                 self.episode_write_frequency,
                 module_name
             )
-            if self.module_logger[module_name].env is not None:
-                self.module_logger[module_name].set_additional_info(
+            self.module_logger[module_name].env = env
+            self.module_logger[module_name].set_additional_info(
                     instance=self.module_logger[module_name].env.get_inst_id()
                 )
 

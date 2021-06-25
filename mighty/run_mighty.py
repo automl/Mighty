@@ -30,8 +30,6 @@ if __name__ == "__main__":
         step_write_frequency=None,
         episode_write_frequency=10,
     )
-    performance_logger = logger.add_module(PerformanceTrackingWrapper, "train_performance")
-    eval_logger = logger.add_module(PerformanceTrackingWrapper, "eval_performance")
 
     # if not args.load_model:
     #     out_dir = prepare_output_dir(args, user_specified_dir=args.out_dir,
@@ -46,16 +44,17 @@ if __name__ == "__main__":
     # val_bench.set_action_values((2, ))
 
     env = benchmark.get_benchmark(seed=args.seed)
-    env = PerformanceTrackingWrapper(env, logger=performance_logger)
     eval_env = val_bench.get_benchmark(seed=args.seed)
-    eval_env = PerformanceTrackingWrapper(eval_env, logger=eval_logger)
-    logger.set_train_env(env)
-    logger.set_eval_env(eval_env)
-    performance_logger.set_env(env)
-    eval_logger.set_env(eval_env)
-    # Setup agent
-    # state_dim = env.observation_space.shape[0]
 
+    performance_logger = logger.add_module(PerformanceTrackingWrapper, env, "train_performance")
+    eval_logger = logger.add_module(PerformanceTrackingWrapper, eval_env, "eval_performance")
+    env = PerformanceTrackingWrapper(env, logger=performance_logger)
+    eval_env = PerformanceTrackingWrapper(eval_env, logger=eval_logger)
+
+    logger.set_train_env(env)
+    logger.set_eval_env(env)
+
+    # Setup agent
     agent_class = get_agent_class(args_agent.agent_type)
     agent = agent_class(
         env=env,
