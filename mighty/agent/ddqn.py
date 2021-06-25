@@ -243,8 +243,8 @@ class DDQNAgent(AbstractAgent):
 
     def checkpoint(self, filepath: str, checkpoint_mode='latest'):
         torch.save(self._q.state_dict(), os.path.join(filepath, 'Q'))
-       
-       if checkpoint_mode == 'latest' and os.path.exists(os.path.join(filepath, 'agent_state')):
+        
+        if checkpoint_mode == 'latest' and os.path.exists(os.path.join(filepath, 'agent_state')):
             os.remove(os.path.join(filepath, 'agent_state'))
         
         if checkpoint_mode == 'debug':
