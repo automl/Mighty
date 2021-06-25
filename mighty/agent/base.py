@@ -274,8 +274,8 @@ class AbstractAgent:
             elif self.checkpoint_mode == 'latest':
                 n_saved = 1
             checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='', n_saved=n_saved, create_dir=True)
-        trainer.add_event_handler(
-            Events.EPOCH_COMPLETED(every=save_model_every_n_episodes), checkpoint_handler, to_save=self._mapping_save_components)
+            trainer.add_event_handler(
+                Events.EPOCH_COMPLETED(every=save_model_every_n_episodes), checkpoint_handler, to_save=self._mapping_save_components)
         trainer.add_event_handler(Events.EPOCH_COMPLETED(every=human_log_every_n_episodes), print_epoch)
 
         # COMPLETED
