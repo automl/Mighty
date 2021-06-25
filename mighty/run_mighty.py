@@ -66,14 +66,22 @@ if __name__ == "__main__":
     episodes = args.episodes
     max_env_time_steps = args_agent.max_env_time_steps
     epsilon = args_agent.epsilon
+    n_episodes_eval = len(eval_env.instance_set.keys())
+    eval_every_n_steps = args.eval_every_n_steps
+    save_model_every_n_episodes = args.save_model_every_n_episodes
 
     if args.load_model is None:
         print('#' * 80)
         print(f'Using agent type "{agent}" to learn')
         print('#' * 80)
         num_eval_episodes = 100  # 10  # use 10 for faster debugging but also set it in the eval method above
-        agent.train(episodes, epsilon, max_env_time_steps, num_eval_episodes, args.eval_after_n_steps,
-                    max_train_time_steps=args.max_train_steps)
+        agent.train(
+            n_episodes=episodes,
+            n_episodes_eval=n_episodes_eval,
+            eval_every_n_steps=eval_every_n_steps,
+            human_log_every_n_episodes=100,
+            save_model_every_n_episodes=save_model_every_n_episodes,
+        )
         os.mkdir(os.path.join(logger.log_dir, 'final'))
         agent.checkpoint(os.path.join(logger.log_dir, 'final'))
         agent.save_replay_buffer(os.path.join(logger.log_dir, 'final'))
