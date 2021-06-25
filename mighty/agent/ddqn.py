@@ -56,7 +56,7 @@ class DDQNAgent(AbstractAgent):
             soft_update_weight: float = 0.01,
             max_env_time_steps: int = 1_000_000,
             log_tensorboard: bool = True,
-            args: argparse.Namespace = None  # from DDQNConfigParser
+            args: argparse.Namespace = None  # from AgentConfigParser
     ):
         """
         Initialize the DQN Agent

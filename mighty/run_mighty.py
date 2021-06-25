@@ -6,11 +6,8 @@ from dacbench.benchmarks import SigmoidBenchmark
 from dacbench.wrappers import PerformanceTrackingWrapper
 
 from mighty.agent.factory import get_agent_class
-from mighty.iohandling.experiment_tracking import prepare_output_dir
 from mighty.utils.logger import Logger
 
-from mighty.utils.scenario_config_parser import ScenarioConfigParser
-from mighty.agent.ddqn_config_parser import DDQNConfigParser
 import importlib
 import mighty.utils.main_parser
 importlib.reload(mighty.utils.main_parser)

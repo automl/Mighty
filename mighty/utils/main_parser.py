@@ -2,7 +2,6 @@ from typing import Optional, Dict
 from pathlib import Path
 import configargparse
 from mighty.utils.scenario_config_parser import ScenarioConfigParser
-from mighty.agent.ddqn_config_parser import DDQNConfigParser
 from mighty.utils.agent_parser import AgentConfigParser
 from mighty.iohandling.experiment_tracking import prepare_output_dir
 
