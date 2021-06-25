@@ -96,7 +96,11 @@ class DDQNAgent(AbstractAgent):
         self._begin_updating_weights = begin_updating_weights
         self._soft_update_weight = soft_update_weight  # type: float  # TODO add description
 
-        self._mapping_save_components = {"model": self._q}
+        self._mapping_save_components = {"model": self._q,
+                                         "targets": self._q_target,
+                                         "optimizer": self._q_optimizer,
+                                         "replay_buffer": self._replay_buffer,
+                                         "step": self.total_steps}
 
         self.writer = None
         if log_tensorboard:
@@ -243,22 +247,6 @@ class DDQNAgent(AbstractAgent):
 
     def checkpoint(self, filepath: str):
         torch.save(self._q.state_dict(), os.path.join(filepath, 'Q'))
-
-    def save_agent_state(self, filepath: str, checkpoint_mode: str ='latest'):
-        if checkpoint_mode == 'latest' and os.path.exists(os.path.join(filepath, 'agent_state')):
-            os.remove(os.path.join(filepath, 'agent_state'))
-
-        if checkpoint_mode == 'debug':
-            name = f'agent_state_{self.total_steps}'
-        else:
-            name = 'agent_state'
-
-        if not checkpoint_mode == None:
-            torch.save({'epoch': self.total_steps,
-                        'q_state_dict': self._q.state_dict(),
-                        'target_state_dict': self._q_target.state_dict(),
-                        'optimizer_state_dict': self._q_optimizer.state_dict()},
-                       os.path.join(filepath, name))
 
     def load(self, filepath: str):
         self._q.load_state_dict(torch.load(os.path.join(filepath, 'Q')))

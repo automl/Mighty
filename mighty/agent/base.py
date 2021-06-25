@@ -208,9 +208,6 @@ class AbstractAgent:
         worker = RolloutWorker(self, self.output_dir, self.logger)
         worker.evaluate(env=env, episodes=episodes)
 
-    def save_agent_state(self, filepath: str, checkpoint_mode: str = 'latest'):
-        raise NotImplementedError
-
     def train(
             self,
             n_episodes: int,
@@ -269,17 +266,17 @@ class AbstractAgent:
         trainer.add_event_handler(Events.ITERATION_COMPLETED, self.check_termination)
 
         # EPOCH_COMPLETED
-
-        checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='', n_saved=None, create_dir=True)
-        # TODO: add log mode saving everything (trainer, optimizer, etc.)
+        if self.checkpoint_mode is None:
+            pass
+        else:
+            if self.checkpoint_mode == 'debug':
+                n_saved = None
+            elif self.checkpoint_mode == 'latest':
+                n_saved = 1
+            checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='', n_saved=n_saved, create_dir=True)
         trainer.add_event_handler(
             Events.EPOCH_COMPLETED(every=save_model_every_n_episodes), checkpoint_handler, to_save=self._mapping_save_components)
         trainer.add_event_handler(Events.EPOCH_COMPLETED(every=human_log_every_n_episodes), print_epoch)
-        agent_state_kwargs = dict(
-            filepath=self.output_dir,
-            checkpoint_mode=self.checkpoint_mode,
-        )
-        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=save_model_every_n_episodes), self.save_agent_state, **agent_state_kwargs)
 
         # COMPLETED
         # order of registering matters! first in, first out
