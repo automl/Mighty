@@ -60,8 +60,7 @@ if __name__ == "__main__":
     agent = agent_class(
         env=env,
         env_eval=eval_env,
-        logger=train_logger,
-        eval_logger=eval_logger,
+        logger=logger,
         args=args_agent,  # by using args we can build a general interface
     )
 
