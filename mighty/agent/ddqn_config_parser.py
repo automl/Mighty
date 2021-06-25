@@ -1,5 +1,5 @@
 import os
-from utils.base_config_parser import BaseConfigParser
+from mighty.utils.base_config_parser import BaseConfigParser
 
 
 class DDQNConfigParser(BaseConfigParser):
