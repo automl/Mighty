@@ -161,7 +161,7 @@ class AbstractAgent:
         """
         self.last_state = self.env.reset()
         self.logger.reset_episode()
-        self.logger.set_env(self.env)
+        self.logger.set_train_env(self.env)
 
     def check_save_components(self):
         """
@@ -181,7 +181,7 @@ class AbstractAgent:
             msg = "Please set '_mapping_save_components' in the child agent."
             raise ValueError(msg)
 
-    def run_rollout(self, env: DACENV, episodes: int):  # TODO test rollout
+    def run_rollout(self, env: DACENV, episodes: int):
         """
         Run evaluation rollout.
 
@@ -198,7 +198,6 @@ class AbstractAgent:
 
         """
         # TODO parallelize / detach from this process/thread/core if possible
-        # TODO: check for existing current checkpoint
         self.checkpoint(self.output_dir)
         # TODO: for this to be nice we want to separate policy and agent
         # agent = DDQN(self.env)
