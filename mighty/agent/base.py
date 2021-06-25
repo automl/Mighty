@@ -281,7 +281,7 @@ class AbstractAgent:
         # COMPLETED
         # order of registering matters! first in, first out
         # we need to save the model first before evaluating
-        trainer.add_event_handler(Events.COMPLETED, checkpoint_handler, to_save=self._mapping_save_components)
+        #trainer.add_event_handler(Events.COMPLETED, checkpoint_handler, to_save=self._mapping_save_components)
         trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
 
         # RUN
