@@ -24,22 +24,14 @@ if __name__ == "__main__":
 
     out_dir = args.out_dir
 
-    train_logger = Logger(
+    logger = Logger(
         experiment_name=f"sigmoid_example_s{args.seed}",
         output_path=Path(out_dir),
         step_write_frequency=None,
         episode_write_frequency=10,
     )
-    performance_logger = train_logger.add_module(PerformanceTrackingWrapper, "train_performance")
-
-    # TODO: this should not be separate! Extend the logger to support multiple envs
-    eval_logger = Logger(
-        experiment_name=f"sigmoid_example_s{args.seed}",
-        output_path=Path(out_dir),
-        step_write_frequency=None,
-        episode_write_frequency=1,
-    )
-    eval_module = eval_logger.add_module(PerformanceTrackingWrapper, "eval_performance")
+    performance_logger = logger.add_module(PerformanceTrackingWrapper, "train_performance")
+    eval_logger = logger.add_module(PerformanceTrackingWrapper, "eval_performance")
 
     # if not args.load_model:
     #     out_dir = prepare_output_dir(args, user_specified_dir=args.out_dir,
@@ -55,13 +47,12 @@ if __name__ == "__main__":
 
     env = benchmark.get_benchmark(seed=args.seed)
     env = PerformanceTrackingWrapper(env, logger=performance_logger)
-    train_logger.set_env(env)
-    train_logger.set_additional_info(seed=args.seed)
-
     eval_env = val_bench.get_benchmark(seed=args.seed)
-    eval_env = PerformanceTrackingWrapper(eval_env, logger=eval_module)
-    eval_logger.set_env(env)
-    eval_logger.set_additional_info(seed=args.seed)
+    eval_env = PerformanceTrackingWrapper(eval_env, logger=eval_logger)
+    logger.set_train_env(env)
+    logger.set_eval_env(eval_env)
+    performance_logger.set_env(env)
+    eval_logger.set_env(eval_env)
     # Setup agent
     # state_dim = env.observation_space.shape[0]
 
@@ -85,9 +76,9 @@ if __name__ == "__main__":
         num_eval_episodes = 100  # 10  # use 10 for faster debugging but also set it in the eval method above
         agent.train(episodes, epsilon, max_env_time_steps, num_eval_episodes, args.eval_after_n_steps,
                     max_train_time_steps=args.max_train_steps)
-        os.mkdir(os.path.join(train_logger.log_dir, 'final'))
-        agent.checkpoint(os.path.join(train_logger.log_dir, 'final'))
-        agent.save_replay_buffer(os.path.join(train_logger.log_dir, 'final'))
+        os.mkdir(os.path.join(logger.log_dir, 'final'))
+        agent.checkpoint(os.path.join(logger.log_dir, 'final'))
+        agent.save_replay_buffer(os.path.join(logger.log_dir, 'final'))
     else:
         print('#' * 80)
         print(f'Loading {agent} from {args.load_model}')
