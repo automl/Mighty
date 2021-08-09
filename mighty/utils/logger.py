@@ -777,7 +777,12 @@ class Logger(AbstractLogger):
         # TODO add seed too if av?
         if self.env is None:
             raise ValueError("No environment found! Please set environment!")
-        self.set_additional_info(instance=self.env.get_inst_id())
+        try:
+            inst = self.env.get_inst_id()
+            self.set_additional_info(instance=inst)
+        except:
+            pass
+            #print("No instances detected in used env")
 
     def reset_episode(self):
         for _, module_logger in self.module_logger.items():

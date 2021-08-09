@@ -25,11 +25,6 @@ from ignite.engine.engine import Engine
 from ignite.engine.events import Events
 from ignite.handlers import ModelCheckpoint
 
-#FIXME: error is most likely in eval! The original eval method in in here now and currently compared to ours
-#Check for global variables that may cause problems
-#How parallel is the engine? Do we need an eval engine?
-#Remove agent copy from rollout
-#Seed envs for comparison
 
 class TD3Agent(AbstractAgent):
     """
@@ -139,7 +134,7 @@ class TD3Agent(AbstractAgent):
         """
         return self.actor(self.tt(state)).detach().numpy()
 
-    def step(self, engine: Engine = None, iteration=None):
+    def step(self):
         """
         Used as process function for ignite. Must have as args: engine, batch.
 
@@ -208,15 +203,15 @@ class TD3Agent(AbstractAgent):
                 self.writer.add_scalar('Reward/train', r, self.total_steps)
 
         if d:
-            if engine is not None:
-                engine.terminate_epoch()
+#            if engine is not None:
+#                engine.terminate_epoch()
             self.end_logger_episode()
 
         state = ns  # stored in engine.state # TODO
         self.last_state = state
-        return state
+        return state, d
 
-    def start_episode(self, engine):
+    def start_episode(self):
         self.last_state = self.env.reset()
         self.logger.reset_episode()
         self.logger.set_env(self.env)
@@ -240,63 +235,32 @@ class TD3Agent(AbstractAgent):
             max_train_time_steps: int = 1_000_000,
     ):
         # self._n_episodes_eval = n_episodes_eval
-
-        # Init Engine
-        trainer = Engine(self.step)
-
-        # Register events
-        # STARTED
-
-        # EPOCH_STARTED
-        # reset env
-        trainer.add_event_handler(Events.EPOCH_STARTED, self.start_episode)
-
-        # ITERATION_STARTED
-
-        # ITERATION_COMPLETED
         eval_kwargs = dict(
             env=self._env_eval,
             episodes=self._n_episodes_eval,
             max_env_time_steps=self._max_env_time_steps,
         )
-        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.run_rollout, **eval_kwargs)
-        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.eval_policy, **{"env_name": "Pendulum-v0", "seed": 0})
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, self.check_termination)
-
-        # EPOCH_COMPLETED
-
-        checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='', n_saved=None, create_dir=True)
-        # TODO: add log mode saving everything (trainer, optimizer, etc.)
-        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=100), checkpoint_handler,
-                                  to_save={"actor_model": self.actor,
-                                           "critic_model": self.critic,
-                                           "actor_optimizer": self.actor_optimizer,
-                                           "critic_optimizer": self.critic_optimizer})
-        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=100), self.print_epoch)
-
-        # COMPLETED
-        # order of registering matters! first in, first out
-        # we need to save the model first before evaluating
-        trainer.add_event_handler(Events.COMPLETED, checkpoint_handler,
-                                  to_save={"actor_model": self.actor,
-                                           "critic_model": self.critic,
-                                           "actor_optimizer": self.actor_optimizer,
-                                           "critic_optimizer": self.critic_optimizer})
-        trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
-
-        # RUN
-        iterations = range(self._max_env_time_steps)
-        trainer.run(iterations, max_epochs=episodes)
+        iteration = 0
+        steps = 0
+        while iteration < episodes:
+            iteration += 1
+            self.start_episode()
+            done = False
+            while not done:
+                steps += 1
+                _, done = self.step()
+            if steps%eval_every_n_steps == 0:
+                self.eval_policy("Pendulum-v0", 0)
 
     def eval_policy(self, env_name, seed, eval_episodes=10):
         eval_env = gym.make(env_name)
-        #eval_env.seed(seed + 100)
-        #eval_env = self._env_eval
+        eval_env.seed(seed + 100)
+
         avg_reward = 0.
         for _ in range(eval_episodes):
             state, done = eval_env.reset(), False
             while not done:
-                action = self.get_action(np.array(state), epsilon=0)
+                action = self.get_action(np.array(state))
                 state, reward, done, _ = eval_env.step(action)
                 avg_reward += reward
 
@@ -442,8 +406,8 @@ if __name__ == '__main__':
     env = gym.make('Pendulum-v0')
     eenv = gym.make('Pendulum-v0')
 
-    #env = TMP(env, None)
-    #eenv = TMP(eenv, None)
+    env = TMP(env, None)
+    eenv = TMP(eenv, None)
 
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
@@ -467,7 +431,6 @@ if __name__ == '__main__':
     )
 
     os.makedirs(out_dir, exist_ok=True)
-
     agent = TD3Agent(env, eenv, logger=train_logger,
                      eval_logger=eval_logger,
                      max_action=max_action,
