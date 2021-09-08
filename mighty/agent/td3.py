@@ -3,7 +3,6 @@ import time
 import copy
 import json
 import argparse
-import gym
 
 import numpy as np
 import torch
@@ -26,11 +25,6 @@ from ignite.engine.engine import Engine
 from ignite.engine.events import Events
 from ignite.handlers import ModelCheckpoint
 
-#FIXME: error is most likely in eval! The original eval method in in here now and currently compared to ours
-#Check for global variables that may cause problems
-#How parallel is the engine? Do we need an eval engine?
-#Remove agent copy from rollout
-#Seed envs for comparison
 
 class TD3Agent(AbstractAgent):
     """
@@ -261,7 +255,6 @@ class TD3Agent(AbstractAgent):
             max_env_time_steps=self._max_env_time_steps,
         )
         trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.run_rollout, **eval_kwargs)
-        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.eval_policy, **{"env_name": "Pendulum-v0", "seed": 0})
         trainer.add_event_handler(Events.ITERATION_COMPLETED, self.check_termination)
 
         # EPOCH_COMPLETED
@@ -310,49 +303,17 @@ class TD3Agent(AbstractAgent):
 
     # TODO: max_env_time_steps is and env option
     def run_rollout(self, env, episodes, max_env_time_steps):
-        # TODO: check for existing current checkpoint
+        # TODO: check for existing current  and possibly remove this one again
         self.checkpoint(self.output_dir)
-        # TODO: for this to be nice we want to separate policy and agent
-        # agent = DDQN(self.env)
         # TODO: this should be easier
         for _, m in self.eval_logger.module_logger.items():
             m.episode = self.logger.module_logger["train_performance"].episode
-        worker = RolloutWorker(self, self.output_dir, self.eval_logger)
 
         # TODO: Why does this use the workers evaluate method and not the agents eval method?
+        # So that we can spawn off workers to do the eval. Although we don't want to create them here if we want to do it properly
+        worker = RolloutWorker(self, self.output_dir, self.eval_logger)
         worker.evaluate(env, episodes)
-        print("Starting evaluation")
 
-        # os.remove(self.output_dir / "Q")  # FIXME I don't know why this is here
-
-    def evaluate(self, engine, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
-        eval_s, eval_r, eval_d, pols = self.eval(
-            env=env, episodes=episodes, max_env_time_steps=max_env_time_steps)
-
-        eval_stats = dict(
-            elapsed_time=engine.state.times[Events.EPOCH_COMPLETED.name],
-            # TODO check if this is the total time passed since start of training
-            training_steps=engine.state.iteration,
-            training_eps=engine.state.epoch,
-            avg_num_steps_per_eval_ep=float(np.mean(eval_s)),
-            avg_num_decs_per_eval_ep=float(np.mean(eval_d)),
-            avg_rew_per_eval_ep=float(np.mean(eval_r)),
-            std_rew_per_eval_ep=float(np.std(eval_r)),
-            eval_eps=episodes
-        )
-        per_inst_stats = dict(
-            # eval_insts=self._train_eval_env.instances,
-            reward_per_isnts=eval_r,
-            steps_per_insts=eval_s,
-            policies=pols
-        )
-
-        with open(os.path.join(self.output_dir, 'eval_scores.json'), 'a+') as out_fh:
-            json.dump(eval_stats, out_fh)
-            out_fh.write('\n')
-        with open(os.path.join(self.output_dir, 'eval_scores_per_inst.json'), 'a+') as out_fh:
-            json.dump(per_inst_stats, out_fh)
-            out_fh.write('\n')
 
     def print_epoch(self, engine):
         episode = engine.state.epoch
@@ -361,42 +322,6 @@ class TD3Agent(AbstractAgent):
 
     def __repr__(self):
         return 'TD3'
-
-    def eval(self, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
-        """
-        Simple method that evaluates the agent with fixed epsilon = 0
-        :param episodes: max number of episodes to play
-        :param max_env_time_steps: max number of max_env_time_steps to play
-
-        :returns (steps per episode), (reward per episode), (decisions per episode)
-        """
-        steps, rewards, decisions = [], [], []
-        policies = []
-        with torch.no_grad():
-            for e in range(episodes):
-                # this_env.instance_index = this_env.instance_index % 10  # for faster debuggin on only 10 insts
-                print(f'Eval Episode {e} of {episodes}')
-                ed, es, er = 0, 0, 0
-
-                s = env.reset()
-                # policy = [float(this_env.current_lr.numpy()[0])]
-                for _ in count():
-                    a = self.get_action(s)
-                    ed += 1
-
-                    ns, r, d, _ = env.step(a)
-                    er += r
-                    es += 1
-                    if es >= max_env_time_steps or d:
-                        break
-                    s = ns
-                steps.append(es)
-                rewards.append(er)
-                decisions.append(ed)
-                policies.append(None)
-
-        # TODO: log this somehow
-        return steps, rewards, decisions, policies
 
     def checkpoint(self, filepath: str):
         torch.save(self.critic.state_dict(), os.path.join(filepath, 'critic'))
@@ -414,73 +339,3 @@ class TD3Agent(AbstractAgent):
 
         self.critic_target = copy.deepcopy(self.critic)
         self.actor_target = copy.deepcopy(self.actor)
-
-
-def run_agent(arg):
-    ##### THIS IS ONLY FOR DEBUGGING PURPOSES
-    ##### THIS IS ONLY FOR DEBUGGING PURPOSES
-    ##### THIS IS ONLY FOR DEBUGGING PURPOSES
-    ##### THIS IS ONLY FOR DEBUGGING PURPOSES
-    ##### THIS IS ONLY FOR DEBUGGING PURPOSES
-    ##### THIS IS ONLY FOR DEBUGGING PURPOSES
-    ##### THIS IS ONLY FOR DEBUGGING PURPOSES
-    ##### THIS IS ONLY FOR DEBUGGING PURPOSES
-    ##### THIS IS ONLY FOR DEBUGGING PURPOSES
-    from pathlib import Path
-    from collections import namedtuple
-    from gym.wrappers import TransformObservation
-
-    import gym
-    from mighty.utils.logger import Logger
-    from mighty.iohandling.experiment_tracking import prepare_output_dir
-
-    class TMP(TransformObservation):
-
-        def __init__(self, env, f):
-            super().__init__(env, lambda x: x)
-
-        def get_inst_id(self):
-            return 0
-
-    env = gym.make('Pendulum-v0')
-    eenv = gym.make('Pendulum-v0')
-
-    #env = TMP(env, None)
-    #eenv = TMP(eenv, None)
-
-    state_dim = env.observation_space.shape[0]
-    action_dim = env.action_space.shape[0]
-    max_action = float(env.action_space.high[0])
-
-    args = namedtuple('Args', ['seed'])
-    args.seed = 12345
-    out_dir = prepare_output_dir(args)
-    train_logger = Logger(
-        experiment_name=f"pendulum_example_{args.seed}",
-        output_path=Path(out_dir),
-        step_write_frequency=None,
-        episode_write_frequency=10,
-    )
-
-    eval_logger = Logger(
-        experiment_name=f"pendulum_example_{args.seed}",
-        output_path=Path(out_dir),
-        step_write_frequency=None,
-        episode_write_frequency=1,
-    )
-
-    os.makedirs(out_dir, exist_ok=True)
-
-    agent = TD3Agent(env, eenv, logger=train_logger,
-                     eval_logger=eval_logger,
-                     max_action=max_action,
-                     epsilon=0.1,
-                     gamma=.99,
-                     batch_size=256, log_tensorboard=False,
-                     begin_updating_weights=1000, policy_noise=max_action * 0.2, noise_clip=max_action * 0.5,
-                     max_env_time_steps=int(1e3))
-    agent.train(1000, .1, 1000, eval_every_n_steps=500)
-
-if __name__ == '__main__':
-    import sys
-    run_agent(sys.argv[1:])
