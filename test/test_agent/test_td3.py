@@ -8,14 +8,14 @@ from torch.autograd import Variable
 from torch import from_numpy as tensor_from_numpy
 
 from mighty.agent.td3 import TD3Agent
-from .mock_environment import MockEnvDiscreteActions
+from .mock_environment import MockEnvContinuousActions
 
 
 class MyTestCase(unittest.TestCase):
 
     @patch('mighty.agent.td3.optim.Adam')
     def setUp(self, mocked_optimizer) -> None:
-        env = MockEnvDiscreteActions()
+        env = MockEnvContinuousActions()
         np.random.seed(12345)
         self.td3 = TD3Agent(env=env, env_eval=env,
                               gamma=.99, epsilon=.1, batch_size=64, logger=MagicMock(), log_tensorboard=False)
