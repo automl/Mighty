@@ -3,7 +3,8 @@ from pathlib import Path
 import numpy as np
 
 from dacbench.benchmarks import SigmoidBenchmark
-from dacbench.wrappers import PerformanceTrackingWrapper
+from dacbench.benchmarks.toysgd_benchmark import ToySGDBenchmark
+from dacbench.wrappers import PerformanceTrackingWrapper, ObservationWrapper
 
 from mighty.agent.factory import get_agent_class
 from mighty.utils.logger import Logger
@@ -36,15 +37,17 @@ if __name__ == "__main__":
     #                                  subfolder_naming_scheme=args.out_dir_suffix)
 
     # create the benchmark
-    benchmark = SigmoidBenchmark()
+    #benchmark = SigmoidBenchmark()
+    benchmark = ToySGDBenchmark()
     # benchmark.config['instance_set_path'] = '../instance_sets/sigmoid/sigmoid_1D3M_train.csv'
     # benchmark.set_action_values((2, ))
-    val_bench = SigmoidBenchmark()
+    #val_bench = SigmoidBenchmark()
+    val_bench = ToySGDBenchmark()
     # val_bench.config['instance_set_path'] = '../instance_sets/sigmoid/sigmoid_1D3M_train.csv'
     # val_bench.set_action_values((2, ))
 
-    env = benchmark.get_benchmark(seed=args.seed)
-    eval_env = val_bench.get_benchmark(seed=args.seed)
+    env = ObservationWrapper(benchmark.get_benchmark(seed=args.seed))
+    eval_env = ObservationWrapper(val_bench.get_benchmark(seed=args.seed))
 
     performance_logger = logger.add_module(PerformanceTrackingWrapper, env, "train_performance")
     eval_logger = logger.add_module(PerformanceTrackingWrapper, eval_env, "eval_performance")

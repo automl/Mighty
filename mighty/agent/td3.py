@@ -118,6 +118,10 @@ class TD3Agent(AbstractAgent):
         self.policy_freq = policy_freq
         self.initial_random_steps = initial_random_steps
         self.total_updates = 0
+        self._mapping_save_components = {"actor_model": self.actor,
+                                           "critic_model": self.critic,
+                                           "actor_optimizer": self.actor_optimizer,
+                                           "critic_optimizer": self.critic_optimizer}
 
     def save_replay_buffer(self, path):
         self._replay_buffer.save(path)
@@ -193,7 +197,8 @@ class TD3Agent(AbstractAgent):
                 self.writer.add_scalar('CriticLoss/train', critic_loss, self.total_steps)
                 if self.total_steps % self.policy_freq == 0:
                     self.writer.add_scalar('ActorLoss/train', actor_loss, self.total_steps)
-                self.writer.add_scalar('Action/train', a, self.total_steps)
+                for d in range(len(a)):
+                    self.writer.add_scalar('ActionD{d}/train', a[d], self.total_steps)
                 # This apparently requires a module named "past" that the docs don't mention.
                 # Also this is not how arrays should be logged, I think, so it should be fixed
                 # self.writer.add_embedding('State/train', self.last_state, self.total_steps)
@@ -208,89 +213,12 @@ class TD3Agent(AbstractAgent):
         self.last_state = state
         return state
 
-    def start_episode(self, engine):
-        self.last_state = self.env.reset()
-        self.logger.reset_episode()
-        self.logger.set_env(self.env)
-
     def end_logger_episode(self):
         self.logger.next_episode()
 
     def check_termination(self, engine):
         if engine.state.iteration > self._max_env_time_steps:
             engine.fire_event(Events.EPOCH_COMPLETED)
-
-    # TODO: should this maybe at least in part be in the superclass?
-    # Basics should be in superclass, extensions here and everything should be extendable in runscript
-    def train(
-            self,
-            episodes: int,
-            epsilon: float,  # FIXME why are these arguments still part of the train call?
-            max_env_time_steps: int,
-            n_episodes_eval: int = 1,
-            eval_every_n_steps: int = 1,
-            max_train_time_steps: int = 1_000_000,
-    ):
-        # self._n_episodes_eval = n_episodes_eval
-
-        # Init Engine
-        trainer = Engine(self.step)
-
-        # Register events
-        # STARTED
-
-        # EPOCH_STARTED
-        # reset env
-        trainer.add_event_handler(Events.EPOCH_STARTED, self.start_episode)
-
-        # ITERATION_STARTED
-
-        # ITERATION_COMPLETED
-
-        #TODO: enable engine evals as soon as they work in parallel
-        #eval_kwargs = dict(
-        #    env=self._env_eval,
-        #    episodes=self._n_episodes_eval,
-        #    max_env_time_steps=self._max_env_time_steps,
-        #)
-        #trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.run_rollout, **eval_kwargs)
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, self.check_termination)
-
-        # EPOCH_COMPLETED
-
-        checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='', n_saved=None, create_dir=True)
-        # TODO: add log mode saving everything (trainer, optimizer, etc.)
-        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=100), checkpoint_handler,
-                                  to_save={"actor_model": self.actor,
-                                           "critic_model": self.critic,
-                                           "actor_optimizer": self.actor_optimizer,
-                                           "critic_optimizer": self.critic_optimizer})
-        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=100), self.print_epoch)
-
-        # COMPLETED
-        # order of registering matters! first in, first out
-        # we need to save the model first before evaluating
-        trainer.add_event_handler(Events.COMPLETED, checkpoint_handler,
-                                  to_save={"actor_model": self.actor,
-                                           "critic_model": self.critic,
-                                           "actor_optimizer": self.actor_optimizer,
-                                           "critic_optimizer": self.critic_optimizer})
-        trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
-
-        # RUN
-        iterations = range(self._max_env_time_steps)
-        trainer.run(iterations, max_epochs=episodes)
-
-
-    # TODO: Redo with new and improved rolloutworker
-    def run_rollout(self, env, episodes):
-        self.checkpoint(self.output_dir)
-        for _, m in self.eval_logger.module_logger.items():
-            m.episode = self.logger.module_logger["train_performance"].episode
-
-        worker = RolloutWorker(self, self.output_dir, self.eval_logger)
-        worker.evaluate(env, episodes)
-
 
     def print_epoch(self, engine):
         episode = engine.state.epoch
@@ -300,19 +228,14 @@ class TD3Agent(AbstractAgent):
     def __repr__(self):
         return 'TD3'
 
-    def checkpoint(self, filepath: str):
-        torch.save(self.critic.state_dict(), os.path.join(filepath, 'critic'))
-        torch.save(self.actor.state_dict(), os.path.join(filepath, 'actor'))
-
-        torch.save(self.actor_optimizer.state_dict(), os.path.join(filepath, 'actor_optimizer'))
-        torch.save(self.critic_optimizer.state_dict(), os.path.join(filepath, 'critic_optimizer'))
-
-    def load(self, filepath: str):
-        self.actor.load_state_dict(torch.load(os.path.join(filepath, 'actor')))
-        self.critic.load_state_dict(torch.load(os.path.join(filepath, 'critic')))
-
-        self.critic_optimizer.load_state_dict(torch.load(os.path.join(filepath, 'critic_optimizer')))
-        self.actor_optimizer.load_state_dict(torch.load(os.path.join(filepath, 'actor_optimizer')))
+    def load_checkpoint(self, path: str, replay_path: str = None):
+        checkpoint = torch.load(path)
+        self.actor.load_state_dict(checkpoint['actor_model'])
+        self.critic.load_state_dict(checkpoint['critic_model'])
+        self.actor_optimizer.load_state_dict(checkpoint['actor_optimizer'])
+        self.critic_optimizer.load_state_dict(checkpoint['critic_optimizer'])
+        if replay_path is not None:
+            self._replay_buffer.load(replay_path)
 
         self.critic_target = copy.deepcopy(self.critic)
         self.actor_target = copy.deepcopy(self.actor)
