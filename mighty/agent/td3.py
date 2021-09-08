@@ -320,21 +320,34 @@ class TD3Agent(AbstractAgent):
         #worker = RolloutWorker(self, self.output_dir, self.eval_logger)
 
         # TODO: Why does this use the workers evaluate method and not the agents eval method?
-        env = gym.make('Pendulum-v0')
+        eval_env = gym.make('Pendulum-v0')
         #worker.evaluate(env, episodes)
         print("Starting evaluation")
         reward = 0
         for i in range(episodes):
             done = False
-            state = env.reset()
+            state = eval_env.reset()
             #self.eval_logger.reset_episode()
             #self.eval_logger.set_env(env)
             while not done:
                 action = self.get_action(np.array(state), epsilon=0)
-                ns, rew, done, _ = env.step(action)
+                ns, rew, done, _ = eval_env.step(action)
                 reward += rew
             #self.eval_logger.write()
-        print(f"Eval reward:{reward / episodes}")
+
+        eval_env = gym.make(env_name)
+        # eval_env.seed(seed + 100)
+        # eval_env = self._env_eval
+        avg_reward = 0.
+        for _ in range(eval_episodes):
+            state, done = eval_env.reset(), False
+            while not done:
+                action = self.get_action(np.array(state), epsilon=0)
+                state, reward, done, _ = eval_env.step(action)
+                avg_reward += reward
+
+        avg_reward /= eval_episodes
+        print(f"Eval reward:{avg_reward}")
         # os.remove(self.output_dir / "Q")  # FIXME I don't know why this is here
 
     def evaluate(self, engine, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
