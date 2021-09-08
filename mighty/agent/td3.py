@@ -83,7 +83,7 @@ class TD3Agent(AbstractAgent):
             soft_update_weight = args.soft_update_weight
             max_env_time_steps = args.max_env_time_steps
 
-        super().__init__(env=env, gamma=gamma, logger=logger)
+        super().__init__(env=env, gamma=gamma, logger=logger, env_eval=env_eval, output_dir=logger.log_dir)
         self._env_eval = env_eval  # TODO: should the abstract agent get this?
         self.eval_logger = eval_logger
 
