@@ -339,7 +339,7 @@ class TD3Agent(AbstractAgent):
         # eval_env.seed(seed + 100)
         # eval_env = self._env_eval
         avg_reward = 0.
-        for _ in range(eval_episodes):
+        for _ in range(episodes):
             state, done = eval_env.reset(), False
             while not done:
                 action = self.get_action(np.array(state), epsilon=0)
