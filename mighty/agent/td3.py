@@ -346,7 +346,7 @@ class TD3Agent(AbstractAgent):
                 state, reward, done, _ = eval_env.step(action)
                 avg_reward += reward
 
-        avg_reward /= eval_episodes
+        avg_reward /= episodes
         print(f"Eval reward:{avg_reward}")
         # os.remove(self.output_dir / "Q")  # FIXME I don't know why this is here
 
