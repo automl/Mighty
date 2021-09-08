@@ -1,3 +1,5 @@
+import numpy as np
+
 class RolloutWorker:
     def __init__(self, agent, agent_checkpoint, logger):
         self.agent = agent
