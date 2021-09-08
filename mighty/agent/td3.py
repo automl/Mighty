@@ -317,11 +317,26 @@ class TD3Agent(AbstractAgent):
         # TODO: this should be easier
         for _, m in self.eval_logger.module_logger.items():
             m.episode = self.logger.module_logger["train_performance"].episode
-        worker = RolloutWorker(self, self.output_dir, self.eval_logger)
+        #worker = RolloutWorker(self, self.output_dir, self.eval_logger)
 
         # TODO: Why does this use the workers evaluate method and not the agents eval method?
         env = gym.make('Pendulum-v0')
-        worker.evaluate(env, episodes)
+        #worker.evaluate(env, episodes)
+        print("Starting evaluation")
+        reward = []
+        for i in range(episodes):
+            done = False
+            s = env.reset()
+            self.eval_logger.reset_episode()
+            self.eval_logger.set_env(env)
+            rew = 0
+            while not done:
+                a = self.get_action(s, epsilon=0)
+                ns, r, done, _ = env.step(a)
+                rew += r
+            reward.append(rew)
+            self.eval_logger.write()
+        print(f"Eval reward:{sum(reward) / episodes}")
         # os.remove(self.output_dir / "Q")  # FIXME I don't know why this is here
 
     def evaluate(self, engine, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
