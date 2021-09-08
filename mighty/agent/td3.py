@@ -320,7 +320,6 @@ class TD3Agent(AbstractAgent):
         worker = RolloutWorker(self, self.output_dir, self.eval_logger)
 
         # TODO: Why does this use the workers evaluate method and not the agents eval method?
-        env = gym.make('Pendulum-v0')
         worker.evaluate(env, episodes)
         print("Starting evaluation")
 
