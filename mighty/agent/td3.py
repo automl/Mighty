@@ -327,13 +327,13 @@ class TD3Agent(AbstractAgent):
         for i in range(episodes):
             done = False
             s = env.reset()
-            self.eval_logger.reset_episode()
-            self.eval_logger.set_env(env)
+            #self.eval_logger.reset_episode()
+            #self.eval_logger.set_env(env)
             while not done:
                 a = self.get_action(s, epsilon=0)
                 ns, r, done, _ = env.step(a)
                 reward += r
-            self.eval_logger.write()
+            #self.eval_logger.write()
         print(f"Eval reward:{reward / episodes}")
         # os.remove(self.output_dir / "Q")  # FIXME I don't know why this is here
 
