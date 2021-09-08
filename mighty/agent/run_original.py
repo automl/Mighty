@@ -65,8 +65,7 @@ def eval_policy(policy, env_name, seed, eval_episodes=10):
     return avg_reward
 
 
-if __name__ == "__main__":
-
+def run_original(args):
     parser = argparse.ArgumentParser()
     parser.add_argument("--policy", default="TD3")  # Policy name (TD3, DDPG or OurDDPG)
     parser.add_argument("--env", default="Pendulum-v0")  # OpenAI gym environment name
@@ -83,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--policy_freq", default=2, type=int)  # Frequency of delayed policy updates
     parser.add_argument("--save_model", action="store_true")  # Save model and optimizer parameters
     parser.add_argument("--load_model", default="")  # Model load file name, "" doesn't load, "default" uses file_name
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     file_name = f"{args.policy}_{args.env}_{args.seed}"
     print("---------------------------------------")
@@ -184,3 +183,7 @@ if __name__ == "__main__":
             evaluations.append(eval_policy(policy, args.env, args.seed))
             np.save(f"./results/{file_name}", evaluations)
             if args.save_model: policy.save(f"./models/{file_name}")
+
+if __name__ == "__main__":
+    import sys
+    run_original(sys.argv[1:])

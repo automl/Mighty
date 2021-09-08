@@ -377,7 +377,7 @@ class TD3Agent(AbstractAgent):
         self.actor_target = copy.deepcopy(self.actor)
 
 
-if __name__ == '__main__':
+def debug_run(arg):
     ##### THIS IS ONLY FOR DEBUGGING PURPOSES
     ##### THIS IS ONLY FOR DEBUGGING PURPOSES
     ##### THIS IS ONLY FOR DEBUGGING PURPOSES
@@ -440,3 +440,8 @@ if __name__ == '__main__':
                      begin_updating_weights=1000, policy_noise=max_action * 0.2, noise_clip=max_action * 0.5,
                      max_env_time_steps=int(1e3))
     agent.train(1000, .1, 1000, eval_every_n_steps=500)
+
+
+if __name__ == '__main__':
+    import sys
+    debug_run(sys.argv[1:])
