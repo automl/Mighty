@@ -326,11 +326,11 @@ class TD3Agent(AbstractAgent):
         reward = 0
         for i in range(episodes):
             done = False
-            s = env.reset()
+            state = env.reset()
             #self.eval_logger.reset_episode()
             #self.eval_logger.set_env(env)
             while not done:
-                a = self.get_action(s, epsilon=0)
+                a = self.get_action(np.array(state), epsilon=0)
                 ns, r, done, _ = env.step(a)
                 reward += r
             #self.eval_logger.write()
