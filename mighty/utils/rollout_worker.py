@@ -5,21 +5,17 @@ class RolloutWorker:
         self.logger = logger
 
     def evaluate(self, env, timesteps):
-        #import gym
-        #env = gym.make("Pendulum-v0")
         print("Starting evaluation")
-        reward = []
-        for i in range(timesteps):
-            done = False
-            s = env.reset()
+        avg_reward = 0.
+        for _ in range(timesteps):
+            state, done = env.reset(), False
             self.logger.reset_episode()
             self.logger.set_env(env)
-            rew = 0
             while not done:
-                a = self.agent.get_action(s, epsilon=0)
-                ns, r, done, _ = env.step(a)
-                rew += r
-            reward.append(rew)
+                action = self.get_action(np.array(state), epsilon=0)
+                state, reward, done, _ = env.step(action)
+                avg_reward += reward
             self.logger.write()
-        print(f"Eval reward:{sum(reward)/len(reward)}")
+        avg_reward /= episodes
+        print(f"Eval reward:{avg_reward}")
 
