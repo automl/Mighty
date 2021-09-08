@@ -18,8 +18,7 @@ class MyTestCase(unittest.TestCase):
         env = MockEnvDiscreteActions()
         np.random.seed(12345)
         self.ddqn = DDQNAgent(env=env, env_eval=env,
-                              gamma=.99, epsilon=.1, batch_size=64, logger=MagicMock(),
-                              eval_logger=MagicMock(), log_tensorboard=False)
+                              gamma=.99, epsilon=.1, batch_size=64, logger=MagicMock(), log_tensorboard=False)
         self.env = env
         mocked_optimizer.assert_called_once()
 

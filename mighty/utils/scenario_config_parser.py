@@ -79,54 +79,19 @@ class ScenarioConfigParser(BaseConfigParser):
             help='Created suffix of directory to save results.'
         )
         self._p.add_argument(
-            '--eval-after-n-steps',
-            default=10 ** 3,
+            '--eval_every_n_steps',
+            default=1_000,
             type=int,
             help='After how many steps to evaluate'
-        )
-        self._p.add_argument(
-            '--env-max-steps',
-            default=200,
-            type=int,
-            help='Maximal steps in environment before termination.'
         )
         self._p.add_argument(
             '--load-model',
             default=None
         )  # TODO: add help and type
-
         self._p.add_argument(
-            '--agent-type',
-            default="DDQN",
-            type=str,
-            choices=["DDQN"],
-            help="Specify the agent type."
+            '--save_model_every_n_episodes',
+            default=100,
+            type=int,
+            help="Save modevery n episodes."
         )
 
-        # TODO move to agent_parser
-        self._p.add_argument(
-            '--agent-epsilon',
-            default=0.2,
-            type=float,
-            help='Fixed epsilon to use during training',
-            dest='epsilon'  # TODO should we be more clear about naming and aliases?
-        )
-
-
-if __name__ == "__main__":
-    # custom train file we want to load
-    fn = "data/configs/custom/custom_train.ini"
-
-    # init parser
-    scenario_parser = ScenarioConfigParser()
-
-    # simulate command line args
-    args = ["--episodes", "42"]
-
-    # parse
-    opts = scenario_parser.parse(args=args, config_filename=fn)
-    print(opts)
-
-    # we want to save parsed args, probably in the output folder
-    # fn_out = "data/test/custom_train_new.ini"
-    # scenario_parser.to_ini(filename=fn_out, namespace=opts)

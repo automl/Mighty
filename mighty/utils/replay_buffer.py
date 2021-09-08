@@ -39,8 +39,13 @@ class ReplayBuffer:
         batch_terminal_flags = np.array([self._data.terminal_flags[i] for i in batch_indices])
         return batch_states, batch_actions, batch_next_states, batch_rewards, batch_terminal_flags
 
-    def save(self, path):
-        with open(os.path.join(path, 'rpb.pkl'), 'wb') as fh:
+    def save(self, path, suffix=None):
+        if suffix is not None:
+            name = f'rpb_{suffix}.pkl'
+        else:
+            name = 'rpb.pkl'
+
+        with open(os.path.join(path, name), 'wb') as fh:
             pickle.dump(list(self._data), fh)
 
     def load(self, path):

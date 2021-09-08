@@ -5,44 +5,35 @@ import numpy as np
 from dacbench.benchmarks import SigmoidBenchmark
 from dacbench.wrappers import PerformanceTrackingWrapper
 
-from mighty.agent.ddqn import DDQNAgent
-from mighty.iohandling.experiment_tracking import prepare_output_dir
+from mighty.agent.factory import get_agent_class
 from mighty.utils.logger import Logger
 
-from utils.scenario_config_parser import ScenarioConfigParser
-from agent.ddqn_config_parser import DDQNConfigParser
+import importlib
+import mighty.utils.main_parser
+importlib.reload(mighty.utils.main_parser)
+from mighty.utils.main_parser import MainParser
 
 if __name__ == "__main__":
-    parser_scenario = ScenarioConfigParser()  # TODO add master parser :)
-    # By using unknown args we can sequentially parse all arguments.
-    args, unknown_args = parser_scenario.parse()
+    parser = MainParser()
+    args_dict = parser.parse()
+    args = args_dict["scenario"]
+    args_agent = args_dict["agent"]
 
-    parser_agent = DDQNConfigParser()
-    args_agent, unknown_args = parser_agent.parse(unknown_args)
+    # Save configuration
+    parser.to_ini()  # TODO do we want to modify args after parsing?
 
-    if not args.load_model:
-        out_dir = prepare_output_dir(args, user_specified_dir=args.out_dir)
+    out_dir = args.out_dir
 
-    train_logger = Logger(
+    logger = Logger(
         experiment_name=f"sigmoid_example_s{args.seed}",
         output_path=Path(out_dir),
         step_write_frequency=None,
         episode_write_frequency=10,
     )
-    performance_logger = train_logger.add_module(PerformanceTrackingWrapper, "train_performance")
 
-    # TODO: this should not be separate! Extend the logger to support multiple envs
-    eval_logger = Logger(
-        experiment_name=f"sigmoid_example_s{args.seed}",
-        output_path=Path(out_dir),
-        step_write_frequency=None,
-        episode_write_frequency=1,
-    )
-    eval_module = eval_logger.add_module(PerformanceTrackingWrapper, "eval_performance")
-
-    if not args.load_model:
-        out_dir = prepare_output_dir(args, user_specified_dir=args.out_dir,
-                                     subfolder_naming_scheme=args.out_dir_suffix)
+    # if not args.load_model:
+    #     out_dir = prepare_output_dir(args, user_specified_dir=args.out_dir,
+    #                                  subfolder_naming_scheme=args.out_dir_suffix)
 
     # create the benchmark
     benchmark = SigmoidBenchmark()
@@ -53,46 +44,47 @@ if __name__ == "__main__":
     # val_bench.set_action_values((2, ))
 
     env = benchmark.get_benchmark(seed=args.seed)
-    env = PerformanceTrackingWrapper(env, logger=performance_logger)
-    train_logger.set_env(env)
-    train_logger.set_additional_info(seed=args.seed)
-
     eval_env = val_bench.get_benchmark(seed=args.seed)
-    eval_env = PerformanceTrackingWrapper(eval_env, logger=eval_module)
-    eval_logger.set_env(env)
-    eval_logger.set_additional_info(seed=args.seed)
+
+    performance_logger = logger.add_module(PerformanceTrackingWrapper, env, "train_performance")
+    eval_logger = logger.add_module(PerformanceTrackingWrapper, eval_env, "eval_performance")
+    env = PerformanceTrackingWrapper(env, logger=performance_logger)
+    eval_env = PerformanceTrackingWrapper(eval_env, logger=eval_logger)
+
+    logger.set_train_env(env)
+    logger.set_eval_env(env)
+
     # Setup agent
-    # state_dim = env.observation_space.shape[0]
-    agent = DDQNAgent(
+    agent_class = get_agent_class(args_agent.agent_type)
+    agent = agent_class(
         env=env,
         env_eval=eval_env,
-        logger=train_logger,
-        eval_logger=eval_logger,
+        logger=logger,
         args=args_agent,  # by using args we can build a general interface
     )
-    agent_cfg_fn = Path(out_dir) / "agent.ini"
-    args_agent.agent_type = "DDQN"
-    parser_agent.to_ini(agent_cfg_fn, args_agent)
-    # TODO: parse args additional hooks into agent
-
-    # save scenario
-    scenario_fn = Path(out_dir) / "scenario.ini"  # TODO: where exactly to save this?
-    parser_scenario.to_ini(scenario_fn, args)  # TODO: should we pass args? args might have been modified after creation
 
     episodes = args.episodes
-    max_env_time_steps = args.env_max_steps
-    epsilon = args.epsilon
+    max_env_time_steps = args_agent.max_env_time_steps
+    epsilon = args_agent.epsilon
+    n_episodes_eval = len(eval_env.instance_set.keys())
+    eval_every_n_steps = args.eval_every_n_steps
+    save_model_every_n_episodes = args.save_model_every_n_episodes
 
     if args.load_model is None:
         print('#' * 80)
         print(f'Using agent type "{agent}" to learn')
         print('#' * 80)
         num_eval_episodes = 100  # 10  # use 10 for faster debugging but also set it in the eval method above
-        agent.train(episodes, epsilon, max_env_time_steps, num_eval_episodes, args.eval_after_n_steps,
-                    max_train_time_steps=args.max_train_steps)
-        os.mkdir(os.path.join(train_logger.log_dir, 'final'))
-        agent.checkpoint(os.path.join(train_logger.log_dir, 'final'))
-        agent.save_replay_buffer(os.path.join(train_logger.log_dir, 'final'))
+        agent.train(
+            n_episodes=episodes,
+            n_episodes_eval=n_episodes_eval,
+            eval_every_n_steps=eval_every_n_steps,
+            human_log_every_n_episodes=100,
+            save_model_every_n_episodes=save_model_every_n_episodes,
+        )
+        #TODO: integrate this into trainer
+        #os.mkdir(os.path.join(logger.log_dir, 'final'))
+        #agent.checkpoint(os.path.join(logger.log_dir, 'final'))
     else:
         print('#' * 80)
         print(f'Loading {agent} from {args.load_model}')
@@ -102,5 +94,4 @@ if __name__ == "__main__":
         np.save(os.path.join(out_dir, 'eval_results.npy'), [steps, rewards, decisions])
     # TODO: this should go in a general cleanup function
     agent.writer.close()
-    train_logger.close()
-    eval_logger.close()
+    logger.close()
