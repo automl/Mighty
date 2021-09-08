@@ -47,8 +47,6 @@ class TD3Agent(AbstractAgent):
             env: DACENV,
             env_eval: DACENV,
             logger: Logger,
-            # The eval logger should be removed as soon as the logger is reconstructed
-            eval_logger: Logger,
             max_action: float,
             epsilon: float = 0.2,
             gamma: float = 0.99,
@@ -85,7 +83,6 @@ class TD3Agent(AbstractAgent):
 
         super().__init__(env=env, gamma=gamma, logger=logger, env_eval=env_eval, output_dir=logger.log_dir)
         self._env_eval = env_eval  # TODO: should the abstract agent get this?
-        self.eval_logger = eval_logger
 
         self._replay_buffer = ReplayBuffer(max_size_replay_buffer)
         self._batch_size = batch_size
@@ -249,12 +246,14 @@ class TD3Agent(AbstractAgent):
         # ITERATION_STARTED
 
         # ITERATION_COMPLETED
-        eval_kwargs = dict(
-            env=self._env_eval,
-            episodes=self._n_episodes_eval,
-            max_env_time_steps=self._max_env_time_steps,
-        )
-        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.run_rollout, **eval_kwargs)
+
+        #TODO: enable engine evals as soon as they work in parallel
+        #eval_kwargs = dict(
+        #    env=self._env_eval,
+        #    episodes=self._n_episodes_eval,
+        #    max_env_time_steps=self._max_env_time_steps,
+        #)
+        #trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.run_rollout, **eval_kwargs)
         trainer.add_event_handler(Events.ITERATION_COMPLETED, self.check_termination)
 
         # EPOCH_COMPLETED
@@ -282,35 +281,13 @@ class TD3Agent(AbstractAgent):
         iterations = range(self._max_env_time_steps)
         trainer.run(iterations, max_epochs=episodes)
 
-    def eval_policy(self, env_name, seed, eval_episodes=10):
-        eval_env = gym.make('Pendulum-v0')
-        #eval_env.seed(seed + 100)
-        #eval_env = self._env_eval
-        avg_reward = 0.
-        for _ in range(eval_episodes):
-            state, done = eval_env.reset(), False
-            while not done:
-                action = self.get_action(np.array(state), epsilon=0)
-                state, reward, done, _ = eval_env.step(action)
-                avg_reward += reward
 
-        avg_reward /= eval_episodes
-
-        print("---------------------------------------")
-        print(f"Evaluation over {eval_episodes} episodes: {avg_reward:.3f}")
-        print("---------------------------------------")
-        return avg_reward
-
-    # TODO: max_env_time_steps is and env option
-    def run_rollout(self, env, episodes, max_env_time_steps):
-        # TODO: check for existing current  and possibly remove this one again
+    # TODO: Redo with new and improved rolloutworker
+    def run_rollout(self, env, episodes):
         self.checkpoint(self.output_dir)
-        # TODO: this should be easier
         for _, m in self.eval_logger.module_logger.items():
             m.episode = self.logger.module_logger["train_performance"].episode
 
-        # TODO: Why does this use the workers evaluate method and not the agents eval method?
-        # So that we can spawn off workers to do the eval. Although we don't want to create them here if we want to do it properly
         worker = RolloutWorker(self, self.output_dir, self.eval_logger)
         worker.evaluate(env, episodes)
 
