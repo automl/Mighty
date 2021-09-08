@@ -12,7 +12,6 @@ from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
 
 from mighty.utils.logger import Logger
-from mighty.utils.rollout_worker import RolloutWorker
 from mighty.utils.replay_buffer import ReplayBuffer
 from mighty.utils.value_function import FullyConnectedQ
 from mighty.utils.weight_updates import soft_update
@@ -45,8 +44,6 @@ class DDQNAgent(AbstractAgent):
             env: DACENV,
             env_eval: DACENV,
             logger: Logger,
-            #The eval logger should be removed as soon as the logger is reconstructed
-            eval_logger: Logger,
             gamma: float = 0.99,
             epsilon: float = 0.2,
             batch_size: int = 64,
@@ -56,7 +53,7 @@ class DDQNAgent(AbstractAgent):
             soft_update_weight: float = 0.01,
             max_env_time_steps: int = 1_000_000,
             log_tensorboard: bool = True,
-            args: argparse.Namespace = None  # from DDQNConfigParser
+            args: argparse.Namespace = None  # from AgentConfigParser
     ):
         """
         Initialize the DQN Agent
@@ -78,10 +75,14 @@ class DDQNAgent(AbstractAgent):
             soft_update_weight = args.soft_update_weight
             max_env_time_steps = args.max_env_time_steps
 
-        super().__init__(env=env, gamma=gamma, logger=logger)
-        self._env_eval = env_eval  # TODO: should the abstract agent get this?
-        self.eval_logger = eval_logger
-
+        super().__init__(
+            env=env,
+            gamma=gamma,
+            logger=logger,
+            max_env_time_steps=max_env_time_steps,
+            env_eval=env_eval,
+            output_dir=logger.log_dir
+        )
         self._q = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
         self._q_target = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
 
@@ -94,11 +95,10 @@ class DDQNAgent(AbstractAgent):
         self._batch_size = batch_size
         self._begin_updating_weights = begin_updating_weights
         self._soft_update_weight = soft_update_weight  # type: float  # TODO add description
-        self._max_env_time_steps = max_env_time_steps  # type: int
-        self._n_episodes_eval = len(self.env.instance_set.keys())  # type: int
-        self.output_dir = self.logger.log_dir
-        self.model_dir = os.path.join(self.output_dir, 'models')
-        
+
+        self._mapping_save_components = {"model": self._q,
+                                         "targets": self._q_target,
+                                         "optimizer": self._q_optimizer}
         self.writer = None
         if log_tensorboard:
             self.writer = SummaryWriter(self.logger.log_dir)
@@ -172,81 +172,8 @@ class DDQNAgent(AbstractAgent):
         self.last_state = state
         return state
 
-    def start_episode(self, engine):
-        self.last_state = self.env.reset()
-        self.logger.reset_episode()
-        self.logger.set_env(self.env)
-
     def end_logger_episode(self):
         self.logger.next_episode()
-
-    def check_termination(self, engine):
-        if engine.state.iteration > self._max_env_time_steps:
-            engine.fire_event(Events.EPOCH_COMPLETED)
-
-    #TODO: should this maybe at least in part be in the superclass?
-    # Basics should be in superclass, extensions here and everything should be extendable in runscript
-    def train(
-            self,
-            episodes: int,
-            epsilon: float,
-            max_env_time_steps: int,
-            n_episodes_eval: int = 1,
-            eval_every_n_steps: int = 1, 
-            max_train_time_steps: int = 1_000_000,
-    ):
-        #self._n_episodes_eval = n_episodes_eval
-        
-        # Init Engine
-        trainer = Engine(self.step)
-        
-        # Register events
-        # STARTED
-
-        # EPOCH_STARTED
-        # reset env
-        trainer.add_event_handler(Events.EPOCH_STARTED, self.start_episode)
-
-        # ITERATION_STARTED
-
-        # ITERATION_COMPLETED
-        eval_kwargs = dict(
-            env=self._env_eval,
-            episodes=self._n_episodes_eval,
-            max_env_time_steps=self._max_env_time_steps,
-        )
-        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.run_rollout, **eval_kwargs)
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, self.check_termination)
-
-        # EPOCH_COMPLETED
-
-        checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='', n_saved=None, create_dir=True)
-        # TODO: add log mode saving everything (trainer, optimizer, etc.)
-        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=100), checkpoint_handler, to_save={"model": self._q})
-        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=100), self.print_epoch)
-
-        # COMPLETED
-        # order of registering matters! first in, first out
-        # we need to save the model first before evaluating
-        trainer.add_event_handler(Events.COMPLETED, checkpoint_handler, to_save={"model": self._q})
-        trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
-
-        # RUN
-        iterations = range(self._max_env_time_steps)
-        trainer.run(iterations, max_epochs=episodes)
-
-    #TODO: max_env_time_steps is and env option
-    def run_rollout(self, env, episodes, max_env_time_steps):
-        #TODO: check for existing current checkpoint
-        self.checkpoint(self.output_dir)
-        #TODO: for this to be nice we want to separate policy and agent
-        #agent = DDQN(self.env)
-        #TODO: this should be easier
-        for _, m in self.eval_logger.module_logger.items():
-            m.episode = self.logger.module_logger["train_performance"].episode
-        worker = RolloutWorker(self, self.output_dir, self.eval_logger)
-        worker.evaluate(env, episodes)
-        os.remove(self.output_dir / "Q")
 
     def evaluate(self, engine, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
         eval_s, eval_r, eval_d, pols = self.eval(
@@ -276,11 +203,6 @@ class DDQNAgent(AbstractAgent):
             json.dump(per_inst_stats, out_fh)
             out_fh.write('\n')
         
-    def print_epoch(self, engine):
-        episode = engine.state.epoch
-        n_episodes = engine.state.max_epochs
-        print("%s/%s" % (episode + 1, n_episodes))
-
     def __repr__(self):
         return 'DoubleDQN'
 
@@ -320,9 +242,11 @@ class DDQNAgent(AbstractAgent):
         #TODO: log this somehow
         return steps, rewards, decisions, policies
 
-    def checkpoint(self, filepath: str):
-        torch.save(self._q.state_dict(), os.path.join(filepath, 'Q'))
-
-    def load(self, filepath: str):
-        self._q.load_state_dict(torch.load(os.path.join(filepath, 'Q')))
+    def load_checkpoint(self, path: str, replay_path: str = None):
+        checkpoint = torch.load(path)
+        self._q.load_state_dict(checkpoint['model'])
+        self._q_target.load_state_dict(checkpoint['targets'])
+        self._q_optimizer.load_state_dict(checkpoint['optimizer'])
+        if replay_path is not None:
+            self._replay_buffer.load(replay_path)
 
