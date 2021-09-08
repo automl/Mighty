@@ -323,20 +323,18 @@ class TD3Agent(AbstractAgent):
         env = gym.make('Pendulum-v0')
         #worker.evaluate(env, episodes)
         print("Starting evaluation")
-        reward = []
+        reward = 0
         for i in range(episodes):
             done = False
             s = env.reset()
             self.eval_logger.reset_episode()
             self.eval_logger.set_env(env)
-            rew = 0
             while not done:
                 a = self.get_action(s, epsilon=0)
                 ns, r, done, _ = env.step(a)
-                rew += r
-            reward.append(rew)
+                reward += r
             self.eval_logger.write()
-        print(f"Eval reward:{sum(reward) / episodes}")
+        print(f"Eval reward:{avg_reward /= episodes}")
         # os.remove(self.output_dir / "Q")  # FIXME I don't know why this is here
 
     def evaluate(self, engine, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
