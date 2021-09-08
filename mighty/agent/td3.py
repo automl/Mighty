@@ -290,7 +290,7 @@ class TD3Agent(AbstractAgent):
         trainer.run(iterations, max_epochs=episodes)
 
     def eval_policy(self, env_name, seed, eval_episodes=10):
-        eval_env = gym.make(env_name)
+        eval_env = gym.make('Pendulum-v0')
         #eval_env.seed(seed + 100)
         #eval_env = self._env_eval
         avg_reward = 0.
@@ -335,7 +335,7 @@ class TD3Agent(AbstractAgent):
                 reward += rew
             #self.eval_logger.write()
 
-        eval_env = gym.make(env_name)
+        eval_env = gym.make('Pendulum-v0')
         # eval_env.seed(seed + 100)
         # eval_env = self._env_eval
         avg_reward = 0.
