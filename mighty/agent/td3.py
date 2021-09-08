@@ -334,7 +334,7 @@ class TD3Agent(AbstractAgent):
                 ns, r, done, _ = env.step(a)
                 reward += r
             self.eval_logger.write()
-        print(f"Eval reward:{avg_reward / episodes}")
+        print(f"Eval reward:{reward / episodes}")
         # os.remove(self.output_dir / "Q")  # FIXME I don't know why this is here
 
     def evaluate(self, engine, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
