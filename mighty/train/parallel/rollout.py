@@ -12,17 +12,15 @@ class EvaluationRolloutWorker(object):
             policy,
             policy_type: str,
             device: str,
-            env: DACENV
     ):
         self.policy = policy
         policy_types = ["continuous", "discrete"]
         if policy_type not in policy_types:
             raise ValueError(f"{policy_type} not available. Available policy types are {policy_types}.")
         self.policy_type = policy_type
-        self.env = env
         self.device = device
 
-    def eval(self, episodes: int = 1):
+    def eval(self, env: DACENV, episodes: int = 1):
         """
         Simple method that evaluates the agent with fixed epsilon = 0
         :param episodes: max number of episodes to play
@@ -37,14 +35,14 @@ class EvaluationRolloutWorker(object):
             for e in range(episodes):
                 es, er = 0, 0
 
-                s = self.env.reset()
-                if hasattr(self.env, "inst_id"):
-                    instance_id = self.env.inst_id
+                s = env.reset()
+                if hasattr(env, "inst_id"):
+                    instance_id = env.inst_id
                 else:
                     instance_id = -1
                 for _ in count():
                     a = self.get_action(state=s)
-                    ns, r, d, _ = self.env.step(a)
+                    ns, r, d, _ = env.step(a)
                     er += r
                     es += 1
                     if d:
