@@ -317,7 +317,7 @@ class TD3Agent(AbstractAgent):
         # TODO: this should be easier
         for _, m in self.eval_logger.module_logger.items():
             m.episode = self.logger.module_logger["train_performance"].episode
-        #worker = RolloutWorker(self, self.output_dir, self.eval_logger)
+        worker = RolloutWorker(self, self.output_dir, self.eval_logger)
 
         # TODO: Why does this use the workers evaluate method and not the agents eval method?
         env = gym.make('Pendulum-v0')
