@@ -47,7 +47,6 @@ class TD3Agent(AbstractAgent):
             env: DACENV,
             env_eval: DACENV,
             logger: Logger,
-            max_action: float,
             epsilon: float = 0.2,
             gamma: float = 0.99,
             batch_size: int = 64,
@@ -103,7 +102,8 @@ class TD3Agent(AbstractAgent):
             self.writer = SummaryWriter(self.logger.log_dir)
             self.writer.add_scalar('batch_size/Hyperparameter', self._batch_size)
             self.writer.add_scalar('policy_epsilon/Hyperparameter', self._epsilon)
-
+        
+        max_action = float(env.action_space.high[0])
         self.actor = Actor(self._state_shape, self._action_dim, max_action).to(self.device)
         self.actor_target = Actor(self._state_shape, self._action_dim, max_action).to(self.device)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=3e-4)
