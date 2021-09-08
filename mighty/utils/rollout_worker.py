@@ -6,10 +6,10 @@ class RolloutWorker:
         self.agent.load(agent_checkpoint)
         self.logger = logger
 
-    def evaluate(self, env, timesteps):
+    def evaluate(self, env, episodes):
         print("Starting evaluation")
         avg_reward = 0.
-        for _ in range(timesteps):
+        for _ in range(episodes):
             state, done = env.reset(), False
             self.logger.reset_episode()
             self.logger.set_env(env)
