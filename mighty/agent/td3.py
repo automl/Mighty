@@ -3,6 +3,7 @@ import time
 import copy
 import json
 import argparse
+import gym
 
 import numpy as np
 import torch

@@ -3,6 +3,7 @@ import time
 import copy
 import json
 import argparse
+import gym
 
 import numpy as np
 import torch
@@ -283,6 +284,7 @@ class TD3Agent(AbstractAgent):
         worker = RolloutWorker(self, self.output_dir, self.eval_logger)
 
         # TODO: Why does this use the workers evaluate method and not the agents eval method?
+        env = gym.make('Pendulum-v0')
         worker.evaluate(env, episodes)
         # os.remove(self.output_dir / "Q")  # FIXME I don't know why this is here
 
