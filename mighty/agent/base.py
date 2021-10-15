@@ -71,7 +71,8 @@ class AbstractAgent:
         self._env_eval = env_eval
 
         self.output_dir = output_dir
-        self.model_dir = os.path.join(self.output_dir, 'models')
+        if self.output_dir is not None:
+            self.model_dir = os.path.join(self.output_dir, 'models')
 
         self.last_state = None
         self.total_steps = 0

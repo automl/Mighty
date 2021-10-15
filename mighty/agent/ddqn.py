@@ -54,7 +54,6 @@ class DDQNAgent(AbstractAgent):
             max_env_time_steps: int = 1_000_000,
             log_tensorboard: bool = True,
             args: argparse.Namespace = None,  # from AgentConfigParser
-            log_path: str = None
     ):
         """
         Initialize the DQN Agent
@@ -79,7 +78,7 @@ class DDQNAgent(AbstractAgent):
         if logger is not None:
             outdir = logger.log_dir
         else:
-            outdir = log_path
+            outdir = None
 
         super().__init__(
             env=env,
@@ -106,7 +105,7 @@ class DDQNAgent(AbstractAgent):
                                          "targets": self._q_target,
                                          "optimizer": self._q_optimizer}
         self.writer = None
-        if log_tensorboard:
+        if log_tensorboard and outdir is not None:
             self.writer = SummaryWriter(outdir)
             self.writer.add_scalar('lr/Hyperparameter', self.lr)
             self.writer.add_scalar('batch_size/Hyperparameter', self._batch_size)
