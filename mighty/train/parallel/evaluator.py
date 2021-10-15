@@ -1,4 +1,7 @@
+import os
 from typing import List, Optional
+import json
+
 import torch
 import torch.nn as nn
 
@@ -10,9 +13,11 @@ class Evaluator(object):
             self,
             checkpoint_dir: str,
             device: str,
+            output_file_name: str,
+            env,
+            instances_to_evaluate: List[str],
             n_workers: int = 1,
             n_episodes_per_instance: int = 1,
-            instance_ids: Optional[List[int]] = None,
             watch_mode: bool = False  # watches if new checkpoints are arriving, should we do this or later?
     ):
         self.checkpoint_dir = checkpoint_dir
@@ -28,11 +33,30 @@ class Evaluator(object):
         # TODO figure out appropriate backend for device
 
         self.n_episodes_per_instance = n_episodes_per_instance
-        self.instance_ids = instance_ids  # only evaluate on those instances from the training set
+        self.instances = instances_to_evaluate  # only evaluate on those instances from the training set
         self.visited_checkpoint_filenames = []  # add filenames of evaluated checkpoints here
 
+        # TODO: check the existing output file to see if we already validated things
+        self.output_file = output_file_name
+        if os.path.isfile(output_file_name):  # we can ignore already evaluated checkpoints
+            with open(output_file_name, 'r') as out_fh:
+                for line in out_fh:
+                    data = json.loads(line)
+                self.visited_checkpoint_filenames.append(data['checkpoint_path'])
+
         # TODO: read in checkpoint filenames
-        # TODO: sort by date, first work on oldest
+        self.checkpoint_data = []
+        validation_file = os.path.join(self.checkpoint_dir, 'validation.json')
+        with open(validation_file, 'r') as in_fh:
+            for line in in_fh:
+                data = json.loads(line)
+            if data['checkpoint_path'] not in self.visited_checkpoint_filenames:
+                self.checkpoint_data.append(data)
+
+        self.total_eval_runs_required = len(self.checkpoint_data) * len(self.instances)
+        self.env = env
+
+
         # TODO: get agent type
         # TODO: get architecture
         self.architecture = None  # type: nn.Module
@@ -41,27 +65,45 @@ class Evaluator(object):
         # TODO: setup logging / logfile
         # TODO: setup idist
 
-    def evaluate(self,):
-        for checkpoint_filename in self.checkpoint_filenames:
-            if checkpoint_filename in self.visited_checkpoint_filenames:
-                continue
-            checkpoint = torch.load(checkpoint_filename)
-            self.architecture.copy().load_state_dict(checkpoint['model'])  # TODO do we need to copy the architecture?
-            # TODO do we need to check device here and move to appropriate device?
-            policy = self.architecture
+        self.checkpoint_dir
 
-            evalworker = EvaluationRolloutWorker(
-                policy=policy,
-                policy_type=self.policy_type,
-                device=self.device,
-            )
+    def evaluate(self):
+        instance_id = 0
+        checkpoint_id = 0
+        # TODO this allows to run multiple workers if we have a non-blocking behaviour. No clue how it actually is with ignite
+        while self.total_eval_runs_required > 0:
+            for worker_id in range(self.n_workers):
+                instance = self.instances[instance_id]
+                checkpoint_data = self.checkpoint_data[checkpoint_id]
+                checkpoint_filename = checkpoint_data['checkpoint_path']
+                checkpoint = torch.load(checkpoint_filename)
+                self.architecture.copy().load_state_dict(checkpoint['model'])  # TODO do we need to copy the architecture?
+                # TODO do we need to check device here and move to appropriate device?
+                policy = self.architecture
 
-            # TODO create environments
-            # TODO distribute eval
-            # TODO gather results
+                evalworker = EvaluationRolloutWorker(
+                    policy=policy,
+                    policy_type=self.policy_type,
+                    device=self.device,
+                )
+                env = self.env(instance=instance)
+                steps, rewards, instances = evalworker.eval(env, self.n_episodes_per_instance)
+                assert instance == instances[0], 'Environment did not use the required instance'
 
-            self.visited_checkpoint_filenames.append(checkpoint_filename)
-        # TODO dump results
+                checkpoint_data['instances'] = instance
+                checkpoint_data['rewards'] = rewards
+                checkpoint_data['steps'] = steps
+                with open(self.output_file, 'a+') as out_fh:
+                    json.dump(checkpoint_data, out_fh)
+                instance_id += 1
+                if instance_id >= len(self.instances):
+                    instance_id = 0
+                    checkpoint_id += 1
+                self.visited_checkpoint_filenames.append(checkpoint_filename)
+                self.total_eval_runs_required -= 1
+                if self.total_eval_runs_required <= 0:
+                    break
+            # TODO dump results
 
 
 
