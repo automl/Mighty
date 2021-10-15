@@ -1,6 +1,7 @@
 import os
 from typing import List, Optional
 import json
+from copy import deepcopy
 
 import torch
 import torch.nn as nn
@@ -86,7 +87,8 @@ class Evaluator(object):
                     policy_type=self.policy_type,
                     device=self.device,
                 )
-                env = self.env(instance=instance)
+                env = deepcopy(self.env)
+                env.instance_set={0: instance}
                 steps, rewards, instances = evalworker.eval(env, self.n_episodes_per_instance)
                 assert instance == instances[0], 'Environment did not use the required instance'
 
