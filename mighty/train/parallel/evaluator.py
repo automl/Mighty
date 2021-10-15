@@ -146,7 +146,6 @@ class Evaluator(object):
         #             break
         #     # TODO dump results
 
-        print("done")
         idist.finalize()  # end all subprocesses
 
     def _evaluate(self, local_rank, config):
