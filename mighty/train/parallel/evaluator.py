@@ -92,7 +92,9 @@ class Evaluator(object):
 
                 checkpoint_data['instances'] = instance
                 checkpoint_data['rewards'] = rewards
-                checkpoint_data['steps'] = steps
+                checkpoint_data['eval_steps'] = steps
+                checkpoint_data['checkpoint_evaluated'] = True
+
                 with open(self.output_file, 'a+') as out_fh:
                     json.dump(checkpoint_data, out_fh)
                 instance_id += 1
