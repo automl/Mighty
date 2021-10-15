@@ -1,9 +1,13 @@
 import os
-from typing import List, Optional
+from typing import List, Optional, Dict
 import json
+import numpy as np
 
 import torch
 import torch.nn as nn
+
+import ignite
+import ignite.distributed as idist
 
 from mighty.train.parallel.rollout import EvaluationRolloutWorker
 
@@ -18,8 +22,34 @@ class Evaluator(object):
             instances_to_evaluate: List[str],
             n_workers: int = 1,
             n_episodes_per_instance: int = 1,
-            watch_mode: bool = False  # watches if new checkpoints are arriving, should we do this or later?
+            backend=None,
+            nproc_per_node=None,
+            with_amp=False,
+            watch_mode: bool = False,  # watches if new checkpoints are arriving, should we do this or later?
+            spawn_kwargs: Dict = {},
     ):
+        """
+
+        :param checkpoint_dir:
+        :param device:
+        :param output_file_name:
+        :param env:
+        :param instances_to_evaluate:
+        :param n_workers:
+        :param n_episodes_per_instance:
+        :param backend:
+        :param nproc_per_node:
+        :param with_amp:
+        :param watch_mode:
+        :param spawn_kwargs:
+
+        backend (str, optional): backend to use for distributed configuration. Possible values: None, "nccl", "xla-tpu",
+        "gloo" etc. Default, None.
+        nproc_per_node (int, optional): optional argument to setup number of processes per node. It is useful,
+        when main python process is spawning training as child processes.
+        with_amp (bool): if True, enables native automatic mixed precision. Default, False.
+        **spawn_kwargs: Other kwargs to spawn run in child processes: master_addr, master_port, node_rank, nnodes
+        """
         self.checkpoint_dir = checkpoint_dir
         if n_workers < 1 or type(n_workers) is not int:
             raise ValueError("n_workers must be >= 1 and of type int.")
@@ -64,46 +94,95 @@ class Evaluator(object):
         # TODO: get all train instances
         # TODO: setup logging / logfile
         # TODO: setup idist
-
-        self.checkpoint_dir
+        self.backend = backend
+        self.nproc_per_node = nproc_per_node
+        self.with_amp = with_amp
+        self.watch_mode = watch_mode
+        self.spawn_kwargs = spawn_kwargs
 
     def evaluate(self):
-        instance_id = 0
-        checkpoint_id = 0
-        # TODO this allows to run multiple workers if we have a non-blocking behaviour. No clue how it actually is with ignite
-        while self.total_eval_runs_required > 0:
-            for worker_id in range(self.n_workers):
-                instance = self.instances[instance_id]
-                checkpoint_data = self.checkpoint_data[checkpoint_id]
-                checkpoint_filename = checkpoint_data['checkpoint_path']
-                checkpoint = torch.load(checkpoint_filename)
-                self.architecture.copy().load_state_dict(checkpoint['model'])  # TODO do we need to copy the architecture?
-                # TODO do we need to check device here and move to appropriate device?
-                policy = self.architecture
+        config = locals()
+        config.update(config["spawn_kwargs"])
+        del config["spawn_kwargs"]
 
-                evalworker = EvaluationRolloutWorker(
-                    policy=policy,
-                    policy_type=self.policy_type,
-                    device=self.device,
-                )
-                env = self.env(instance=instance)
-                steps, rewards, instances = evalworker.eval(env, self.n_episodes_per_instance)
-                assert instance == instances[0], 'Environment did not use the required instance'
+        device = idist.device()
 
-                checkpoint_data['instances'] = instance
-                checkpoint_data['rewards'] = rewards
-                checkpoint_data['steps'] = steps
-                with open(self.output_file, 'a+') as out_fh:
-                    json.dump(checkpoint_data, out_fh)
-                instance_id += 1
-                if instance_id >= len(self.instances):
-                    instance_id = 0
-                    checkpoint_id += 1
-                self.visited_checkpoint_filenames.append(checkpoint_filename)
-                self.total_eval_runs_required -= 1
-                if self.total_eval_runs_required <= 0:
-                    break
-            # TODO dump results
+        # TODO make it work for more than one node
+        self.spawn_kwargs["nproc_per_node"] = self.nproc_per_node
+        if self.backend == "xla-tpu" and self.with_amp:
+            raise RuntimeError("The value of with_amp should be False if backend is xla")
+
+        # idist.spawn(backend, training, args=(), kwargs_dict={"config": config}, nproc_per_node=nproc_per_node)
+
+        n_instances = len(self.env.instances)
+        n_workers = self.nproc_per_node
+
+        def chunks(lst, n):
+            """Yield successive n-sized chunks from lst."""
+            for i in range(0, len(lst), n):
+                yield lst[i:i + n]
+
+        all_ids = np.arange(0, n_instances)
+        for ids in chunks(all_ids, n_workers):
+            instance_ids = ids
+            checkpoint_ids = ids
+            config["instance_ids"] = instance_ids
+            config["checkpoint_ids"] = checkpoint_ids
+            with idist.Parallel(backend=self.backend, **self.spawn_kwargs) as parallel:
+                parallel.run(self._evaluate, config)
+
+
+        # while self.total_eval_runs_required > 0:
+        #     for worker_id in range(self.n_workers):
+        #         checkpoint_filename = self._evaluate(0, instance_id=instance_id, worker_id=worker_id)
+        #         instance_id += 1
+        #         if instance_id >= len(self.instances):
+        #             instance_id = 0
+        #             checkpoint_id += 1
+        #         self.visited_checkpoint_filenames.append(checkpoint_filename)
+        #         self.total_eval_runs_required -= 1
+        #         if self.total_eval_runs_required <= 0:
+        #             break
+        #     # TODO dump results
+
+        print("done")
+        idist.finalize()  # end all subprocesses
+
+    def _evaluate(self, local_rank, config):
+        """
+        Evaluation function / part which is parallelized
+        """
+        instance_ids = config["instance_ids"]
+        checkpoint_ids = config["checkpoint_ids"]
+        instance_id = instance_ids[local_rank]
+        checkpoint_id = checkpoint_ids[local_rank]
+
+        instance = self.instances[instance_id]
+        checkpoint_data = self.checkpoint_data[checkpoint_id]
+        checkpoint_filename = checkpoint_data['checkpoint_path']
+        checkpoint = torch.load(checkpoint_filename)
+        self.architecture.copy().load_state_dict(checkpoint['model'])  # TODO do we need to copy the architecture?
+        # TODO do we need to check device here and move to appropriate device?
+        policy = self.architecture
+
+        evalworker = EvaluationRolloutWorker(
+            policy=policy,
+            policy_type=self.policy_type,
+            device=self.device,
+        )
+        env = self.env(instance=instance)
+        steps, rewards, instances = evalworker.eval(env, self.n_episodes_per_instance)
+        assert instance == instances[0], 'Environment did not use the required instance'
+
+        checkpoint_data['instances'] = instance
+        checkpoint_data['rewards'] = rewards
+        checkpoint_data['steps'] = steps
+        # TODO add a lock
+        with open(self.output_file, 'a+') as out_fh:
+            json.dump(checkpoint_data, out_fh)
+
+        return checkpoint_filename
+
 
 
 
