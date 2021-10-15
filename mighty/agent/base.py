@@ -12,7 +12,7 @@ from ignite.handlers import ModelCheckpoint
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
 from mighty.utils.rollout_worker import RolloutWorker
-
+from mighty.utils.extended_checkpointing import checkpoint_metadata
 
 def print_epoch(engine):
     """
@@ -270,13 +270,15 @@ class AbstractAgent:
             env=self._env_eval,
             episodes=n_episodes_eval,
         )
-        eval_checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='eval_checkpoint', n_saved=1, create_dir=True)
-        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), eval_checkpoint_handler, to_save=self._mapping_save_components)
-        trainer.add_event_handler(
-            Events.ITERATION_COMPLETED(every=eval_every_n_steps),
-            self.run_rollout,
-            **eval_kwargs
-        )
+        eval_checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='eval_checkpoint', n_saved=None, create_dir=True)
+        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=eval_every_n_steps), checkpoint_metadata, agent=self,
+                                  file=f"{self.model_dir}/checkpoint_list.json", checkpoint_handler=eval_checkpoint_handler, engine=trainer)
+
+        #trainer.add_event_handler(
+        #    Events.ITERATION_COMPLETED(every=eval_every_n_steps),
+        #    self.run_rollout,
+        #    **eval_kwargs
+        #)
         trainer.add_event_handler(Events.ITERATION_COMPLETED, self.check_termination)
 
         # EPOCH_COMPLETED

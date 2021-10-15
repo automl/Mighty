@@ -1,0 +1,41 @@
+{
+  "timesteps": 100,
+  "model_dir": "checkpointing_test/sigmoid_example_s12345/models",
+  "checkpoint_path": "checkpointing_test/sigmoid_example_s12345/models/model_9.090909090909092.pt"
+}{
+  "timesteps": 200,
+  "model_dir": "checkpointing_test/sigmoid_example_s12345/models",
+  "checkpoint_path": "checkpointing_test/sigmoid_example_s12345/models/model_18.181818181818183.pt"
+}{
+  "timesteps": 300,
+  "model_dir": "checkpointing_test/sigmoid_example_s12345/models",
+  "checkpoint_path": "checkpointing_test/sigmoid_example_s12345/models/model_27.272727272727273.pt"
+}{
+  "timesteps": 400,
+  "model_dir": "checkpointing_test/sigmoid_example_s12345/models",
+  "checkpoint_path": "checkpointing_test/sigmoid_example_s12345/models/model_36.36363636363637.pt"
+}{
+  "timesteps": 500,
+  "model_dir": "checkpointing_test/sigmoid_example_s12345/models",
+  "checkpoint_path": "checkpointing_test/sigmoid_example_s12345/models/model_45.45454545454545.pt"
+}{
+  "timesteps": 600,
+  "model_dir": "checkpointing_test/sigmoid_example_s12345/models",
+  "checkpoint_path": "checkpointing_test/sigmoid_example_s12345/models/model_54.54545454545455.pt"
+}{
+  "timesteps": 700,
+  "model_dir": "checkpointing_test/sigmoid_example_s12345/models",
+  "checkpoint_path": "checkpointing_test/sigmoid_example_s12345/models/model_63.63636363636363.pt"
+}{
+  "timesteps": 800,
+  "model_dir": "checkpointing_test/sigmoid_example_s12345/models",
+  "checkpoint_path": "checkpointing_test/sigmoid_example_s12345/models/model_72.72727272727273.pt"
+}{
+  "timesteps": 900,
+  "model_dir": "checkpointing_test/sigmoid_example_s12345/models",
+  "checkpoint_path": "checkpointing_test/sigmoid_example_s12345/models/model_81.81818181818181.pt"
+}{
+  "timesteps": 1000,
+  "model_dir": "checkpointing_test/sigmoid_example_s12345/models",
+  "checkpoint_path": "checkpointing_test/sigmoid_example_s12345/models/model_90.9090909090909.pt"
+}
