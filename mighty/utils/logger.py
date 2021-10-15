@@ -7,12 +7,37 @@ from itertools import chain
 from numbers import Number
 from pathlib import Path
 from typing import Union, Dict, Any, Tuple, List
+import logging
+import sys
 
 import numpy as np
 import pandas as pd
 
 from typing import Callable, Iterable
 from mighty.env.env_handling import DACENV
+
+
+def get_standard_logger(
+    identifier: str,
+    level: int = logging.INFO,
+    stream_format: str = "%(asctime)s|%(levelname)s|%(name)s|%(message)s",
+):
+    logger = logging.getLogger(identifier)
+    logger.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter(stream_format)
+
+    stream_handler = logging.StreamHandler(stream=sys.stdout)
+    stream_handler.setLevel(level=level)
+    stream_handler.setFormatter(formatter)
+
+    handlers = logger.handlers
+    for handler in handlers:
+        logger.removeHandler(handler)
+    logger.addHandler(stream_handler)
+    logger.propagate = False
+
+    return logger
 
 
 def load_logs(log_file: Path) -> List[Dict]:
