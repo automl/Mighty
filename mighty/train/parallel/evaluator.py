@@ -78,11 +78,12 @@ class Evaluator(object):
         # TODO: read in checkpoint filenames
         self.checkpoint_data = []
         validation_file = os.path.join(self.checkpoint_dir, 'validation.json')
-        with open(validation_file, 'r') as in_fh:
-            for line in in_fh:
-                data = json.loads(line)
-            if data['checkpoint_path'] not in self.visited_checkpoint_filenames:
-                self.checkpoint_data.append(data)
+        if os.path.isfile(validation_file):
+            with open(validation_file, 'r') as in_fh:
+                for line in in_fh:
+                    data = json.loads(line)
+                if data['checkpoint_path'] not in self.visited_checkpoint_filenames:
+                    self.checkpoint_data.append(data)
 
         self.total_eval_runs_required = len(self.checkpoint_data) * len(self.instances)
         self.env = env
@@ -103,8 +104,9 @@ class Evaluator(object):
 
     def evaluate(self):
         config = locals()
-        config.update(config["spawn_kwargs"])
-        del config["spawn_kwargs"]
+        # config.update(config["spawn_kwargs"])
+        # del config["spawn_kwargs"]
+        config.update(self.spawn_kwargs)
 
         device = idist.device()
 
@@ -115,7 +117,7 @@ class Evaluator(object):
 
         # idist.spawn(backend, training, args=(), kwargs_dict={"config": config}, nproc_per_node=nproc_per_node)
 
-        n_instances = len(self.env.instances)
+        n_instances = len(self.env.instance_set)
         n_workers = self.nproc_per_node
 
         def chunks(lst, n):
@@ -124,8 +126,10 @@ class Evaluator(object):
                 yield lst[i:i + n]
 
         all_ids = np.arange(0, n_instances)
+        all_instance_ids = np.array(list(self.env.instance_set.keys()))
         for ids in chunks(all_ids, n_workers):
-            instance_ids = ids
+            print(ids)
+            instance_ids = all_instance_ids[ids]
             checkpoint_ids = ids
             config["instance_ids"] = instance_ids
             config["checkpoint_ids"] = checkpoint_ids
@@ -185,6 +189,32 @@ class Evaluator(object):
             json.dump(checkpoint_data, out_fh)
 
         return checkpoint_filename
+
+
+if __name__ == "__main__":
+    from pathlib import Path
+    from dacbench.benchmarks import SigmoidBenchmark
+
+    device = idist.device()
+    seed = 0
+    checkpoint_dir = Path("/home/benjamin/Dokumente/code/tmp/Mighty-DACS/mighty/data/tmp/test_parallel/sigmoid_example_s12345/models/")
+    output_file_name = checkpoint_dir.parent / "eval_checkpoints.json"
+    benchmark = SigmoidBenchmark()
+    env = benchmark.get_benchmark(seed=seed)
+    instances_to_evaluate = env.instance_set
+
+    evaluator = Evaluator(
+        backend="gloo",
+        nproc_per_node=4,
+        checkpoint_dir=str(checkpoint_dir),
+        device=device.type,
+        output_file_name=str(output_file_name),
+        env=env,
+        instances_to_evaluate=instances_to_evaluate,
+        n_episodes_per_instance=1,
+        with_amp=False,
+    )
+    evaluator.evaluate()
 
 
 
