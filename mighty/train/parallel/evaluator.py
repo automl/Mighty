@@ -1,6 +1,7 @@
 import os
 from typing import List, Optional, Dict
 import json
+from copy import deepcopy
 import numpy as np
 
 import torch
@@ -170,19 +171,21 @@ class Evaluator(object):
             policy_type=self.policy_type,
             device=self.device,
         )
-        env = self.env(instance=instance)
+        env = deepcopy(self.env)
+        env.instance_set={0: instance}
         steps, rewards, instances = evalworker.eval(env, self.n_episodes_per_instance)
         assert instance == instances[0], 'Environment did not use the required instance'
 
         checkpoint_data['instances'] = instance
         checkpoint_data['rewards'] = rewards
-        checkpoint_data['steps'] = steps
-        # TODO add a lock
+        checkpoint_data['eval_steps'] = steps
+        checkpoint_data['checkpoint_evaluated'] = True
+
+        # TODO add a file lock?
         with open(self.output_file, 'a+') as out_fh:
             json.dump(checkpoint_data, out_fh)
 
         return checkpoint_filename
-
 
 
 
