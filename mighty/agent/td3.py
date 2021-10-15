@@ -96,13 +96,17 @@ class TD3Agent(AbstractAgent):
             self._n_episodes_eval = len(self.env.instance_set.keys())  # type: int
         except AttributeError:
             self._n_episodes_eval = 10
-        self.output_dir = self.logger.log_dir
+
+        if logger is not None:
+            self.output_dir = logger.log_dir
+        else:
+            self.output_dir = log_path
         self.model_dir = os.path.join(self.output_dir, 'models')
 
         self.writer = None
         if log_tensorboard:
             # TODO write out all the other hyperparameters
-            self.writer = SummaryWriter(self.logger.log_dir)
+            self.writer = SummaryWriter(self.output_dir)
             self.writer.add_scalar('batch_size/Hyperparameter', self._batch_size)
             self.writer.add_scalar('policy_epsilon/Hyperparameter', self._epsilon)
 
@@ -150,7 +154,8 @@ class TD3Agent(AbstractAgent):
 
         ns, r, d, _ = self.env.step(a)
         self.total_steps += 1
-        self.logger.next_step()
+        if self.logger is not None:
+            self.logger.next_step()
         self._replay_buffer.add_transition(self.last_state, a, ns, r, d)
         self.reset_needed = d
 
@@ -202,7 +207,8 @@ class TD3Agent(AbstractAgent):
         if d:
             if engine is not None:
                 engine.terminate_epoch()
-            self.end_logger_episode()
+            if self.logger is not None:
+                self.end_logger_episode()
 
         state = ns  # stored in engine.state # TODO
         self.last_state = state
@@ -210,11 +216,13 @@ class TD3Agent(AbstractAgent):
 
     def start_episode(self, engine):
         self.last_state = self.env.reset()
-        self.logger.reset_episode()
-        self.logger.set_env(self.env)
+        if self.logger is not None:
+            self.logger.reset_episode()
+            self.logger.set_env(self.env)
 
     def end_logger_episode(self):
-        self.logger.next_episode()
+        if self.logger is not None:
+            self.logger.next_episode()
 
     def check_termination(self, engine):
         if engine.state.iteration > self._max_env_time_steps:

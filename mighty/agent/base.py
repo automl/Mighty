@@ -71,7 +71,8 @@ class AbstractAgent:
         self._env_eval = env_eval
 
         self.output_dir = output_dir
-        self.model_dir = os.path.join(self.output_dir, 'models')
+        if self.output_dir is not None:
+            self.model_dir = os.path.join(self.output_dir, 'models')
 
         self.last_state = None
         self.total_steps = 0
@@ -164,8 +165,9 @@ class AbstractAgent:
 
         """
         self.last_state = self.env.reset()
-        self.logger.reset_episode()
-        self.logger.set_train_env(self.env)
+        if self.logger is not None:
+            self.logger.reset_episode()
+            self.logger.set_train_env(self.env)
 
     def check_save_components(self):
         """
@@ -270,7 +272,7 @@ class AbstractAgent:
             env=self._env_eval,
             episodes=n_episodes_eval,
         )
-        eval_checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='eval_checkpoint', n_saved=None, create_dir=True)
+        eval_checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='eval', n_saved=None, create_dir=True)
         trainer.add_event_handler(Events.EPOCH_COMPLETED(every=eval_every_n_steps), checkpoint_metadata, agent=self,
                                   file=f"{self.model_dir}/checkpoint_list.json", checkpoint_handler=eval_checkpoint_handler, engine=trainer)
 
@@ -305,7 +307,7 @@ class AbstractAgent:
         # order of registering matters! first in, first out
         # we need to save the model first before evaluating
         trainer.add_event_handler(Events.COMPLETED, eval_checkpoint_handler, to_save=self._mapping_save_components)
-        trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
+        #trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
 
         # RUN
         iterations = range(self._max_env_time_steps)

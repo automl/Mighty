@@ -53,7 +53,7 @@ class DDQNAgent(AbstractAgent):
             soft_update_weight: float = 0.01,
             max_env_time_steps: int = 1_000_000,
             log_tensorboard: bool = True,
-            args: argparse.Namespace = None  # from AgentConfigParser
+            args: argparse.Namespace = None,  # from AgentConfigParser
     ):
         """
         Initialize the DQN Agent
@@ -75,13 +75,18 @@ class DDQNAgent(AbstractAgent):
             soft_update_weight = args.soft_update_weight
             max_env_time_steps = args.max_env_time_steps
 
+        if logger is not None:
+            outdir = logger.log_dir
+        else:
+            outdir = None
+
         super().__init__(
             env=env,
             gamma=gamma,
             logger=logger,
             max_env_time_steps=max_env_time_steps,
             env_eval=env_eval,
-            output_dir=logger.log_dir
+            output_dir=outdir
         )
         self._q = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
         self._q_target = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
@@ -100,8 +105,8 @@ class DDQNAgent(AbstractAgent):
                                          "targets": self._q_target,
                                          "optimizer": self._q_optimizer}
         self.writer = None
-        if log_tensorboard:
-            self.writer = SummaryWriter(self.logger.log_dir)
+        if log_tensorboard and outdir is not None:
+            self.writer = SummaryWriter(outdir)
             self.writer.add_scalar('lr/Hyperparameter', self.lr)
             self.writer.add_scalar('batch_size/Hyperparameter', self._batch_size)
             self.writer.add_scalar('policy_epsilon/Hyperparameter', self._epsilon)
@@ -133,7 +138,8 @@ class DDQNAgent(AbstractAgent):
         a = self.get_action(self.last_state, self._epsilon)
         ns, r, d, _ = self.env.step(a)
         self.total_steps += 1
-        self.logger.next_step()
+        if self.logger is not None:
+            self.logger.next_step()
         self._replay_buffer.add_transition(self.last_state, a, ns, r, d)
         self.reset_needed = d
 
@@ -166,14 +172,16 @@ class DDQNAgent(AbstractAgent):
         if d:
             if engine is not None:
                 engine.terminate_epoch()
-            self.end_logger_episode()
+            if self.logger is not None:
+                self.end_logger_episode()
 
         state = ns  # stored in engine.state # TODO
         self.last_state = state
         return state
 
     def end_logger_episode(self):
-        self.logger.next_episode()
+        if self.logger is not None:
+            self.logger.next_episode()
 
     def evaluate(self, engine, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
         eval_s, eval_r, eval_d, pols = self.eval(
