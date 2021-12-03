@@ -303,3 +303,29 @@ class SalinaTD3Agent:
             soft_update_params(self.action_agent, self.action_target_agent, tau)
 
         self.iteration += 1
+
+def run():
+    import gym
+    output_dir = "./test"
+    logger = salina.logger.TFLogger(log_dir=output_dir, modulo=100, verbose=True)
+    env={"classname": "gym.make", "env": "CartPole-v0"}
+    q_agent_1 = salina_examples.rl.td3.agents.QMLPAgent(env=env, hidden_size=256, n_layers=2)
+    action_agent = salina_examples.rl.td3.agents.ActionMLPAgent(env=env, hidden_size=256, n_layers=2)
+    args = {"q_agent": q_agent_1,
+            "action_agent": action_agent,
+            "gamma": 0.99,
+            "target_noise": 0.2,
+            "action_noise": 0.1,
+            "noise_clip": 0.5,
+            "policy_delay": 2,
+            "burning_timesteps": 0,
+            "clip_grad": 2,
+            "optimizer": torch.optim.Adam(0.0001),
+            "n_envs": 1,
+            "overlapping_timesteps": 1,
+            "buffer_time_size": 2,
+            "buffer_size": 1000000
+            }
+    agent = SalinaTD3Agent(gym.make("CartPole-v0"), env_seed=0, logger, output_dir=output_dir,
+                           log_tensorboard=False, args)
+    agent.step()
