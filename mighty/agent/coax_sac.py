@@ -27,31 +27,32 @@ class SACAgent(MightyAgent):
             render_progress: bool = True,
             log_tensorboard: bool = False,
             n_policy_units: int = 8,
-            n_policy_layers: int = 3,
             n_critic_units: int = 8,
-            n_critic_layers: int = 3,
     ):
         self.n_policy_units = n_policy_units
-        self.n_policy_layers = n_policy_layers
         self.n_critic_units = n_critic_units
-        self.n_critic_layers = n_critic_layers
         super().__init__(env, logger, eval_env, lr, epsilon, batch_size, render_progress, log_tensorboard)
 
     def initialize_agent(self):
         def func_pi(S, is_training):
-            layers = [hk.Linear(self.n_critic_units), jax.nn.relu] * self.n_critic_layers
-            layers.append(hk.Linear(prod(self.env.action_space.shape) * 2, w_init=jnp.zeros))
-            layers.append(hk.Reshape((*self.env.action_space.shape, 2)))
-            seq = hk.Sequential(tuple(layers))
+            seq = hk.Sequential((
+                hk.Linear(self.n_policy_units), jax.nn.relu,
+                hk.Linear(self.n_policy_units), jax.nn.relu,
+                hk.Linear(self.n_policy_units), jax.nn.relu,
+                hk.Linear(prod(self.env.action_space.shape) * 2, w_init=jnp.zeros),
+                hk.Reshape((*self.env.action_space.shape, 2)),
+            ))
             x = seq(S)
             mu, logvar = x[..., 0], x[..., 1]
             return {'mu': mu, 'logvar': logvar}
 
         def func_q(S, A, is_training):
-            layers = [hk.Linear(self.n_critic_units), jax.nn.relu] * self.n_critic_layers
-            layers.append(hk.Linear(1, w_init=jnp.zeros))
-            layers.append(jnp.ravel)
-            seq = hk.Sequential(tuple(layers))
+            seq = hk.Sequential((
+                hk.Linear(self.n_critic_units), jax.nn.relu,
+                hk.Linear(self.n_critic_units), jax.nn.relu,
+                hk.Linear(self.n_critic_units), jax.nn.relu,
+                hk.Linear(1, w_init=jnp.zeros), jnp.ravel
+            ))
             X = jnp.concatenate((S, A), axis=-1)
             return seq(X)
 
@@ -75,22 +76,22 @@ class SACAgent(MightyAgent):
 
         # updaters (use current pi to update the q-functions and use sampled action in contrast to TD3)
         self.qlearning1 = coax.td_learning.SoftClippedDoubleQLearning(
-            q1, pi_targ_list=[self.policy], q_targ_list=[self.q1_target, self.q2_target],
-            loss_function=coax.value_losses.mse, optimizer=optax.adam(1e-3),
+            self.q1, pi_targ_list=[self.policy], q_targ_list=[self.q1_target, self.q2_target],
+            loss_function=coax.value_losses.mse, optimizer=optax.adam(self.lr),
             policy_regularizer=self.policy_regularizer)
         self.qlearning2 = coax.td_learning.SoftClippedDoubleQLearning(
-            q2, pi_targ_list=[self.policy], q_targ_list=[self.q1_target, self.q2_target],
-            loss_function=coax.value_losses.mse, optimizer=optax.adam(1e-3),
+            self.q2, pi_targ_list=[self.policy], q_targ_list=[self.q1_target, self.q2_target],
+            loss_function=coax.value_losses.mse, optimizer=optax.adam(self.lr),
             policy_regularizer=self.policy_regularizer)
         self.soft_pg = coax.policy_objectives.SoftPG(self.policy, [self.q1_target, self.q2_target], optimizer=optax.adam(
-            1e-3), regularizer=coax.regularizers.NStepEntropyRegularizer(pi,
+            1e-3), regularizer=coax.regularizers.NStepEntropyRegularizer(self.policy,
                                                                          beta=alpha / self.tracer.n,
                                                                          gamma=self.tracer.gamma,
                                                                          n=jnp.arange(self.tracer.n)))
         print("Initialized agent.")
 
     def update_agent(self, step):
-        transition_batch = buffer.sample(batch_size=self._batch_size)
+        transition_batch = self.buffer.sample(batch_size=self._batch_size)
         metrics = {}
         # flip a coin to decide which of the q-functions to update
         qlearning = self.qlearning1 if jax.random.bernoulli(self.q1.rng) else self.qlearning2

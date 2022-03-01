@@ -26,19 +26,20 @@ class DDQNAgent(MightyAgent):
             render_progress: bool = True,
             log_tensorboard: bool = False,
             n_units: int = 8,
-            n_layers: int = 3,
     ):
         self.n_units = n_units
-        self.n_layers = n_layers
         super().__init__(env, logger, eval_env, lr, epsilon, batch_size, render_progress, log_tensorboard)
 
     def initialize_agent(self):
 
         def func_q(S, is_training):
             """ type-2 q-function: s -> q(s,.) """
-            layers = [hk.Linear(self.n_units), jax.nn.relu]*self.n_layers
-            layers.append(hk.Linear(self.env.action_space.n, w_init=jnp.zeros))
-            seq = hk.Sequential(tuple(layers))
+            seq = hk.Sequential((
+                hk.Linear(self.n_units), jax.nn.relu,
+                hk.Linear(self.n_units), jax.nn.relu,
+                hk.Linear(self.n_units), jax.nn.relu,
+                hk.Linear(self.env.action_space.n, w_init=jnp.zeros)
+            ))
             return seq(S)
 
         self.q = coax.Q(func_q, self.env)

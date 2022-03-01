@@ -110,7 +110,7 @@ class MightyAgent(object):
 
                     self.last_state = s
                     s = s_next
-
+                    
                 episodes += 1
 
                 if steps_since_eval >= eval_every_n_steps:
