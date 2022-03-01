@@ -148,11 +148,11 @@ class DDQNAgent(object):
                     self.eval(self.eval_env, n_episodes_eval)
 
                 #TODO: make this more informative
-                if human_log_every_n_episodes % episodes == 0:
+                if episodes % human_log_every_n_episodes == 0:
                     print(f"Steps: {steps}, Reward: {sum(log_reward_buffer)/len(log_reward_buffer)}")
                     log_reward_buffer = []
 
-                if save_model_every_n_episodes % episodes == 0:
+                if episodes % save_model_every_n_episodes == 0:
                     self.save()
 
 
