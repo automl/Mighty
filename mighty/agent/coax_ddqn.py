@@ -34,7 +34,7 @@ class DDQNAgent(MightyAgent):
 
     def initialize_agent(self):
 
-        def func_q(self, S, is_training):
+        def func_q(S, is_training):
             """ type-2 q-function: s -> q(s,.) """
             layers = [hk.Linear(self.n_units), jax.nn.relu]*self.n_layers
             layers.append(hk.Linear(self.env.action_space.n, w_init=jnp.zeros))
