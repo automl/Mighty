@@ -103,7 +103,7 @@ class DDQNAgent(object):
             save_model_every_n_episodes: int = 100,
     ):
         step_progress = 1 /n_steps
-        human_log_steps = 0
+        episodes = 0
         with Progress(
                 "[progress.description]{task.description}",
                 BarColumn(),
@@ -141,16 +141,20 @@ class DDQNAgent(object):
                     self.last_state = s
                     s = s_next
 
+                episodes += 1
+
                 if steps_since_eval >= eval_every_n_steps:
                     steps_since_eval = 0
                     self.eval(self.eval_env, n_episodes_eval)
 
                 #TODO: make this more informative
-                if human_log_steps >= human_log_every_n_episodes == 0:
+                if human_log_every_n_episodes % episodes == 0:
                     print(f"Steps: {steps}, Reward: {sum(log_reward_buffer)/len(log_reward_buffer)}")
                     log_reward_buffer = []
-                    human_log_steps = 0
-                # TODO add saving
+
+                if save_model_every_n_episodes % episodes == 0:
+                    self.save()
+
 
     def run(
             self,
