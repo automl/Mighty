@@ -172,7 +172,7 @@ class DDQNAgent(object):
 
     def save(self):
         """ Checkpoint model. """
-        coax.utils.dump((self.q, self.q_target, self.qlearning), os.path.join(self.model_dir, 'checkpoint.pkl.lz4')
+        coax.utils.dump((self.q, self.q_target, self.qlearning), os.path.join(self.model_dir, 'checkpoint.pkl.lz4'))
 
     def eval(self, env, episodes):
         """
