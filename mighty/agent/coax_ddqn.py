@@ -178,7 +178,9 @@ class DDQNAgent(object):
 
     def save(self):
         """ Checkpoint model. """
-        coax.utils.dump((self.q, self.q_target, self.qlearning), os.path.join(self.model_dir, 'checkpoint.pkl.lz4'))
+        path = os.path.join(self.model_dir, 'checkpoint.pkl.lz4')
+        #For some reason there's an error here to do with pickle. Pickling this outside of the class works, though.
+        #coax.utils.dump((self.q, self.q_target, self.qlearning), 'checkpoint.pkl.lz4')#path)
 
     def eval(self, env, episodes):
         """
