@@ -102,6 +102,7 @@ class DDQNAgent(object):
             human_log_every_n_episodes: int = 100,
             save_model_every_n_episodes: int = 100,
     ):
+        step_progress = 1 /n_steps
         with Progress(
                 "[progress.description]{task.description}",
                 BarColumn(),
@@ -111,15 +112,21 @@ class DDQNAgent(object):
                 'Elapsed:',
                 TimeElapsedColumn()
         ) as progress:
+            steps_task = progress.add_task("Train Steps", total=n_steps, start=False, visible=False)
+            progress.start_task(steps_task)
             steps = 0
             steps_since_eval = 0
+            log_reward_buffer = []
             while steps < n_steps:
+                progress.update(steps_task, visible=True)
                 s = self.env.reset()
                 done = False
                 while not done:
                     a = self.policy(s)
                     s_next, r, done, info = self.env.step(a)
+                    log_reward_buffer.append(r)
                     steps += 1
+                    progress.advance(steps_task)
 
                     # add transition to buffer
                     self.tracer.add(s, a, r, done)
@@ -137,9 +144,10 @@ class DDQNAgent(object):
                     steps_since_eval = 0
                     self.eval(self.eval_env, n_episodes_eval)
 
-                #TODO: make this make sense
+                #TODO: make this more informative
                 if human_log_every_n_episodes % steps*10 == 0:
-                    print(f"Reward: {r}")
+                    print(f"Steps: {steps}, Reward: {sum(log_reward_buffer)/len(log_reward_buffer)}")
+                    log_reward_buffer = []
                 # TODO add saving
 
     def run(
@@ -158,9 +166,13 @@ class DDQNAgent(object):
             save_model_every_n_episodes=save_model_every_n_episodes
         )
 
-    def load(self):
+    def load(self, path):
         """ Load checkpointed model. """
-        raise NotImplementedError
+        self.q, self.q_target, self.qlearning = coax.utils.load(path)
+
+    def save(self):
+        """ Checkpoint model. """
+        coax.utils.dump((self.q, self.q_target, self.qlearning), os.path.join(self.model_dir, 'checkpoint.pkl.lz4')
 
     def eval(self, env, episodes):
         """
