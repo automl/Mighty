@@ -147,17 +147,21 @@ class DDQNAgent(object):
         else:
             return Variable(torch.from_numpy(ndarray).float(), requires_grad=False)
 
-    def func_pi(t, is_training):
-        # FIXME: read state given t
+    def func_pi(self, t, is_training):
+        # FIXME: get correct name
+        state = self.acq_workspace.get("env/env_obs", t)
         # custom haiku function (for continuous actions in this example)
-        mu = hk.Sequential([...])(S)  # mu.shape: (batch_size, *action_space.shape)
-        # FIXME: write to space instead of return
-        return {'mu': mu, 'logvar': jnp.full_like(mu, -10)}  # deterministic policy
+        mu = hk.Sequential([...])(state)  # mu.shape: (batch_size, *action_space.shape)
+        mu = self.noise(mu)
+        self.acq_workspace.set_full("policy_out/mu", mu)
+        self.acq_workspace.set_full("policy_out/logvar", jnp.full_like(mu, -10))
 
-    def func_q(S, A, is_training):
+    def func_q(self, t, A, is_training):
+        # FIXME: get correct name
+        state = self.acq_workspace.get("env/env_obs", t)
         # custom haiku function
         value = hk.Sequential([...])
-        return value(S)  # output shape: (batch_size,)
+        self.acq_workspace.set_full("q_out/value", value(state))
 
     def __init__(
             self,
@@ -324,7 +328,7 @@ class DDQNAgent(object):
         self.acq_remote_agent.seed(self.seed)
         # target networks
         self.policy_target = self.policy.copy()
-        self.q_target_agenttarg = self.q_agent.copy()
+        self.q_target_agent = self.q_agent.copy()
 
         # specify how to update policy and value function
         self.determ_pg = coax.policy_objectives.DeterministicPG(self.policy, self.q_agent, optimizer=optax.adam(0.001))
@@ -332,7 +336,7 @@ class DDQNAgent(object):
 
         # specify how to trace the transitions
         self.tracer = coax.reward_tracing.NStep(n=1, gamma=0.9)
-        self.buffer = coax.experience_replay.SimpleReplayBuffer(capacity=1000000)
+        self.buffer = ReplayBuffer(self.replay_buffer_size)
 
         # action noise
         self.noise = coax.utils.OrnsteinUhlenbeckNoise(mu=0., sigma=0.2, theta=0.15)
@@ -430,8 +434,7 @@ class DDQNAgent(object):
                     epsilon=epsilon,
                 )
                 # Update the replay buffer
-                #FIXME: this is the salina replay buffer, above and below it's the coax one. Pick one and stick with it (probably this one)
-                self.replay_buffer.put(self.acq_workspace, time_size=self.replay_buffer_time_size)
+                self.buffer.put(self.acq_workspace, time_size=self.replay_buffer_time_size)
 
                 total_time_steps += step_progress
                 if total_time_steps == step_progress:
@@ -449,14 +452,14 @@ class DDQNAgent(object):
                     # print(f'\t\tReward {creward}')
                     # print(f'\t\t\t\t\t\tAVG Reward {creward.mean().item():>8.5f} | Epoch {epoch}')
 
-                self.logger.add_scalar("monitor/replay_buffer_size", self.replay_buffer.size(), iteration)
+                self.logger.add_scalar("monitor/replay_buffer_size", self.buffer.size(), iteration)
 
-                s = self.env.reset()
                 self.noise.reset()
                 self.noise.sigma *= 0.99  # slowly decrease noise scale
 
                 for t in range(self.inner_epochs):
                     # update
+                    #FIXME: use salina replay buffer
                     transition_batch = self.buffer.sample(batch_size=32)
                     metrics_q = self.qlearning.update(transition_batch)
                     metrics_pi = self.determ_pg.update(transition_batch)
@@ -467,11 +470,6 @@ class DDQNAgent(object):
                     if ep % 10 == 0:
                         pi_targ.soft_update(pi, tau=1.0)
                         q_targ.soft_update(q, tau=1.0)
-
-                    if done:
-                        break
-
-                    s = s_next
 
                 epoch += 1
                 if total_time_steps >= self.max_env_time_steps:
