@@ -1,36 +1,29 @@
+import os
+import jax
 import coax
 import optax
 import haiku as hk
 import jax.numpy as jnp
+from rich.progress import Progress, TimeRemainingColumn, TimeElapsedColumn, BarColumn
+
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
 
 
 class DDQNAgent(object):
     """
-        Simple double DQN Agent
-        """
+    Simple double DQN Agent
+    """
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    def tt(self, ndarray):
-        """
-        Helper Function to cast observation to correct type/device
-        """
-        if self.device == "cuda":
-            return Variable(torch.from_numpy(ndarray).float().cuda(), requires_grad=False)
-        else:
-            return Variable(torch.from_numpy(ndarray).float(), requires_grad=False)
-
-    def func_q(state, is_training):
+    def func_q(self, S, is_training):
         """ type-2 q-function: s -> q(s,.) """
         seq = hk.Sequential((
             hk.Linear(8), jax.nn.relu,
             hk.Linear(8), jax.nn.relu,
             hk.Linear(8), jax.nn.relu,
-            hk.Linear(env.action_space.n, w_init=jnp.zeros)
+            hk.Linear(self.env.action_space.n, w_init=jnp.zeros)
         ))
-        return seq(state)
+        return seq(S)
 
     def __init__(
             self,
@@ -99,7 +92,7 @@ class DDQNAgent(object):
 
         # periodically sync target models
         if step % 10 == 0:
-            self.q_target.soft_update(q, tau=1.0)
+            self.q_target.soft_update(self.q, tau=1.0)
 
     def train(
             self,
@@ -109,8 +102,6 @@ class DDQNAgent(object):
             human_log_every_n_episodes: int = 100,
             save_model_every_n_episodes: int = 100,
     ):
-        self.logger.message("[DDQN] Learning")
-
         with Progress(
                 "[progress.description]{task.description}",
                 BarColumn(),
@@ -124,7 +115,7 @@ class DDQNAgent(object):
             steps_since_eval = 0
             while steps < n_steps:
                 s = self.env.reset()
-
+                done = False
                 while not done:
                     a = self.policy(s)
                     s_next, r, done, info = self.env.step(a)
@@ -132,11 +123,13 @@ class DDQNAgent(object):
 
                     # add transition to buffer
                     self.tracer.add(s, a, r, done)
-                    while tracer:
-                        buffer.add(tracer.pop())
+                    while self.tracer:
+                        self.buffer.add(self.tracer.pop())
 
                     # update
-                    self.update_agent(steps)
+                    if len(self.buffer) >= self._batch_size:
+                        self.update_agent(steps)
+                    
                     self.last_state = s
                     s = s_next
 
@@ -144,7 +137,9 @@ class DDQNAgent(object):
                     steps_since_eval = 0
                     self.eval(self.eval_env, n_episodes_eval)
 
-            progress.finished = True  # TODO correctly emit progress finished
+                #TODO: make this make sense
+                if human_log_every_n_episodes % steps*10 == 0:
+                    print(f"Reward: {r}")
                 # TODO add saving
 
     def run(

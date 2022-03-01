@@ -56,19 +56,22 @@ if __name__ == "__main__":
 
     # Setup agent
     agent_class = get_agent_class(args_agent.agent_type)
+    from agent.coax_ddqn import DDQNAgent
+    agent_class = DDQNAgent
+    args_agent = {"lr": 0.001, "epsilon": 0.1}
     agent = agent_class(
         env=env,
-        env_eval=eval_env,
+        eval_env=eval_env,
         logger=logger,
-        args=args_agent,  # by using args we can build a general interface
+        **args_agent,  # by using args we can build a general interface
     )
 
     episodes = args.episodes
-    max_env_time_steps = args_agent.max_env_time_steps
-    epsilon = args_agent.epsilon
+    #max_env_time_steps = args_agent.max_env_time_steps
+    epsilon = args_agent["epsilon"]
     n_episodes_eval = len(eval_env.instance_set.keys())
     eval_every_n_steps = args.eval_every_n_steps
-    save_model_every_n_episodes = args.save_model_every_n_episodes
+    #save_model_every_n_episodes = args.save_model_every_n_episodes
 
     if args.load_model is None:
         print('#' * 80)
@@ -76,11 +79,11 @@ if __name__ == "__main__":
         print('#' * 80)
         num_eval_episodes = 100  # 10  # use 10 for faster debugging but also set it in the eval method above
         agent.train(
-            n_episodes=episodes,
+            n_steps=episodes*10,
             n_episodes_eval=n_episodes_eval,
             eval_every_n_steps=eval_every_n_steps,
-            human_log_every_n_episodes=100,
-            save_model_every_n_episodes=save_model_every_n_episodes,
+            #human_log_every_n_episodes=100,
+            #save_model_every_n_episodes=save_model_every_n_episodes,
         )
         #TODO: integrate this into trainer
         #os.mkdir(os.path.join(logger.log_dir, 'final'))
@@ -93,5 +96,6 @@ if __name__ == "__main__":
         steps, rewards, decisions = agent.eval(1, 100000)
         np.save(os.path.join(out_dir, 'eval_results.npy'), [steps, rewards, decisions])
     # TODO: this should go in a general cleanup function
-    agent.writer.close()
+    # TODO: should only happen if there is a writer to close
+    #agent.writer.close()
     logger.close()
