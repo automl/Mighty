@@ -4,10 +4,59 @@ import optax
 import haiku as hk
 import jax.numpy as jnp
 
+import torch
+from torch.autograd import Variable
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.tensorboard import SummaryWriter
+
+import os
+import argparse
+import copy
+import math
+from gym.wrappers import TimeLimit
+from typing import Optional, Dict
+
+from rich import print, box
+import logging
+from rich.logging import RichHandler
+from rich.progress import Progress, TimeRemainingColumn, TimeElapsedColumn, BarColumn
+from rich.theme import Theme
+
+from salina.agents import Agents, NRemoteAgent, TemporalAgent
+from salina_examples.rl.dqn.double_dqn.dqn import soft_update_params, _state_dict
+from salina.rl.replay_buffer import ReplayBuffer
+from salina.logger import TFLogger
+import salina.rl.functional as RLF
+
+from mighty.env.env_handling import DACENV
+from mighty.utils.logger import Logger
+from mighty.train.dacbench_salina_agent import AutoResetDACBenchAgent
+from mighty.agent.policies import DQNMLPAgent
+
 
 # pick environment
 env = gym.make(...)
 env = coax.wrappers.TrainMonitor(env)
+
+import torch
+import torch.nn as nn
+from salina import TAgent, instantiate_class
+from salina_examples.rl.dqn.agents import MLP
+
+
+
+class DQNMLPAgent(TAgent):
+    def __init__(self, pi, noise = None):
+        super().__init__()
+        self.pi = pi
+        self.noise = noise
+
+    def forward(self, t, **kwargs):
+        input = self.get(("env/env_obs", t))
+        input_with_noise = self.noise(input)
+        action = self.pi(input_with_noise)
+        self.set(("action", t), action)
 
 
 def func_pi(t, is_training):
