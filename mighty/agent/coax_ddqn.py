@@ -99,14 +99,11 @@ class DDQNAgent(MightyAgent):
 
     def load(self, path):
         """ Load checkpointed model. """
-        self.q, self.q_target, self.qlearning = coax.utils.load(path)
+        state = coax.utils.load(path)
+        self.set_state(state=state)
 
     def save(self):
         """ Checkpoint model. """
-        # path = os.path.join(self.model_dir, 'checkpoint.pkl.lz4')
-        # #For some reason there's an error here to do with pickle. Pickling this outside of the class works, though.
-        # #coax.utils.dump((self.q, self.q_target, self.qlearning), path)
-
         logdir = os.getcwd()
         T = 0  # TODO get automatic checkpoint IDs
         filepath = Path(os.path.join(logdir, "checkpoints", f"checkpoint_{T}.pkl.lz4"))
