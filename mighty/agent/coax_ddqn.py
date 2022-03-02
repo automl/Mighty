@@ -31,6 +31,7 @@ def parse_replay_buffer_args(
     if replay_buffer_kwargs is None:
         replay_buffer_kwargs = {
             "capacity": 1_000_000,
+            "random_seed": None,
         }
 
     return replay_buffer_class, replay_buffer_kwargs
