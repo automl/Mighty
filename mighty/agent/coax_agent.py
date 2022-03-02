@@ -198,7 +198,7 @@ class MightyAgent(object):
         """ Checkpoint model. """
         raise NotImplementedError
 
-    def eval(self, env, episodes):
+    def eval(self, env: DACENV, episodes: int):
         """
         Eval agent on an environment. (Full evaluation)
         :param env:
