@@ -28,7 +28,16 @@ class DDQNAgent(MightyAgent):
             n_units: int = 8,
     ):
         self.n_units = n_units
-        super().__init__(env, logger, eval_env, learning_rate, epsilon, batch_size, render_progress, log_tensorboard)
+        super().__init__(
+            env=env,
+            logger=logger,
+            eval_env=eval_env,
+            learning_rate=learning_rate,
+            epsilon=epsilon,
+            batch_size=batch_size,
+            render_progress=render_progress,
+            log_tensorboard=log_tensorboard
+        )
 
     def initialize_agent(self):
 
