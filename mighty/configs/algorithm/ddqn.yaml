@@ -1,5 +1,5 @@
 # @package _global_
-algorithm: ddqn
+algorithm: DDQN
 q_func: ???
 
 algorithm_kwargs:
