@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Dict, Any, Union, Tuple
+from typing import Optional, Dict, Any, Union, Tuple, Type
 
 import jax
 import coax
@@ -18,9 +18,9 @@ from mighty.utils.logger import Logger
 
 
 def parse_replay_buffer_args(
-    replay_buffer_class: Optional[Union[str, DictConfig, BaseReplayBuffer]] = None,
+    replay_buffer_class: Optional[Union[str, DictConfig, Type[BaseReplayBuffer]]] = None,
     replay_buffer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
-) -> Tuple[BaseReplayBuffer, Union[Dict[str, Any], DictConfig]]:
+) -> Tuple[Type[BaseReplayBuffer], Union[Dict[str, Any], DictConfig]]:
     if replay_buffer_class is None:
         replay_buffer_class = SimpleReplayBuffer
     elif type(replay_buffer_class) == DictConfig:
@@ -55,7 +55,7 @@ class DDQNAgent(MightyAgent):
             n_units: int = 8,
             discount_factor: float = 0.9,
             n_step_reward_tracing: int = 1,
-            replay_buffer_class: Optional[Union[str, DictConfig, BaseReplayBuffer]] = None,
+            replay_buffer_class: Optional[Union[str, DictConfig, Type[BaseReplayBuffer]]] = None,
             replay_buffer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
     ):
         self.n_units = n_units
