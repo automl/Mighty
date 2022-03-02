@@ -1,9 +1,16 @@
 import os
+from typing import Optional, Dict, Any, Union
+
 import jax
 import coax
 import optax
 import haiku as hk
 import jax.numpy as jnp
+from coax.experience_replay._simple import BaseReplayBuffer
+from coax.experience_replay import SimpleReplayBuffer
+
+import hydra
+from omegaconf import DictConfig
 
 from mighty.agent.coax_agent import MightyAgent
 from mighty.env.env_handling import DACENV
@@ -28,12 +35,26 @@ class DDQNAgent(MightyAgent):
             n_units: int = 8,
             discount_factor: float = 0.9,
             n_step_reward_tracing: int = 1,
-            replay_buffer_capacity: int = 1_000_000,
+            replay_buffer_class: Optional[Union[str, DictConfig, BaseReplayBuffer]] = None,
+            replay_buffer_kwargs: Optional[Dict[str, Any]] = None,
     ):
         self.n_units = n_units
         self.discount_factor = discount_factor
         self.n_step_reward_tracing = n_step_reward_tracing
-        self.replay_buffer_capacity = replay_buffer_capacity
+
+        if replay_buffer_class is None:
+            replay_buffer_class = SimpleReplayBuffer
+        elif type(replay_buffer_class) == DictConfig:
+            replay_buffer_class = hydra.utils.get_class(replay_buffer_class._target_)
+        elif type(replay_buffer_class) == str:
+            replay_buffer_class = hydra.utils.get_class(replay_buffer_class)
+        self.replay_buffer_class = replay_buffer_class
+        if replay_buffer_kwargs is None:
+            replay_buffer_kwargs = {
+                "capacity": 1_000_000,
+            }
+        self.replay_buffer_kwargs = replay_buffer_kwargs
+
         super().__init__(
             env=env,
             logger=logger,
@@ -68,7 +89,7 @@ class DDQNAgent(MightyAgent):
 
         # specify how to trace the transitions
         self.tracer = coax.reward_tracing.NStep(n=self.n_step_reward_tracing, gamma=self.discount_factor)
-        self.buffer = coax.experience_replay.SimpleReplayBuffer(capacity=self.replay_buffer_capacity)
+        self.buffer = self.replay_buffer_class(**self.replay_buffer_kwargs)
         print("Initialized agent.")
 
     def update_agent(self, step):
