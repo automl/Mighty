@@ -26,8 +26,14 @@ class DDQNAgent(MightyAgent):
             render_progress: bool = True,
             log_tensorboard: bool = False,
             n_units: int = 8,
+            discount_factor: float = 0.9,
+            n_step_reward_tracing: int = 1,
+            replay_buffer_capacity: int = 1_000_000,
     ):
         self.n_units = n_units
+        self.discount_factor = discount_factor
+        self.n_step_reward_tracing = n_step_reward_tracing
+        self.replay_buffer_capacity = replay_buffer_capacity
         super().__init__(
             env=env,
             logger=logger,
@@ -61,8 +67,8 @@ class DDQNAgent(MightyAgent):
         self.qlearning = coax.td_learning.DoubleQLearning(self.q, q_targ=self.q_target, optimizer=optax.adam(self.learning_rate))
 
         # specify how to trace the transitions
-        self.tracer = coax.reward_tracing.NStep(n=1, gamma=0.9)
-        self.buffer = coax.experience_replay.SimpleReplayBuffer(capacity=1000000)
+        self.tracer = coax.reward_tracing.NStep(n=self.n_step_reward_tracing, gamma=self.discount_factor)
+        self.buffer = coax.experience_replay.SimpleReplayBuffer(capacity=self.replay_buffer_capacity)
         print("Initialized agent.")
 
     def update_agent(self, step):
