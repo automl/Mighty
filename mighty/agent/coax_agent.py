@@ -1,10 +1,15 @@
 import os
+from typing import Optional, Dict, Any, Union, Tuple, Type
+import hydra
+from omegaconf import DictConfig
+
 import jax
 import coax
 import optax
 import haiku as hk
 import jax.numpy as jnp
 from coax.experience_replay._simple import BaseReplayBuffer
+from coax.experience_replay import SimpleReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
 from typing import Optional
 from rich.progress import Progress, TimeRemainingColumn, TimeElapsedColumn, BarColumn
@@ -12,6 +17,16 @@ from torch.utils.tensorboard import SummaryWriter
 
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
+
+
+def retrieve_class(cls: Union[str, DictConfig, Type], default_cls: Type) -> Type:
+    if cls is None:
+        cls = default_cls
+    elif type(cls) == DictConfig:
+        cls = hydra.utils.get_class(cls._target_)
+    elif type(cls) == str:
+        cls = hydra.utils.get_class(cls)
+    return cls
 
 
 class MightyAgent(object):
@@ -27,7 +42,11 @@ class MightyAgent(object):
             epsilon: float = 0.1,
             batch_size: int = 64,
             render_progress: bool = True,
-            log_tensorboard: bool = False
+            log_tensorboard: bool = False,
+            replay_buffer_class: Optional[Union[str, DictConfig, Type[BaseReplayBuffer]]] = None,
+            replay_buffer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
+            tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
+            tracer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
     ):
         self.learning_rate = learning_rate
         self._epsilon = epsilon
@@ -36,6 +55,27 @@ class MightyAgent(object):
         self.replay_buffer: Optional[BaseReplayBuffer] = None
         self.tracer: Optional[BaseRewardTracer] = None
         self.policy: Optional = None
+
+        # Replay Buffer
+        replay_buffer_class = retrieve_class(cls=replay_buffer_class, default_cls=SimpleReplayBuffer)
+        if replay_buffer_kwargs is None:
+            replay_buffer_kwargs = {
+                "capacity": 1_000_000,
+                "random_seed": None,
+            }
+        self.replay_buffer_class = replay_buffer_class
+        self.replay_buffer_kwargs = replay_buffer_kwargs
+
+        # Reward Tracer
+        # TODO create dac tracer receiving instance as additional info
+        tracer_class = retrieve_class(cls=tracer_class, default_cls=coax.reward_tracing.NStep)
+        if tracer_kwargs is None:
+            tracer_kwargs = {
+                "n": 1,
+                "gamma": 0.9,
+            }
+        self.tracer_class = tracer_class
+        self.tracer_kwargs = tracer_kwargs
 
         if logger is not None:
             output_dir = logger.log_dir

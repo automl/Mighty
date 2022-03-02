@@ -9,10 +9,8 @@ import haiku as hk
 import jax.numpy as jnp
 from coax.experience_replay._simple import BaseReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
-from coax.experience_replay import SimpleReplayBuffer
 from coax._core.value_based_policy import BaseValueBasedPolicy
 
-import hydra
 from omegaconf import DictConfig
 
 from mighty.agent.coax_agent import MightyAgent
@@ -20,21 +18,10 @@ from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
 
 
-def retrieve_class(cls: Union[str, DictConfig, Type], default_cls: Type) -> Type:
-    if cls is None:
-        cls = default_cls
-    elif type(cls) == DictConfig:
-        cls = hydra.utils.get_class(cls._target_)
-    elif type(cls) == str:
-        cls = hydra.utils.get_class(cls)
-    return cls
-
-
 class DDQNAgent(MightyAgent):
     """
     Simple double DQN Agent
     """
-
     def __init__(
             self,
             env: DACENV,
@@ -53,27 +40,6 @@ class DDQNAgent(MightyAgent):
     ):
         self.n_units = n_units
 
-        # Replay Buffer
-        replay_buffer_class = retrieve_class(cls=replay_buffer_class, default_cls=SimpleReplayBuffer)
-        if replay_buffer_kwargs is None:
-            replay_buffer_kwargs = {
-                "capacity": 1_000_000,
-                "random_seed": None,
-            }
-        self.replay_buffer_class = replay_buffer_class
-        self.replay_buffer_kwargs = replay_buffer_kwargs
-
-        # Reward Tracer
-        # TODO create dac tracer receiving instance as additional info
-        tracer_class = retrieve_class(cls=tracer_class, default_cls=coax.reward_tracing.NStep)
-        if tracer_kwargs is None:
-            tracer_kwargs = {
-                "n": 1,
-                "gamma": 0.9,
-            }
-        self.tracer_class = tracer_class
-        self.tracer_kwargs = tracer_kwargs
-
         # Placeholder variables which are filled in self.initialize_agent
         self.q: Optional[coax.Q] = None
         self.policy: Optional[BaseValueBasedPolicy] = None
@@ -88,7 +54,11 @@ class DDQNAgent(MightyAgent):
             epsilon=epsilon,
             batch_size=batch_size,
             render_progress=render_progress,
-            log_tensorboard=log_tensorboard
+            log_tensorboard=log_tensorboard,
+            replay_buffer_class=replay_buffer_class,
+            replay_buffer_kwargs=replay_buffer_kwargs,
+            tracer_class=tracer_class,
+            tracer_kwargs=tracer_kwargs,
         )
 
     def initialize_agent(self):
