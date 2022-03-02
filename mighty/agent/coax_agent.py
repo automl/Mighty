@@ -4,6 +4,7 @@ import coax
 import optax
 import haiku as hk
 import jax.numpy as jnp
+from typing import Optional
 from rich.progress import Progress, TimeRemainingColumn, TimeElapsedColumn, BarColumn
 from torch.utils.tensorboard import SummaryWriter
 
@@ -19,7 +20,7 @@ class MightyAgent(object):
             self,
             env: DACENV,
             logger: Logger,
-            eval_env: DACENV = None,
+            eval_env: Optional[DACENV] = None,
             learning_rate: float = 0.01,
             epsilon: float = 0.1,
             batch_size: int = 64,
