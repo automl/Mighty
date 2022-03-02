@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any, Union, Tuple
 
 import jax
 import coax
@@ -15,6 +15,25 @@ from omegaconf import DictConfig
 from mighty.agent.coax_agent import MightyAgent
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
+
+
+def parse_replay_buffer_args(
+    replay_buffer_class: Optional[Union[str, DictConfig, BaseReplayBuffer]] = None,
+    replay_buffer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
+) -> Tuple[BaseReplayBuffer, Union[Dict[str, Any], DictConfig]]:
+    if replay_buffer_class is None:
+        replay_buffer_class = SimpleReplayBuffer
+    elif type(replay_buffer_class) == DictConfig:
+        replay_buffer_class = hydra.utils.get_class(replay_buffer_class._target_)
+    elif type(replay_buffer_class) == str:
+        replay_buffer_class = hydra.utils.get_class(replay_buffer_class)
+
+    if replay_buffer_kwargs is None:
+        replay_buffer_kwargs = {
+            "capacity": 1_000_000,
+        }
+
+    return replay_buffer_class, replay_buffer_kwargs
 
 
 class DDQNAgent(MightyAgent):
@@ -36,24 +55,16 @@ class DDQNAgent(MightyAgent):
             discount_factor: float = 0.9,
             n_step_reward_tracing: int = 1,
             replay_buffer_class: Optional[Union[str, DictConfig, BaseReplayBuffer]] = None,
-            replay_buffer_kwargs: Optional[Dict[str, Any]] = None,
+            replay_buffer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
     ):
         self.n_units = n_units
         self.discount_factor = discount_factor
         self.n_step_reward_tracing = n_step_reward_tracing
 
-        if replay_buffer_class is None:
-            replay_buffer_class = SimpleReplayBuffer
-        elif type(replay_buffer_class) == DictConfig:
-            replay_buffer_class = hydra.utils.get_class(replay_buffer_class._target_)
-        elif type(replay_buffer_class) == str:
-            replay_buffer_class = hydra.utils.get_class(replay_buffer_class)
-        self.replay_buffer_class = replay_buffer_class
-        if replay_buffer_kwargs is None:
-            replay_buffer_kwargs = {
-                "capacity": 1_000_000,
-            }
-        self.replay_buffer_kwargs = replay_buffer_kwargs
+        self.replay_buffer_class, self.replay_buffer_kwargs = parse_replay_buffer_args(
+            replay_buffer_class=replay_buffer_class,
+            replay_buffer_kwargs=replay_buffer_kwargs
+        )
 
         super().__init__(
             env=env,
