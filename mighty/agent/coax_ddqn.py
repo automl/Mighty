@@ -7,6 +7,7 @@ import optax
 import haiku as hk
 import jax.numpy as jnp
 from coax.experience_replay._simple import BaseReplayBuffer
+from coax.reward_tracing._base import BaseRewardTracer
 from coax.experience_replay import SimpleReplayBuffer
 
 import hydra
@@ -17,24 +18,14 @@ from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
 
 
-def parse_replay_buffer_args(
-    replay_buffer_class: Optional[Union[str, DictConfig, Type[BaseReplayBuffer]]] = None,
-    replay_buffer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
-) -> Tuple[Type[BaseReplayBuffer], Union[Dict[str, Any], DictConfig]]:
-    if replay_buffer_class is None:
-        replay_buffer_class = SimpleReplayBuffer
-    elif type(replay_buffer_class) == DictConfig:
-        replay_buffer_class = hydra.utils.get_class(replay_buffer_class._target_)
-    elif type(replay_buffer_class) == str:
-        replay_buffer_class = hydra.utils.get_class(replay_buffer_class)
-
-    if replay_buffer_kwargs is None:
-        replay_buffer_kwargs = {
-            "capacity": 1_000_000,
-            "random_seed": None,
-        }
-
-    return replay_buffer_class, replay_buffer_kwargs
+def retrieve_class(cls: Union[str, DictConfig, Type], default_cls: Type) -> Type:
+    if cls is None:
+        cls = default_cls
+    elif type(cls) == DictConfig:
+        cls = hydra.utils.get_class(cls._target_)
+    elif type(cls) == str:
+        cls = hydra.utils.get_class(cls)
+    return cls
 
 
 class DDQNAgent(MightyAgent):
@@ -53,19 +44,35 @@ class DDQNAgent(MightyAgent):
             render_progress: bool = True,
             log_tensorboard: bool = False,
             n_units: int = 8,
-            discount_factor: float = 0.9,
-            n_step_reward_tracing: int = 1,
             replay_buffer_class: Optional[Union[str, DictConfig, Type[BaseReplayBuffer]]] = None,
             replay_buffer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
+            tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
+            tracer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
     ):
         self.n_units = n_units
-        self.discount_factor = discount_factor
-        self.n_step_reward_tracing = n_step_reward_tracing
 
-        self.replay_buffer_class, self.replay_buffer_kwargs = parse_replay_buffer_args(
-            replay_buffer_class=replay_buffer_class,
-            replay_buffer_kwargs=replay_buffer_kwargs
-        )
+        # Replay Buffer
+        replay_buffer_class = retrieve_class(cls=replay_buffer_class, default_cls=SimpleReplayBuffer)
+        if replay_buffer_kwargs is None:
+            replay_buffer_kwargs = {
+                "capacity": 1_000_000,
+                "random_seed": None,
+            }
+        self.replay_buffer_class = replay_buffer_class
+        self.replay_buffer_kwargs = replay_buffer_kwargs
+        self.replay_buffer: Optional[BaseReplayBuffer] = None
+
+        # Reward Tracer
+        # TODO create dac tracer receiving instance as additional info
+        tracer_class = retrieve_class(cls=tracer_class, default_cls=coax.reward_tracing.NStep)
+        if tracer_kwargs is None:
+            tracer_kwargs = {
+                "n": 1,
+                "gamma": 0.9,
+            }
+        self.tracer_class = tracer_class
+        self.tracer_kwargs = tracer_kwargs
+        self.tracer: Optional[BaseRewardTracer] = None
 
         super().__init__(
             env=env,
@@ -100,12 +107,12 @@ class DDQNAgent(MightyAgent):
         self.qlearning = coax.td_learning.DoubleQLearning(self.q, q_targ=self.q_target, optimizer=optax.adam(self.learning_rate))
 
         # specify how to trace the transitions
-        self.tracer = coax.reward_tracing.NStep(n=self.n_step_reward_tracing, gamma=self.discount_factor)
-        self.buffer = self.replay_buffer_class(**self.replay_buffer_kwargs)
+        self.tracer = self.tracer_class(**self.tracer_kwargs)
+        self.replay_buffer = self.replay_buffer_class(**self.replay_buffer_kwargs)
         print("Initialized agent.")
 
     def update_agent(self, step):
-        transition_batch = self.buffer.sample(batch_size=self._batch_size)
+        transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
         metrics_q = self.qlearning.update(transition_batch)
         # TODO: log these properly
         # env.record_metrics(metrics_q)
