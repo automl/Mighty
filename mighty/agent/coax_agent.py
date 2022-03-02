@@ -5,6 +5,7 @@ import optax
 import haiku as hk
 import jax.numpy as jnp
 from rich.progress import Progress, TimeRemainingColumn, TimeElapsedColumn, BarColumn
+from torch.utils.tensorboard import SummaryWriter
 
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
