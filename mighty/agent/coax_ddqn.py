@@ -33,12 +33,15 @@ class DDQNAgent(MightyAgent):
             render_progress: bool = True,
             log_tensorboard: bool = False,
             n_units: int = 8,
+            soft_update_weight: float = 1.,  # TODO which default value?
             replay_buffer_class: Optional[Union[str, DictConfig, Type[BaseReplayBuffer]]] = None,
             replay_buffer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
             tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
             tracer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
     ):
         self.n_units = n_units
+        assert 0. <= soft_update_weight <= 1.
+        self.soft_update_weight = soft_update_weight
 
         # Placeholder variables which are filled in self.initialize_agent
         self.q: Optional[coax.Q] = None
@@ -95,7 +98,7 @@ class DDQNAgent(MightyAgent):
 
         # periodically sync target models
         if step % 10 == 0:
-            self.q_target.soft_update(self.q, tau=1.0)
+            self.q_target.soft_update(self.q, tau=self.soft_update_weight)
 
     def load(self, path):
         """ Load checkpointed model. """

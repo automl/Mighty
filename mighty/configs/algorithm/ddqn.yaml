@@ -22,4 +22,4 @@ algorithm_kwargs:
   learning_rate: 0.001
   batch_size: 64  # Batch size for training.
 #  begin_updating_weights: 1  # Begin updating policy weights after this many observed transitions.
-#  soft_update_weight: 0.01  #
+  soft_update_weight: 1.  # If we set :math:`\tau=1` we do a hard update. If we pick a smaller value, we do a smooth update.
