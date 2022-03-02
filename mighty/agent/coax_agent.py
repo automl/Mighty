@@ -19,13 +19,13 @@ class MightyAgent(object):
             env: DACENV,
             logger: Logger,
             eval_env: DACENV = None,
-            lr: float = 0.01,
+            learning_rate: float = 0.01,
             epsilon: float = 0.1,
             batch_size: int = 64,
             render_progress: bool = True,
             log_tensorboard: bool = False
     ):
-        self.lr = lr
+        self.learning_rate = learning_rate
         self._epsilon = epsilon
         self._batch_size = batch_size
 
@@ -52,7 +52,7 @@ class MightyAgent(object):
         self.writer = None
         if log_tensorboard and output_dir is not None:
             self.writer = SummaryWriter(output_dir)
-            self.writer.add_scalar('hyperparameter/lr', self.lr)
+            self.writer.add_scalar('hyperparameter/learning_rate', self.learning_rate)
             self.writer.add_scalar('hyperparameter/batch_size', self._batch_size)
             self.writer.add_scalar('hyperparameter/policy_epsilon', self._epsilon)
 
