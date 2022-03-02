@@ -76,7 +76,7 @@ class DDQNAgent(MightyAgent):
             tracer_kwargs=tracer_kwargs,
         )
 
-    def initialize_agent(self):
+    def _initialize_agent(self):
 
         def func_q(S, is_training):
             """ type-2 q-function: s -> q(s,.) """
@@ -97,9 +97,6 @@ class DDQNAgent(MightyAgent):
         # specify how to update value function
         self.qlearning = coax.td_learning.DoubleQLearning(self.q, q_targ=self.q_target, optimizer=optax.adam(self.learning_rate))
 
-        # specify how to trace the transitions
-        self.tracer = self.tracer_class(**self.tracer_kwargs)
-        self.replay_buffer = self.replay_buffer_class(**self.replay_buffer_kwargs)
         print("Initialized agent.")
 
     def update_agent(self, step):

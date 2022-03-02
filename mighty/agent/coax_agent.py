@@ -107,8 +107,15 @@ class MightyAgent(object):
 
         self.initialize_agent()
 
-    def initialize_agent(self):
+    def _initialize_agent(self):
+        """Agent/algorithm specific initializations."""
         raise NotImplementedError
+
+    def initialize_agent(self):
+        self.tracer = self.tracer_class(**self.tracer_kwargs)  # specify how to trace the transitions
+        self.replay_buffer = self.replay_buffer_class(**self.replay_buffer_kwargs)
+
+        self._initialize_agent()
 
     def update_agent(self, step):
         raise NotImplementedError
