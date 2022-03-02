@@ -47,7 +47,7 @@ class DDQNAgent(MightyAgent):
                 hk.Linear(self.n_units), jax.nn.relu,
                 hk.Linear(self.n_units), jax.nn.relu,
                 hk.Linear(self.n_units), jax.nn.relu,
-                hk.Linear(self.env.action_space.n, w_init=jnp.zeros)
+                hk.Linear(self.env.action_space.n, w_init=jnp.zeros)  # TODO check if this spec is needed. haiku automatically determines sizes
             ))
             return seq(S)
 
