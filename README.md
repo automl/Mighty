@@ -31,3 +31,9 @@ python setup.py develop
 ## Learning a Configuration Policy via DAC
 
 TODO
+
+
+## Run Coax DDQN
+```bash
+python run_mighty.py 'num_steps=1000' '+algorithm=ddqn' 
+```
