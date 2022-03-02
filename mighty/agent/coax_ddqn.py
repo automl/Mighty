@@ -25,6 +25,7 @@ class DDQNAgent(MightyAgent):
     """
     def __init__(
             self,
+            # MightyAgent Args
             env: DACENV,
             logger: Logger,
             eval_env: DACENV = None,
@@ -33,14 +34,15 @@ class DDQNAgent(MightyAgent):
             batch_size: int = 64,
             render_progress: bool = True,
             log_tensorboard: bool = False,
-            n_units: int = 8,
-            soft_update_weight: float = 1.,  # TODO which default value?
-            policy_class: Optional[Union[str, DictConfig, Type[BaseValueBasedPolicy]]] = None,
-            policy_kwargs: Optional[TKwargs] = None,
             replay_buffer_class: Optional[Union[str, DictConfig, Type[BaseReplayBuffer]]] = None,
             replay_buffer_kwargs: Optional[TKwargs] = None,
             tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
             tracer_kwargs: Optional[TKwargs] = None,
+            # DDQN Specific Args
+            n_units: int = 8,
+            soft_update_weight: float = 1.,  # TODO which default value?
+            policy_class: Optional[Union[str, DictConfig, Type[BaseValueBasedPolicy]]] = None,
+            policy_kwargs: Optional[TKwargs] = None,
     ):
         self.n_units = n_units
         assert 0. <= soft_update_weight <= 1.
