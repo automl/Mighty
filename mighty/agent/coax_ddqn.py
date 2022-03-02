@@ -9,6 +9,7 @@ import jax.numpy as jnp
 from coax.experience_replay._simple import BaseReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
 from coax.experience_replay import SimpleReplayBuffer
+from coax._core.value_based_policy import BaseValueBasedPolicy
 
 import hydra
 from omegaconf import DictConfig
@@ -73,6 +74,12 @@ class DDQNAgent(MightyAgent):
         self.tracer_class = tracer_class
         self.tracer_kwargs = tracer_kwargs
         self.tracer: Optional[BaseRewardTracer] = None
+
+        # Dummy variables which are created in self.initialize_agent
+        self.q: Optional[coax.Q] = None
+        self.policy: Optional[BaseValueBasedPolicy] = None
+        self.q_target: Optional[coax.Q] = None
+        self.qlearning: Optional[coax.td_learning.DoubleQLearning] = None
 
         super().__init__(
             env=env,
