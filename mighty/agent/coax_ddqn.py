@@ -20,7 +20,7 @@ class DDQNAgent(MightyAgent):
             env: DACENV,
             logger: Logger,
             eval_env: DACENV = None,
-            lr: float = 0.01,
+            learning_rate: float = 0.01,
             epsilon: float = 0.1,
             batch_size: int = 64,
             render_progress: bool = True,
@@ -28,7 +28,7 @@ class DDQNAgent(MightyAgent):
             n_units: int = 8,
     ):
         self.n_units = n_units
-        super().__init__(env, logger, eval_env, lr, epsilon, batch_size, render_progress, log_tensorboard)
+        super().__init__(env, logger, eval_env, learning_rate, epsilon, batch_size, render_progress, log_tensorboard)
 
     def initialize_agent(self):
 
@@ -49,7 +49,7 @@ class DDQNAgent(MightyAgent):
         self.q_target = self.q.copy()
 
         # specify how to update value function
-        self.qlearning = coax.td_learning.DoubleQLearning(self.q, q_targ=self.q_target, optimizer=optax.adam(self.lr))
+        self.qlearning = coax.td_learning.DoubleQLearning(self.q, q_targ=self.q_target, optimizer=optax.adam(self.learning_rate))
 
         # specify how to trace the transitions
         self.tracer = coax.reward_tracing.NStep(n=1, gamma=0.9)
