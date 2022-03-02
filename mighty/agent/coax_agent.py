@@ -4,6 +4,8 @@ import coax
 import optax
 import haiku as hk
 import jax.numpy as jnp
+from coax.experience_replay._simple import BaseReplayBuffer
+from coax.reward_tracing._base import BaseRewardTracer
 from typing import Optional
 from rich.progress import Progress, TimeRemainingColumn, TimeElapsedColumn, BarColumn
 from torch.utils.tensorboard import SummaryWriter
@@ -30,6 +32,10 @@ class MightyAgent(object):
         self.learning_rate = learning_rate
         self._epsilon = epsilon
         self._batch_size = batch_size
+
+        self.replay_buffer: Optional[BaseReplayBuffer] = None
+        self.tracer: Optional[BaseRewardTracer] = None
+        self.policy: Optional = None
 
         if logger is not None:
             output_dir = logger.log_dir
@@ -104,10 +110,10 @@ class MightyAgent(object):
                     # add transition to buffer
                     self.tracer.add(s, a, r, done)
                     while self.tracer:
-                        self.buffer.add(self.tracer.pop())
+                        self.replay_buffer.add(self.tracer.pop())
 
                     # update
-                    if len(self.buffer) >= self._batch_size:
+                    if len(self.replay_buffer) >= self._batch_size:
                         self.update_agent(steps)
 
                     self.last_state = s
