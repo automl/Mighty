@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Optional, Dict, Any, Union, Tuple, Type
 
 import jax
@@ -61,7 +62,6 @@ class DDQNAgent(MightyAgent):
             }
         self.replay_buffer_class = replay_buffer_class
         self.replay_buffer_kwargs = replay_buffer_kwargs
-        self.replay_buffer: Optional[BaseReplayBuffer] = None
 
         # Reward Tracer
         # TODO create dac tracer receiving instance as additional info
@@ -73,9 +73,8 @@ class DDQNAgent(MightyAgent):
             }
         self.tracer_class = tracer_class
         self.tracer_kwargs = tracer_kwargs
-        self.tracer: Optional[BaseRewardTracer] = None
 
-        # Dummy variables which are created in self.initialize_agent
+        # Placeholder variables which are filled in self.initialize_agent
         self.q: Optional[coax.Q] = None
         self.policy: Optional[BaseValueBasedPolicy] = None
         self.q_target: Optional[coax.Q] = None
@@ -134,7 +133,27 @@ class DDQNAgent(MightyAgent):
 
     def save(self):
         """ Checkpoint model. """
-        path = os.path.join(self.model_dir, 'checkpoint.pkl.lz4')
-        #For some reason there's an error here to do with pickle. Pickling this outside of the class works, though.
-        #coax.utils.dump((self.q, self.q_target, self.qlearning), path)
+        # path = os.path.join(self.model_dir, 'checkpoint.pkl.lz4')
+        # #For some reason there's an error here to do with pickle. Pickling this outside of the class works, though.
+        # #coax.utils.dump((self.q, self.q_target, self.qlearning), path)
+
+        logdir = os.getcwd()
+        T = 0  # TODO get automatic checkpoint IDs
+        filepath = Path(os.path.join(logdir, "checkpoints", f"checkpoint_{T}.pkl.lz4"))
+        if not filepath.is_file() or True:  # TODO build logic
+            state = self.get_state()
+            coax.utils.dump(state, str(filepath))
+            print(f"Saved checkpoint to {filepath}")
+
+    def get_state(self):
+        return self.q.params, self.q.function_state, self.q_target.params, self.q_target.function_state
+
+    def set_state(self, state):
+        self.q.params, self.q.function_state, self.q_target.params, self.q_target.function_state = state
+
+
+
+
+
+
 
