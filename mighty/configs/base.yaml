@@ -15,6 +15,7 @@ env: CartPole-v0
 env_kwargs: {}
 env_wrappers: []
 
+# Training
 eval_every_n_steps: 1000  # After how many steps to evaluate.
 checkpoint: null  # Path to model checkpoint to load model from.
 

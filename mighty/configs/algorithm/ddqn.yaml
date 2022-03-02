@@ -4,12 +4,12 @@ q_func: ???
 
 algorithm_kwargs:
   # Hyperparameters
-  discount_factor: 0.99
+#  discount_factor: 0.99
   epsilon: 0.2  # Controls epsilon-greedy action selection in policy.
-  max_size_replay_buffer: 1000000  # Maximum size of replay buffer.
+#  max_size_replay_buffer: 1000000  # Maximum size of replay buffer.
 
   # Training
   learning_rate: 0.001
   batch_size: 64  # Batch size for training.
-  begin_updating_weights: 1  # Begin updating policy weights after this many observed transitions.
-  soft_update_weight: 0.01  #
+#  begin_updating_weights: 1  # Begin updating policy weights after this many observed transitions.
+#  soft_update_weight: 0.01  #
