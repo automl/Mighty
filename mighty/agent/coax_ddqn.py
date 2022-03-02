@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Optional, Dict, Any, Union, Tuple, Type
+from typing import Optional, Dict, Any, Union, Tuple, Type, NewType
 
 import jax
 import coax
@@ -13,9 +13,10 @@ from coax._core.value_based_policy import BaseValueBasedPolicy
 
 from omegaconf import DictConfig
 
-from mighty.agent.coax_agent import MightyAgent
+from mighty.agent.coax_agent import MightyAgent, retrieve_class
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
+from mighty.utils.types import TKwargs
 
 
 class DDQNAgent(MightyAgent):
@@ -34,10 +35,12 @@ class DDQNAgent(MightyAgent):
             log_tensorboard: bool = False,
             n_units: int = 8,
             soft_update_weight: float = 1.,  # TODO which default value?
+            policy_class: Optional[Union[str, DictConfig, Type[BaseValueBasedPolicy]]] = None,
+            policy_kwargs: Optional[TKwargs] = None,
             replay_buffer_class: Optional[Union[str, DictConfig, Type[BaseReplayBuffer]]] = None,
-            replay_buffer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
+            replay_buffer_kwargs: Optional[TKwargs] = None,
             tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
-            tracer_kwargs: Optional[Union[Dict[str, Any], DictConfig]] = None,
+            tracer_kwargs: Optional[TKwargs] = None,
     ):
         self.n_units = n_units
         assert 0. <= soft_update_weight <= 1.
@@ -48,6 +51,15 @@ class DDQNAgent(MightyAgent):
         self.policy: Optional[BaseValueBasedPolicy] = None
         self.q_target: Optional[coax.Q] = None
         self.qlearning: Optional[coax.td_learning.DoubleQLearning] = None
+
+        # Policy Class
+        policy_class = retrieve_class(cls=policy_class, default_cls=coax.EpsilonGreedy)
+        if policy_kwargs is None:
+            policy_kwargs = {
+                "epsilon": 0.1
+            }
+        self.policy_class = policy_class
+        self.policy_kwargs = policy_kwargs
 
         super().__init__(
             env=env,
@@ -77,7 +89,7 @@ class DDQNAgent(MightyAgent):
             return seq(S)
 
         self.q = coax.Q(func_q, self.env)
-        self.policy = coax.EpsilonGreedy(self.q, epsilon=self._epsilon)
+        self.policy = self.policy_class(q=self.q, **self.policy_kwargs)
 
         # target network
         self.q_target = self.q.copy()
