@@ -251,7 +251,7 @@ def run_td3(q_agent_1, q_agent_2, action_agent, logger, cfg):
             iteration += 1
 
 
-@hydra.main(config_path=".", config_name="gym.yaml")
+@hydra.main(config_path="..", config_name="gym.yaml")
 def main(cfg):
     import torch.multiprocessing as mp
 

@@ -6,7 +6,7 @@ from rich import print
 from dacbench.benchmarks import SigmoidBenchmark
 from dacbench.wrappers import PerformanceTrackingWrapper
 
-from mighty.agent.factory import get_agent_class
+from mighty.agent.archive.factory import get_agent_class
 from mighty.utils.logger import Logger
 
 import importlib

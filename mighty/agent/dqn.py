@@ -13,7 +13,7 @@ from coax._core.value_based_policy import BaseValueBasedPolicy
 
 from omegaconf import DictConfig
 
-from mighty.agent.coax_agent import MightyAgent, retrieve_class
+from mighty.agent.base_agent import MightyAgent, retrieve_class
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TKwargs

@@ -1,6 +1,6 @@
-from mighty.agent.base import AbstractAgent
+from mighty.agent.archive.base import AbstractAgent
 # from mighty.agent.ddqn import DDQNAgent
-from mighty.agent.coax_ddqn import DDQNAgent
+from mighty.agent.dqn import DDQNAgent
 
 
 def get_agent_class(agent_type: str) -> type(AbstractAgent):

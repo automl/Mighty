@@ -15,7 +15,7 @@ from mighty.utils.logger import Logger
 from mighty.utils.replay_buffer import ReplayBuffer
 from mighty.utils.value_function import FullyConnectedQ
 from mighty.utils.weight_updates import soft_update
-from mighty.agent.base import AbstractAgent
+from mighty.agent.archive.base import AbstractAgent
 from mighty.env.env_handling import DACENV
 
 from ignite.engine.engine import Engine

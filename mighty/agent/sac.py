@@ -6,7 +6,7 @@ import haiku as hk
 import jax.numpy as jnp
 from numpy import prod
 
-from mighty.agent.coax_agent import MightyAgent
+from mighty.agent.base_agent import MightyAgent
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
 
