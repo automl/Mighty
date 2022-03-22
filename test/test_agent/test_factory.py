@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from mighty.agent.archive.factory import get_agent_class
+from mighty.agent.factory import get_agent_class
 from mighty.agent.archive.ddqn import DDQNAgent
 
 
