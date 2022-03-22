@@ -1,6 +1,4 @@
-import os
-from pathlib import Path
-from typing import Optional, Dict, Any, Union, Tuple, Type, NewType
+from typing import Optional, Union, Type
 
 import jax
 import coax
@@ -43,6 +41,12 @@ class DDQNAgent(MightyAgent):
             soft_update_weight: float = 1.,  # TODO which default value?
             policy_class: Optional[Union[str, DictConfig, Type[BaseValueBasedPolicy]]] = None,
             policy_kwargs: Optional[TKwargs] = None,
+            td_update_class: Optional[Union[Type[coax.td_learning.QLearning],
+                                            Type[coax.td_learning.DoubleQLearning],
+                                            Type[coax.td_learning.SoftQLearning],
+                                            Type[coax.td_learning.ClippedDoubleQLearning],
+                                            Type[coax.td_learning.SoftClippedDoubleQLearning]]] = None,
+            td_update_kwargs: Optional[TKwargs] = None
     ):
         self.n_units = n_units
         assert 0. <= soft_update_weight <= 1.
@@ -62,6 +66,14 @@ class DDQNAgent(MightyAgent):
             }
         self.policy_class = policy_class
         self.policy_kwargs = policy_kwargs
+
+        self.td_update_class = retrieve_class(cls=td_update_class, default_cls=coax.td_learning.DoubleQLearning)
+        if td_update_kwargs is None:
+            td_update_kwargs = {
+                "q_targ": None,
+                "optimizer": optax.adam(self.learning_rate)
+            }
+        self.td_update_kwargs = td_update_kwargs
 
         super().__init__(
             env=env,
@@ -97,7 +109,7 @@ class DDQNAgent(MightyAgent):
         self.q_target = self.q.copy()
 
         # specify how to update value function
-        self.qlearning = coax.td_learning.DoubleQLearning(self.q, q_targ=self.q_target, optimizer=optax.adam(self.learning_rate))
+        self.qlearning = self.td_update_class(self.q, **self.td_update_kwargs)
 
         print("Initialized agent.")
 

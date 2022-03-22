@@ -1,14 +1,20 @@
-import os
+from typing import Optional, Union, Type
+
 import jax
 import coax
 import optax
 import haiku as hk
 import jax.numpy as jnp
+from coax.experience_replay._simple import BaseReplayBuffer
+from coax.reward_tracing._base import BaseRewardTracer
 from numpy import prod
 
-from mighty.agent.base_agent import MightyAgent
+from omegaconf import DictConfig
+
+from mighty.agent.base_agent import MightyAgent, retrieve_class
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
+from mighty.utils.types import TKwargs
 
 
 class SACAgent(MightyAgent):
@@ -18,16 +24,28 @@ class SACAgent(MightyAgent):
 
     def __init__(
             self,
+            # MightyAgent Args
             env: DACENV,
             logger: Logger,
             eval_env: DACENV = None,
-            lr: float = 0.01,
+            learning_rate: float = 0.01,
             epsilon: float = 0.1,
             batch_size: int = 64,
             render_progress: bool = True,
             log_tensorboard: bool = False,
+            replay_buffer_class: Optional[Union[str, DictConfig, Type[BaseReplayBuffer]]] = None,
+            replay_buffer_kwargs: Optional[TKwargs] = None,
+            tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
+            tracer_kwargs: Optional[TKwargs] = None,
+            # SAC Specific Args
             n_policy_units: int = 8,
             n_critic_units: int = 8,
+            td_update_class: Optional[Union[Type[coax.td_learning.QLearning],
+                                            Type[coax.td_learning.DoubleQLearning],
+                                            Type[coax.td_learning.SoftQLearning],
+                                            Type[coax.td_learning.ClippedDoubleQLearning],
+                                            Type[coax.td_learning.SoftClippedDoubleQLearning]]] = None,
+            td_update_kwargs: Optional[TKwargs] = None
     ):
         self.n_policy_units = n_policy_units
         self.n_critic_units = n_critic_units
@@ -43,7 +61,28 @@ class SACAgent(MightyAgent):
         self.buffer: Optional[coax.experience_replay.SimpleReplayBuffer] = None
         self.policy_regularizer: Optional[coax.regularizers.NStepEntropyRegularizer] = None
 
-        super().__init__(env, logger, eval_env, lr, epsilon, batch_size, render_progress, log_tensorboard)
+        self.td_update_class = retrieve_class(cls=td_update_class, default_cls=coax.td_learning.DoubleQLearning)
+        if td_update_kwargs is None:
+            td_update_kwargs = {
+                "q_targ": None,
+                "optimizer": optax.adam(self.learning_rate)
+            }
+        self.td_update_kwargs = td_update_kwargs
+
+        super().__init__(
+            env=env,
+            logger=logger,
+            eval_env=eval_env,
+            learning_rate=learning_rate,
+            epsilon=epsilon,
+            batch_size=batch_size,
+            render_progress=render_progress,
+            log_tensorboard=log_tensorboard,
+            replay_buffer_class=replay_buffer_class,
+            replay_buffer_kwargs=replay_buffer_kwargs,
+            tracer_class=tracer_class,
+            tracer_kwargs=tracer_kwargs,
+        )
 
     def initialize_agent(self):
         def func_pi(S, is_training):
@@ -77,9 +116,7 @@ class SACAgent(MightyAgent):
         self.q1_target = self.q1.copy()
         self.q2_target = self.q2.copy()
 
-        # experience tracer
-        self.tracer = coax.reward_tracing.NStep(n=5, gamma=0.9, record_extra_info=True)
-        self.buffer = coax.experience_replay.SimpleReplayBuffer(capacity=25000)
+        # regularizer
         alpha = 0.2
         self.policy_regularizer = coax.regularizers.NStepEntropyRegularizer(self.policy,
                                                                        beta=alpha / self.tracer.n,
@@ -89,11 +126,11 @@ class SACAgent(MightyAgent):
         # updaters (use current pi to update the q-functions and use sampled action in contrast to TD3)
         self.qlearning1 = coax.td_learning.SoftClippedDoubleQLearning(
             self.q1, pi_targ_list=[self.policy], q_targ_list=[self.q1_target, self.q2_target],
-            loss_function=coax.value_losses.mse, optimizer=optax.adam(self.lr),
+            loss_function=coax.value_losses.mse, optimizer=optax.adam(self.learning_rate),
             policy_regularizer=self.policy_regularizer)
         self.qlearning2 = coax.td_learning.SoftClippedDoubleQLearning(
             self.q2, pi_targ_list=[self.policy], q_targ_list=[self.q1_target, self.q2_target],
-            loss_function=coax.value_losses.mse, optimizer=optax.adam(self.lr),
+            loss_function=coax.value_losses.mse, optimizer=optax.adam(self.learning_rate),
             policy_regularizer=self.policy_regularizer)
         self.soft_pg = coax.policy_objectives.SoftPG(self.policy, [self.q1_target, self.q2_target], optimizer=optax.adam(
             1e-3), regularizer=coax.regularizers.NStepEntropyRegularizer(self.policy,
