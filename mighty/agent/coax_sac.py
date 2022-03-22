@@ -31,6 +31,18 @@ class SACAgent(MightyAgent):
     ):
         self.n_policy_units = n_policy_units
         self.n_critic_units = n_critic_units
+
+        # Placeholder variables which are filled in self.initialize_agent
+        self.q1: Optional[coax.Q] = None
+        self.q2: Optional[coax.Q] = None
+        self.q1_target: Optional[coax.Q] = None
+        self.q2_target: Optional[coax.Q] = None
+        self.qlearning1: Optional[coax.td_learning.DoubleQLearning] = None
+        self.qlearning2: Optional[coax.td_learning.DoubleQLearning] = None
+        self.soft_pg: Optional[coax.policy_objectives.SoftPG] = None
+        self.buffer: Optional[coax.experience_replay.SimpleReplayBuffer] = None
+        self.policy_regularizer: Optional[coax.regularizers.NStepEntropyRegularizer] = None
+
         super().__init__(env, logger, eval_env, lr, epsilon, batch_size, render_progress, log_tensorboard)
 
     def initialize_agent(self):
@@ -105,12 +117,17 @@ class SACAgent(MightyAgent):
         self.q1_target.soft_update(self.q1, tau=0.001)
         self.q2_target.soft_update(self.q2, tau=0.001)
 
-    def load(self, path):
-        """ Load checkpointed model. """
-        self.policy, self.q1, self.q2, self.q1_target, self.q2_target, self.qlearning1, self.qlearning2, self.soft_pg = coax.utils.load(path)
+    def get_state(self):
+        return self.policy, self.q1, self.q2, self.q1_target, self.q2_target, self.qlearning1, self.qlearning2, self.soft_pg
 
-    def save(self):
-        """ Checkpoint model. """
-        path = os.path.join(self.model_dir, 'checkpoint.pkl.lz4')
-        #For some reason there's an error here to do with pickle. Pickling this outside of the class works, though.
-        #coax.utils.dump((self.policy, self.q1, self.q2, self.q1_target, self.q2_target, self.qlearning1, self.qlearning2, self.soft_pg), path)
+    def set_state(self, state):
+        self.policy, self.q1, self.q2, self.q1_target, self.q2_target, self.qlearning1, self.qlearning2, self.soft_pg = state
+
+    def eval(self, env: DACENV, episodes: int):
+        """
+        Eval agent on an environment. (Full evaluation)
+        :param env:
+        :param episodes:
+        :return:
+        """
+        raise NotImplementedError

@@ -111,21 +111,6 @@ class DDQNAgent(MightyAgent):
         if step % 10 == 0:
             self.q_target.soft_update(self.q, tau=self.soft_update_weight)
 
-    def load(self, path):
-        """ Load checkpointed model. """
-        state = coax.utils.load(path)
-        self.set_state(state=state)
-
-    def save(self):
-        """ Checkpoint model. """
-        logdir = os.getcwd()
-        T = 0  # TODO get automatic checkpoint IDs
-        filepath = Path(os.path.join(logdir, "checkpoints", f"checkpoint_{T}.pkl.lz4"))
-        if not filepath.is_file() or True:  # TODO build logic
-            state = self.get_state()
-            coax.utils.dump(state, str(filepath))
-            print(f"Saved checkpoint to {filepath}")
-
     def get_state(self):
         return self.q.params, self.q.function_state, self.q_target.params, self.q_target.function_state
 

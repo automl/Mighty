@@ -197,13 +197,28 @@ class MightyAgent(object):
             save_model_every_n_episodes=save_model_every_n_episodes
         )
 
+    def get_state(self):
+        """ Return internal state for checkpointing. """
+        raise NotImplementedError
+
+    def set_state(self, state):
+        """ Set internal state after loading. """
+        raise NotImplementedError
+
     def load(self, path):
         """ Load checkpointed model. """
-        raise NotImplementedError
+        state = coax.utils.load(path)
+        self.set_state(state=state)
 
     def save(self):
         """ Checkpoint model. """
-        raise NotImplementedError
+        logdir = os.getcwd()
+        T = 0  # TODO get automatic checkpoint IDs
+        filepath = Path(os.path.join(logdir, "checkpoints", f"checkpoint_{T}.pkl.lz4"))
+        if not filepath.is_file() or True:  # TODO build logic
+            state = self.get_state()
+            coax.utils.dump(state, str(filepath))
+            print(f"Saved checkpoint to {filepath}")
 
     def eval(self, env: DACENV, episodes: int):
         """

@@ -66,7 +66,6 @@ class AbstractAgent:
         except AttributeError:
             self._action_dim = self.env.action_space.shape[0]
         self._state_shape = self.env.observation_space.shape[0]
-
         self._max_env_time_steps = max_env_time_steps  # type: int
         self._env_eval = env_eval
 
