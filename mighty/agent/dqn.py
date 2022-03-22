@@ -17,7 +17,7 @@ from mighty.utils.logger import Logger
 from mighty.utils.types import TKwargs
 
 
-class DDQNAgent(MightyAgent):
+class DQNAgent(MightyAgent):
     """
     Simple double DQN Agent
     """

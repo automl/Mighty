@@ -7,7 +7,6 @@ import haiku as hk
 import jax.numpy as jnp
 from coax.experience_replay._simple import BaseReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
-from coax._core.value_based_policy import BaseValueBasedPolicy
 from numpy import prod
 
 from omegaconf import DictConfig
@@ -18,7 +17,7 @@ from mighty.utils.logger import Logger
 from mighty.utils.types import TKwargs
 
 
-class DDQNAgent(MightyAgent):
+class PPOAgent(MightyAgent):
     """
     Simple double DQN Agent
     """
@@ -49,10 +48,12 @@ class DDQNAgent(MightyAgent):
         self.soft_update_weight = soft_update_weight
 
         # Placeholder variables which are filled in self.initialize_agent
-        self.q: Optional[coax.Q] = None
-        self.policy: Optional[BaseValueBasedPolicy] = None
-        self.q_target: Optional[coax.Q] = None
-        self.qlearning: Optional[coax.td_learning.DoubleQLearning] = None
+        self.v: Optional[coax.V] = None
+        self.pi: Optional[coax.Policy] = None
+        self.v_targ: Optional[coax.V] = None
+        self.pi_old: Optional[coax.Policy] = None
+        self.td_update: Optional[coax.td_learning.SimpleTD] = None
+        self.ppo_clip: Optional[coax.policy_objectives.PPOClip] = None
 
         super().__init__(
             env=env,

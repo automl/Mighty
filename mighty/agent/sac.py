@@ -47,6 +47,8 @@ class SACAgent(MightyAgent):
                                             Type[coax.td_learning.SoftClippedDoubleQLearning]]] = None,
             td_update_kwargs: Optional[TKwargs] = None
     ):
+        assert 0. <= soft_update_weight <= 1.
+        self.soft_update_weight = soft_update_weight
         self.n_policy_units = n_policy_units
         self.n_critic_units = n_critic_units
 
@@ -151,8 +153,8 @@ class SACAgent(MightyAgent):
         #env.record_metrics(metrics)
 
         # sync target networks
-        self.q1_target.soft_update(self.q1, tau=0.001)
-        self.q2_target.soft_update(self.q2, tau=0.001)
+        self.q1_target.soft_update(self.q1, tau=self.soft_update_weight)
+        self.q2_target.soft_update(self.q2, tau=self.soft_update_weight)
 
     def get_state(self):
         return self.policy.proba_dist, self.policy.function_state,\
