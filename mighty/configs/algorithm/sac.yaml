@@ -15,8 +15,9 @@ algorithm_kwargs:
   tracer_class:
     _target_: coax.reward_tracing.NStep
   tracer_kwargs:
-    n: 1  # The number of steps over which to bootstrap.
+    n: 5  # The number of steps over which to bootstrap.
     gamma: 0.9  # The amount by which to discount future rewards.
+    record_extra_info: True
 
   # Training
   learning_rate: 0.001

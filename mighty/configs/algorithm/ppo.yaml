@@ -3,6 +3,8 @@ algorithm: PPO
 q_func: ???
 
 algorithm_kwargs:
+  epsilon: None
+
   replay_buffer_class:
     _target_: coax.experience_replay.SimpleReplayBuffer
   replay_buffer_kwargs:

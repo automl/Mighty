@@ -49,7 +49,7 @@ class PPOAgent(MightyAgent):
 
         # Placeholder variables which are filled in self.initialize_agent
         self.v: Optional[coax.V] = None
-        self.pi: Optional[coax.Policy] = None
+        self.policy: Optional[coax.Policy] = None
         self.v_targ: Optional[coax.V] = None
         self.pi_old: Optional[coax.Policy] = None
         self.td_update: Optional[coax.td_learning.SimpleTD] = None
@@ -99,38 +99,38 @@ class PPOAgent(MightyAgent):
             ))
             return seq(S)
 
-        self.pi = coax.Policy(func_pi, self.env)
+        self.policy = coax.Policy(func_pi, self.env)
         self.v = coax.V(func_v, self.env)
 
         # targets
-        self.pi_old = self.pi.copy()
+        self.pi_old = self.policy.copy()
         self.v_targ = self.v.copy()
 
         # update
         self.td_update = coax.td_learning.SimpleTD(self.v, self.v_targ, optimizer=optax.adam(0.02))
-        self.ppo_clip = coax.policy_objectives.PPOClip(self.pi, optimizer=optax.adam(0.01))
+        self.ppo_clip = coax.policy_objectives.PPOClip(self.policy, optimizer=optax.adam(0.01))
 
         print("Initialized agent.")
 
     def update_agent(self, step):
-        transition_batch = self.tracer.pop()
+        transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)   
         _, td_error = self.td_update.update(transition_batch, return_td_error=True)
         self.ppo_clip.update(transition_batch, td_error)
 
         # sync target networks
         self.v_targ.soft_update(self.v, tau=self.soft_update_weight)
-        self.pi_old.soft_update(self.pi, tau=self.soft_update_weight)
+        self.pi_old.soft_update(self.policy, tau=self.soft_update_weight)
 
     def get_state(self):
         return self.v.params, self.v.function_state, \
                 self.v_targ.params, self.v_targ.function_state, \
-                self.pi.params, self.pi.function_state, \
+                self.policy.params, self.policy.function_state, \
                 self.pi_old.params, self.pi_old.function_state
 
     def set_state(self, state):
         self.v.params, self.v.function_state, \
             self.v_targ.params, self.v_targ.function_state, \
-            self.pi.params, self.pi.function_state, \
+            self.policy.params, self.policy.function_state, \
             self.pi_old.params, self.pi_old.function_state = state
 
     def eval(self, env: DACENV, episodes: int):

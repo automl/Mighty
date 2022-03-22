@@ -71,7 +71,7 @@ class DQNAgent(MightyAgent):
         if td_update_kwargs is None:
             td_update_kwargs = {
                 "q_targ": None,
-                "optimizer": optax.adam(self.learning_rate)
+                "optimizer": optax.adam(learning_rate)
             }
         self.td_update_kwargs = td_update_kwargs
 

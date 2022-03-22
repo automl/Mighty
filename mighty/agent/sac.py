@@ -40,6 +40,7 @@ class SACAgent(MightyAgent):
             # SAC Specific Args
             n_policy_units: int = 8,
             n_critic_units: int = 8,
+            soft_update_weight: float = 1.,  # TODO which default value?
             td_update_class: Optional[Union[Type[coax.td_learning.QLearning],
                                             Type[coax.td_learning.DoubleQLearning],
                                             Type[coax.td_learning.SoftQLearning],
@@ -67,7 +68,7 @@ class SACAgent(MightyAgent):
         if td_update_kwargs is None:
             td_update_kwargs = {
                 "q_targ": None,
-                "optimizer": optax.adam(self.learning_rate)
+                "optimizer": optax.adam(learning_rate)
             }
         self.td_update_kwargs = td_update_kwargs
 
@@ -86,7 +87,7 @@ class SACAgent(MightyAgent):
             tracer_kwargs=tracer_kwargs,
         )
 
-    def initialize_agent(self):
+    def _initialize_agent(self):
         def func_pi(S, is_training):
             seq = hk.Sequential((
                 hk.Linear(self.n_policy_units), jax.nn.relu,
@@ -142,7 +143,7 @@ class SACAgent(MightyAgent):
         print("Initialized agent.")
 
     def update_agent(self, step):
-        transition_batch = self.buffer.sample(batch_size=self._batch_size)
+        transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
         metrics = {}
         # flip a coin to decide which of the q-functions to update
         qlearning = self.qlearning1 if jax.random.bernoulli(self.q1.rng) else self.qlearning2
