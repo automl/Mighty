@@ -155,10 +155,18 @@ class SACAgent(MightyAgent):
         self.q2_target.soft_update(self.q2, tau=0.001)
 
     def get_state(self):
-        return self.policy, self.q1, self.q2, self.q1_target, self.q2_target, self.qlearning1, self.qlearning2, self.soft_pg
+        return self.policy.proba_dist, self.policy.function_state,\
+               self.q1.params, self.q1.function_state, \
+               self.q2.params, self.q2.function_state, \
+               self.q1_target.params, self.q1_target.function_state, \
+               self.q2_target.params, self.q2_target.function_state,
 
     def set_state(self, state):
-        self.policy, self.q1, self.q2, self.q1_target, self.q2_target, self.qlearning1, self.qlearning2, self.soft_pg = state
+        self.policy.proba_dist, self.policy.function_state, \
+            self.q1.params, self.q1.function_state, \
+            self.q2.params, self.q2.function_state, \
+            self.q1_target.params, self.q1_target.function_state, \
+            self.q2_target.params, self.q2_target.function_state, = state
 
     def eval(self, env: DACENV, episodes: int):
         """
