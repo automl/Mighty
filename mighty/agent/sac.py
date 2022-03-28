@@ -128,12 +128,18 @@ class SACAgent(MightyAgent):
 
         # updaters (use current pi to update the q-functions and use sampled action in contrast to TD3)
         self.qlearning1 = coax.td_learning.SoftClippedDoubleQLearning(
-            self.q1, pi_targ_list=[self.policy], q_targ_list=[self.q1_target, self.q2_target],
-            loss_function=coax.value_losses.mse, optimizer=optax.adam(self.learning_rate),
+            self.q1,
+            pi_targ_list=[self.policy],
+            q_targ_list=[self.q1_target, self.q2_target],
+            loss_function=coax.value_losses.mse,
+            optimizer=optax.adam(self.learning_rate),
             policy_regularizer=self.policy_regularizer)
         self.qlearning2 = coax.td_learning.SoftClippedDoubleQLearning(
-            self.q2, pi_targ_list=[self.policy], q_targ_list=[self.q1_target, self.q2_target],
-            loss_function=coax.value_losses.mse, optimizer=optax.adam(self.learning_rate),
+            self.q2,
+             pi_targ_list=[self.policy],
+              q_targ_list=[self.q1_target, self.q2_target],
+            loss_function=coax.value_losses.mse,
+             optimizer=optax.adam(self.learning_rate),
             policy_regularizer=self.policy_regularizer)
         self.soft_pg = coax.policy_objectives.SoftPG(self.policy, [self.q1_target, self.q2_target], optimizer=optax.adam(
             1e-3), regularizer=coax.regularizers.NStepEntropyRegularizer(self.policy,
