@@ -81,7 +81,7 @@ class SACAgent(MightyAgent):
         if td_update_kwargs is None:
             td_update_kwargs = {"q_targ": None, "optimizer": optax.adam(learning_rate)}
         self.td_update_kwargs = td_update_kwargs
-
+        
         super().__init__(
             env=env,
             logger=logger,
@@ -97,49 +97,52 @@ class SACAgent(MightyAgent):
             tracer_kwargs=tracer_kwargs,
         )
 
+    def policy_function(self, S, is_training):
+        """ Policy base function """
+        seq = hk.Sequential(
+            (
+                hk.Linear(self.n_policy_units),
+                jax.nn.relu,
+                hk.Linear(self.n_policy_units),
+                jax.nn.relu,
+                hk.Linear(self.n_policy_units),
+                jax.nn.relu,
+                hk.Linear(prod(self.env.action_space.shape) * 2, w_init=jnp.zeros),
+                hk.Reshape((*self.env.action_space.shape, 2)),
+            )
+        )
+        x = seq(S)
+        mu, logvar = x[..., 0], x[..., 1]
+        return {"mu": mu, "logvar": logvar}
+
+    def q_function(self, S, A, is_training):
+        """ Q-function base for critic """
+        seq = hk.Sequential(
+            (
+                hk.Linear(self.n_critic_units),
+                jax.nn.relu,
+                hk.Linear(self.n_critic_units),
+                jax.nn.relu,
+                hk.Linear(self.n_critic_units),
+                jax.nn.relu,
+                hk.Linear(1, w_init=jnp.zeros),
+                jnp.ravel,
+            )
+        )
+        X = jnp.concatenate((S, A), axis=-1)
+        return seq(X)
+
     def _initialize_agent(self):
-        def func_pi(S, is_training):
-            seq = hk.Sequential(
-                (
-                    hk.Linear(self.n_policy_units),
-                    jax.nn.relu,
-                    hk.Linear(self.n_policy_units),
-                    jax.nn.relu,
-                    hk.Linear(self.n_policy_units),
-                    jax.nn.relu,
-                    hk.Linear(prod(self.env.action_space.shape) * 2, w_init=jnp.zeros),
-                    hk.Reshape((*self.env.action_space.shape, 2)),
-                )
-            )
-            x = seq(S)
-            mu, logvar = x[..., 0], x[..., 1]
-            return {"mu": mu, "logvar": logvar}
-
-        def func_q(S, A, is_training):
-            seq = hk.Sequential(
-                (
-                    hk.Linear(self.n_critic_units),
-                    jax.nn.relu,
-                    hk.Linear(self.n_critic_units),
-                    jax.nn.relu,
-                    hk.Linear(self.n_critic_units),
-                    jax.nn.relu,
-                    hk.Linear(1, w_init=jnp.zeros),
-                    jnp.ravel,
-                )
-            )
-            X = jnp.concatenate((S, A), axis=-1)
-            return seq(X)
-
+        """Initialize algorithm components like policy and critic"""
         # main function approximators
-        self.policy = coax.Policy(func_pi, self.env)
+        self.policy = coax.Policy(self.policy_function, self.env)
         self.q1 = coax.Q(
-            func_q,
+            self.q_function,
             self.env,
             action_preprocessor=self.policy.proba_dist.preprocess_variate,
         )
         self.q2 = coax.Q(
-            func_q,
+            self.q_function,
             self.env,
             action_preprocessor=self.policy.proba_dist.preprocess_variate,
         )

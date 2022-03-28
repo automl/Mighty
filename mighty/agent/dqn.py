@@ -99,25 +99,27 @@ class DQNAgent(MightyAgent):
             tracer_kwargs=tracer_kwargs,
         )
 
-    def _initialize_agent(self):
-        def func_q(S, is_training):
-            """type-2 q-function: s -> q(s,.)"""
-            seq = hk.Sequential(
-                (
-                    hk.Linear(self.n_units),
-                    jax.nn.relu,
-                    hk.Linear(self.n_units),
-                    jax.nn.relu,
-                    hk.Linear(self.n_units),
-                    jax.nn.relu,
-                    hk.Linear(
-                        self.env.action_space.n, w_init=jnp.zeros
-                    ),  # TODO check if this spec is needed. haiku automatically determines sizes
-                )
+    def q_function(self, S, is_training):
+        """ Q-function base """
+        seq = hk.Sequential(
+            (
+                hk.Linear(self.n_units),
+                jax.nn.relu,
+                hk.Linear(self.n_units),
+                jax.nn.relu,
+                hk.Linear(self.n_units),
+                jax.nn.relu,
+                hk.Linear(
+                    self.env.action_space.n, w_init=jnp.zeros
+                ),  # TODO check if this spec is needed. haiku automatically determines sizes
             )
-            return seq(S)
+        )
+        return seq(S)
 
-        self.q = coax.Q(func_q, self.env)
+    def _initialize_agent(self):
+        """ Initialize DQN specific things like q-function """
+
+        self.q = coax.Q(self.q_function, self.env)
         self.policy = self.policy_class(q=self.q, **self.policy_kwargs)
 
         # target network

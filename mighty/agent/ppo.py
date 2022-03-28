@@ -75,53 +75,57 @@ class PPOAgent(MightyAgent):
             tracer_kwargs=tracer_kwargs,
         )
 
+    def policy_function(self, S, is_training):
+        """ Policy base """    
+        shared = hk.Sequential(
+            (
+                hk.Linear(self.n_policy_units),
+                jax.nn.relu,
+                hk.Linear(self.n_policy_units),
+                jax.nn.relu,
+            )
+        )
+        mu = hk.Sequential(
+            (
+                shared,
+                hk.Linear(self.n_policy_units),
+                jax.nn.relu,
+                hk.Linear(prod(self.env.action_space.shape), w_init=jnp.zeros),
+                hk.Reshape(self.env.action_space.shape),
+            )
+        )
+        logvar = hk.Sequential(
+            (
+                shared,
+                hk.Linear(self.n_policy_units),
+                jax.nn.relu,
+                hk.Linear(prod(self.env.action_space.shape), w_init=jnp.zeros),
+                hk.Reshape(self.env.action_space.shape),
+            )
+        )
+        return {"mu": mu(S), "logvar": logvar(S)}
+
+    def value_function(self, S, is_training):
+        """ value base """
+        seq = hk.Sequential(
+            (
+                hk.Linear(self.n_critic_units),
+                jax.nn.relu,
+                hk.Linear(self.n_critic_units),
+                jax.nn.relu,
+                hk.Linear(self.n_critic_units),
+                jax.nn.relu,
+                hk.Linear(1, w_init=jnp.zeros),
+                jnp.ravel,
+            )
+        )
+        return seq(S)
+
     def _initialize_agent(self):
-        def func_pi(S, is_training):
-            shared = hk.Sequential(
-                (
-                    hk.Linear(self.n_policy_units),
-                    jax.nn.relu,
-                    hk.Linear(self.n_policy_units),
-                    jax.nn.relu,
-                )
-            )
-            mu = hk.Sequential(
-                (
-                    shared,
-                    hk.Linear(self.n_policy_units),
-                    jax.nn.relu,
-                    hk.Linear(prod(self.env.action_space.shape), w_init=jnp.zeros),
-                    hk.Reshape(self.env.action_space.shape),
-                )
-            )
-            logvar = hk.Sequential(
-                (
-                    shared,
-                    hk.Linear(self.n_policy_units),
-                    jax.nn.relu,
-                    hk.Linear(prod(self.env.action_space.shape), w_init=jnp.zeros),
-                    hk.Reshape(self.env.action_space.shape),
-                )
-            )
-            return {"mu": mu(S), "logvar": logvar(S)}
+        """ Initialize PPO specific components """
 
-        def func_v(S, is_training):
-            seq = hk.Sequential(
-                (
-                    hk.Linear(self.n_critic_units),
-                    jax.nn.relu,
-                    hk.Linear(self.n_critic_units),
-                    jax.nn.relu,
-                    hk.Linear(self.n_critic_units),
-                    jax.nn.relu,
-                    hk.Linear(1, w_init=jnp.zeros),
-                    jnp.ravel,
-                )
-            )
-            return seq(S)
-
-        self.policy = coax.Policy(func_pi, self.env)
-        self.v = coax.V(func_v, self.env)
+        self.policy = coax.Policy(self.policy_function, self.env)
+        self.v = coax.V(self.value_function, self.env)
 
         # targets
         self.pi_old = self.policy.copy()
