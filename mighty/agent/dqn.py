@@ -16,42 +16,52 @@ from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TKwargs
 
-#DQN with possible extension to DDQN as first proposed in "Playing Atari with Deep Reinforcement Learn#DQN with possible extension to DDQN as first proposed in "Playing Atari with Deep Reinforcement Learning" by Mnih et al. in 2013
-#DDQN was proposed by van Hasselt et al. in 2016's "Deep Reinforcement Learning with Double Q-learning"
+# DQN with possible extension to DDQN as first proposed in "Playing Atari with Deep Reinforcement Learn#DQN with possible extension to DDQN as first proposed in "Playing Atari with Deep Reinforcement Learning" by Mnih et al. in 2013
+# DDQN was proposed by van Hasselt et al. in 2016's "Deep Reinforcement Learning with Double Q-learning"
+
 
 class DQNAgent(MightyAgent):
     """
     Simple double DQN Agent
     """
+
     def __init__(
-            self,
-            # MightyAgent Args
-            env: DACENV,
-            logger: Logger,
-            eval_env: DACENV = None,
-            learning_rate: float = 0.01,
-            epsilon: float = 0.1,
-            batch_size: int = 64,
-            render_progress: bool = True,
-            log_tensorboard: bool = False,
-            replay_buffer_class: Optional[Union[str, DictConfig, Type[BaseReplayBuffer]]] = None,
-            replay_buffer_kwargs: Optional[TKwargs] = None,
-            tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
-            tracer_kwargs: Optional[TKwargs] = None,
-            # DDQN Specific Args
-            n_units: int = 8,
-            soft_update_weight: float = 1.,  # TODO which default value?
-            policy_class: Optional[Union[str, DictConfig, Type[BaseValueBasedPolicy]]] = None,
-            policy_kwargs: Optional[TKwargs] = None,
-            td_update_class: Optional[Union[Type[coax.td_learning.QLearning],
-                                            Type[coax.td_learning.DoubleQLearning],
-                                            Type[coax.td_learning.SoftQLearning],
-                                            Type[coax.td_learning.ClippedDoubleQLearning],
-                                            Type[coax.td_learning.SoftClippedDoubleQLearning]]] = None,
-            td_update_kwargs: Optional[TKwargs] = None
+        self,
+        # MightyAgent Args
+        env: DACENV,
+        logger: Logger,
+        eval_env: DACENV = None,
+        learning_rate: float = 0.01,
+        epsilon: float = 0.1,
+        batch_size: int = 64,
+        render_progress: bool = True,
+        log_tensorboard: bool = False,
+        replay_buffer_class: Optional[
+            Union[str, DictConfig, Type[BaseReplayBuffer]]
+        ] = None,
+        replay_buffer_kwargs: Optional[TKwargs] = None,
+        tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
+        tracer_kwargs: Optional[TKwargs] = None,
+        # DDQN Specific Args
+        n_units: int = 8,
+        soft_update_weight: float = 1.0,  # TODO which default value?
+        policy_class: Optional[
+            Union[str, DictConfig, Type[BaseValueBasedPolicy]]
+        ] = None,
+        policy_kwargs: Optional[TKwargs] = None,
+        td_update_class: Optional[
+            Union[
+                Type[coax.td_learning.QLearning],
+                Type[coax.td_learning.DoubleQLearning],
+                Type[coax.td_learning.SoftQLearning],
+                Type[coax.td_learning.ClippedDoubleQLearning],
+                Type[coax.td_learning.SoftClippedDoubleQLearning],
+            ]
+        ] = None,
+        td_update_kwargs: Optional[TKwargs] = None,
     ):
         self.n_units = n_units
-        assert 0. <= soft_update_weight <= 1.
+        assert 0.0 <= soft_update_weight <= 1.0
         self.soft_update_weight = soft_update_weight
 
         # Placeholder variables which are filled in self.initialize_agent
@@ -63,18 +73,15 @@ class DQNAgent(MightyAgent):
         # Policy Class
         policy_class = retrieve_class(cls=policy_class, default_cls=coax.EpsilonGreedy)
         if policy_kwargs is None:
-            policy_kwargs = {
-                "epsilon": 0.1
-            }
+            policy_kwargs = {"epsilon": 0.1}
         self.policy_class = policy_class
         self.policy_kwargs = policy_kwargs
 
-        self.td_update_class = retrieve_class(cls=td_update_class, default_cls=coax.td_learning.DoubleQLearning)
+        self.td_update_class = retrieve_class(
+            cls=td_update_class, default_cls=coax.td_learning.DoubleQLearning
+        )
         if td_update_kwargs is None:
-            td_update_kwargs = {
-                "q_targ": None,
-                "optimizer": optax.adam(learning_rate)
-            }
+            td_update_kwargs = {"q_targ": None, "optimizer": optax.adam(learning_rate)}
         self.td_update_kwargs = td_update_kwargs
 
         super().__init__(
@@ -93,15 +100,21 @@ class DQNAgent(MightyAgent):
         )
 
     def _initialize_agent(self):
-
         def func_q(S, is_training):
-            """ type-2 q-function: s -> q(s,.) """
-            seq = hk.Sequential((
-                hk.Linear(self.n_units), jax.nn.relu,
-                hk.Linear(self.n_units), jax.nn.relu,
-                hk.Linear(self.n_units), jax.nn.relu,
-                hk.Linear(self.env.action_space.n, w_init=jnp.zeros)  # TODO check if this spec is needed. haiku automatically determines sizes
-            ))
+            """type-2 q-function: s -> q(s,.)"""
+            seq = hk.Sequential(
+                (
+                    hk.Linear(self.n_units),
+                    jax.nn.relu,
+                    hk.Linear(self.n_units),
+                    jax.nn.relu,
+                    hk.Linear(self.n_units),
+                    jax.nn.relu,
+                    hk.Linear(
+                        self.env.action_space.n, w_init=jnp.zeros
+                    ),  # TODO check if this spec is needed. haiku automatically determines sizes
+                )
+            )
             return seq(S)
 
         self.q = coax.Q(func_q, self.env)
@@ -126,10 +139,20 @@ class DQNAgent(MightyAgent):
             self.q_target.soft_update(self.q, tau=self.soft_update_weight)
 
     def get_state(self):
-        return self.q.params, self.q.function_state, self.q_target.params, self.q_target.function_state
+        return (
+            self.q.params,
+            self.q.function_state,
+            self.q_target.params,
+            self.q_target.function_state,
+        )
 
     def set_state(self, state):
-        self.q.params, self.q.function_state, self.q_target.params, self.q_target.function_state = state
+        (
+            self.q.params,
+            self.q.function_state,
+            self.q_target.params,
+            self.q_target.function_state,
+        ) = state
 
     def eval(self, env: DACENV, episodes: int):
         """
@@ -139,9 +162,3 @@ class DQNAgent(MightyAgent):
         :return:
         """
         raise NotImplementedError
-
-
-
-
-
-

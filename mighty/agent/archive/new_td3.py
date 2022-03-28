@@ -91,6 +91,7 @@ class QMLPAgent(TAgent):
         q = self.fc(x)
         self.set(("q", t), q)
 
+
 def weight_init(m):
     """
     Usage:
@@ -160,6 +161,7 @@ def weight_init(m):
             else:
                 init.normal_(param.data)
 
+
 def soft_update_params(net, target_net, tau):
     for param, target_param in zip(net.parameters(), target_net.parameters()):
         target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
@@ -174,14 +176,14 @@ def _state_dict(agent, device):
 
 class SalinaTD3Agent:
     def __init__(
-            self,
-            env: DACENV,
-            env_seed: int,
-            logger,
-            output_dir: str,
-            log_tensorboard: bool = True,
-            args: argparse.Namespace = None, #algorithm args
-            n_processes: int = 1,
+        self,
+        env: DACENV,
+        env_seed: int,
+        logger,
+        output_dir: str,
+        log_tensorboard: bool = True,
+        args: argparse.Namespace = None,  # algorithm args
+        n_processes: int = 1,
     ):
         """
         Initialize the TD3 Agent
@@ -197,7 +199,7 @@ class SalinaTD3Agent:
         self.env_seed = env_seed
         self.logger = logger
         self.output_dir = output_dir
-        self.model_dir = os.path.join(self.output_dir, 'models')
+        self.model_dir = os.path.join(self.output_dir, "models")
 
         self.action_noise = args.action_noise
         self.clip_grad = args.clip_grad
@@ -218,8 +220,8 @@ class SalinaTD3Agent:
         if log_tensorboard:
             # TODO write out all the other hyperparameters
             self.writer = SummaryWriter(self.output_dir)
-            self.writer.add_scalar('batch_size/Hyperparameter', self.batch_size)
-            self.writer.add_scalar('gamma/Hyperparameter', self.gamma)
+            self.writer.add_scalar("batch_size/Hyperparameter", self.batch_size)
+            self.writer.add_scalar("gamma/Hyperparameter", self.gamma)
 
         self.c_step = 0
         self.epoch = 0
@@ -263,7 +265,9 @@ class SalinaTD3Agent:
         self.train_temporal_action_agent = TemporalAgent(self.action_agent)
         self.train_temporal_q_target_agent_1 = TemporalAgent(self.q_target_agent_1)
         self.train_temporal_q_target_agent_2 = TemporalAgent(self.q_target_agent_2)
-        self.train_temporal_action_target_agent = TemporalAgent(self.action_target_agent)
+        self.train_temporal_action_target_agent = TemporalAgent(
+            self.action_target_agent
+        )
 
         self.train_temporal_q_agent_1.to(self.loss_device)
         self.train_temporal_q_agent_2.to(self.loss_device)
@@ -271,12 +275,12 @@ class SalinaTD3Agent:
         self.train_temporal_q_target_agent_1.to(self.loss_device)
         self.train_temporal_q_target_agent_2.to(self.loss_device)
         self.train_temporal_action_target_agent.to(self.loss_device)
-        
+
         print("targets set up")
         self.acq_remote_agent(
             self.acq_workspace,
             t=0,
-            n_steps=1,#self.n_timesteps,
+            n_steps=1,  # self.n_timesteps,
             epsilon=self.action_noise,
         )
         print("workspace set up")
@@ -298,14 +302,14 @@ class SalinaTD3Agent:
         print("optimizer initialized")
 
     def save_replay_buffer(self, path):
-        #TODO
+        # TODO
         pass
 
     def load_replay_buffer(self, path):
-        #TODO
+        # TODO
         pass
 
-    #TODO: save and load model
+    # TODO: save and load model
 
     def get_action(self, state: np.ndarray, **kwargs) -> int:
         """
@@ -313,12 +317,12 @@ class SalinaTD3Agent:
         """
         for a in self.acq_remote_agent.get_by_name("action_agent"):
             a.load_state_dict(_state_dict(self.action_agent, "cpu"))
-        #TODO: what is this called?
+        # TODO: what is this called?
         return self.acq_workspace["env/action"]
 
     def step(self):
         print("starting step")
-        #TODO: this is pretty long, mabye separate into rollout and update?
+        # TODO: this is pretty long, mabye separate into rollout and update?
         for a in self.acq_remote_agent.get_by_name("action_agent"):
             a.load_state_dict(_state_dict(self.action_agent, "cpu"))
 
@@ -338,16 +342,19 @@ class SalinaTD3Agent:
         creward = creward[done]
         if creward.size()[0] > 0:
             self.logger.add_scalar("monitor/reward", creward.mean().item(), self.epoch)
-        self.logger.add_scalar("monitor/replay_buffer_size", self.replay_buffer.size(), self.epoch)
+        self.logger.add_scalar(
+            "monitor/replay_buffer_size", self.replay_buffer.size(), self.epoch
+        )
 
         self.n_interactions += (
             self.acq_workspace.time_size() - self.overlapping_timesteps
         ) * self.acq_workspace.batch_size()
-        self.logger.add_scalar("monitor/n_interactions", self.n_interactions, self.epoch)
+        self.logger.add_scalar(
+            "monitor/n_interactions", self.n_interactions, self.epoch
+        )
 
         batch_size = self.batch_size
-        self.replay_workspace = self.replay_buffer.get(batch_size).to(
-                self.loss_device)
+        self.replay_workspace = self.replay_buffer.get(batch_size).to(self.loss_device)
         done, reward = self.replay_workspace["env/done", "env/reward"]
 
         print("experience collected")
@@ -359,41 +366,36 @@ class SalinaTD3Agent:
         )
         q_1 = self.replay_workspace["q"].squeeze(-1)
         self.train_temporal_q_agent_2(
-                self.replay_workspace,
-                t=0,
-                n_steps=self.buffer_time_size,
-                detach_action=True,
-            )
+            self.replay_workspace,
+            t=0,
+            n_steps=self.buffer_time_size,
+            detach_action=True,
+        )
         q_2 = self.replay_workspace["q"].squeeze(-1)
 
         with torch.no_grad():
             self.train_temporal_action_target_agent(
-                    self.replay_workspace,
-                    t=0,
-                    n_steps=self.buffer_time_size,
-                    epsilon=self.target_noise,
-                    epsilon_clip=self.noise_clip,
-                )
+                self.replay_workspace,
+                t=0,
+                n_steps=self.buffer_time_size,
+                epsilon=self.target_noise,
+                epsilon_clip=self.noise_clip,
+            )
             self.train_temporal_q_target_agent_1(
-                    self.replay_workspace,
-                    t=0,
-                    n_steps=self.buffer_time_size,
-                )
+                self.replay_workspace,
+                t=0,
+                n_steps=self.buffer_time_size,
+            )
             q_target_1 = self.replay_workspace["q"]
             self.train_temporal_q_target_agent_2(
-                    self.replay_workspace,
-                    t=0,
-                    n_steps=self.buffer_time_size,
-                )
+                self.replay_workspace,
+                t=0,
+                n_steps=self.buffer_time_size,
+            )
             q_target_2 = self.replay_workspace["q"]
 
         q_target = torch.min(q_target_1, q_target_2).squeeze(-1)
-        target = (
-                reward[1:]
-                + self.gamma
-                * (1.0 - done[1:].float())
-                * q_target[1:]
-            )
+        target = reward[1:] + self.gamma * (1.0 - done[1:].float()) * q_target[1:]
 
         td_1 = q_1[:-1] - target
         td_2 = q_2[:-1] - target
@@ -450,7 +452,9 @@ class SalinaTD3Agent:
                 n = torch.nn.utils.clip_grad_norm_(
                     self.action_agent.parameters(), self.clip_grad
                 )
-                self.logger.add_scalar("monitor/grad_norm_action", n.item(), self.iteration)
+                self.logger.add_scalar(
+                    "monitor/grad_norm_action", n.item(), self.iteration
+                )
 
             self.logger.add_scalar("loss/q_loss", loss.item(), self.iteration)
             self.optimizer_action.step()
@@ -462,20 +466,30 @@ class SalinaTD3Agent:
 
         self.iteration += 1
 
+
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
 
+
 def run():
     import gym
     from salina import logger
+
     output_dir = "./test"
     logger = logger.TFLogger(log_dir=output_dir, modulo=100, verbose=True)
-    env={"classname": "gym.make", "id": "Pendulum-v1"}
+    env = {"classname": "gym.make", "id": "Pendulum-v1"}
     q_agent_1 = {"classname": QMLPAgent, "hidden_size": 256, "n_layers": 2, "env": env}
-    action_agent = {"classname": ActionMLPAgent, "hidden_size": 256, "n_layers": 2, "env": env}
-    args = AttrDict({"q_agent": q_agent_1,
+    action_agent = {
+        "classname": ActionMLPAgent,
+        "hidden_size": 256,
+        "n_layers": 2,
+        "env": env,
+    }
+    args = AttrDict(
+        {
+            "q_agent": q_agent_1,
             "action_agent": action_agent,
             "gamma": 0.99,
             "target_noise": 0.2,
@@ -493,9 +507,14 @@ def run():
             "n_timesteps": 50,
             "update_target_tau": 0.005,
             "batch_size": 8,
-            })
-    agent = SalinaTD3Agent(env, env_seed=0, logger=logger, output_dir=output_dir,
-                           log_tensorboard=False, args=args)
+        }
+    )
+    agent = SalinaTD3Agent(
+        env,
+        env_seed=0,
+        logger=logger,
+        output_dir=output_dir,
+        log_tensorboard=False,
+        args=args,
+    )
     agent.step()
-
-

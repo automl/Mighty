@@ -30,38 +30,40 @@ class TD3Agent(AbstractAgent):
     Simple TD3 Agent
     """
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def tt(self, ndarray):
         """
         Helper Function to cast observation to correct type/device
         """
         if self.device == "cuda":
-            return Variable(torch.from_numpy(ndarray).float().cuda(), requires_grad=False)
+            return Variable(
+                torch.from_numpy(ndarray).float().cuda(), requires_grad=False
+            )
         else:
             return Variable(torch.from_numpy(ndarray).float(), requires_grad=False)
 
     def __init__(
-            self,
-            env: DACENV,
-            env_eval: DACENV,
-            logger: Logger,
-            # The eval logger should be removed as soon as the logger is reconstructed
-            eval_logger: Logger,
-            max_action: float,
-            epsilon: float = 0.2,
-            gamma: float = 0.99,
-            batch_size: int = 64,
-            max_size_replay_buffer: int = 1_000_000,
-            begin_updating_weights: int = 1,
-            soft_update_weight: float = 0.005,
-            max_env_time_steps: int = 1_000_000,
-            log_tensorboard: bool = True,
-            args: argparse.Namespace = None,  # from DDQNConfigParser
-            policy_noise=0.2,
-            noise_clip=0.5,
-            policy_freq=2,
-            initial_random_steps=25e3
+        self,
+        env: DACENV,
+        env_eval: DACENV,
+        logger: Logger,
+        # The eval logger should be removed as soon as the logger is reconstructed
+        eval_logger: Logger,
+        max_action: float,
+        epsilon: float = 0.2,
+        gamma: float = 0.99,
+        batch_size: int = 64,
+        max_size_replay_buffer: int = 1_000_000,
+        begin_updating_weights: int = 1,
+        soft_update_weight: float = 0.005,
+        max_env_time_steps: int = 1_000_000,
+        log_tensorboard: bool = True,
+        args: argparse.Namespace = None,  # from DDQNConfigParser
+        policy_noise=0.2,
+        noise_clip=0.5,
+        policy_freq=2,
+        initial_random_steps=25e3,
     ):
         """
         Initialize the TD3 Agent
@@ -90,7 +92,9 @@ class TD3Agent(AbstractAgent):
         self._batch_size = batch_size
         self._epsilon = epsilon
         self._begin_updating_weights = begin_updating_weights
-        self._soft_update_weight = soft_update_weight  # type: float  # TODO add description
+        self._soft_update_weight = (
+            soft_update_weight
+        )  # type: float  # TODO add description
         self._max_env_time_steps = max_env_time_steps  # type: int
         try:
             self._n_episodes_eval = len(self.env.instance_set.keys())  # type: int
@@ -101,17 +105,21 @@ class TD3Agent(AbstractAgent):
             self.output_dir = logger.log_dir
         else:
             self.output_dir = log_path
-        self.model_dir = os.path.join(self.output_dir, 'models')
+        self.model_dir = os.path.join(self.output_dir, "models")
 
         self.writer = None
         if log_tensorboard:
             # TODO write out all the other hyperparameters
             self.writer = SummaryWriter(self.output_dir)
-            self.writer.add_scalar('batch_size/Hyperparameter', self._batch_size)
-            self.writer.add_scalar('policy_epsilon/Hyperparameter', self._epsilon)
+            self.writer.add_scalar("batch_size/Hyperparameter", self._batch_size)
+            self.writer.add_scalar("policy_epsilon/Hyperparameter", self._epsilon)
 
-        self.actor = Actor(self._state_shape, self._action_dim, max_action).to(self.device)
-        self.actor_target = Actor(self._state_shape, self._action_dim, max_action).to(self.device)
+        self.actor = Actor(self._state_shape, self._action_dim, max_action).to(
+            self.device
+        )
+        self.actor_target = Actor(self._state_shape, self._action_dim, max_action).to(
+            self.device
+        )
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=3e-4)
 
         self.critic = Critic(self._state_shape, self._action_dim).to(self.device)
@@ -148,8 +156,9 @@ class TD3Agent(AbstractAgent):
             a = self.env.action_space.sample()
         else:
             # Only for continuous action spaces. For discrete we would need normal epsilon greedy
-            a = self.get_action(self.last_state) + np.random.normal(0, self.max_action * self._epsilon,
-                                                                    size=self._action_dim)
+            a = self.get_action(self.last_state) + np.random.normal(
+                0, self.max_action * self._epsilon, size=self._action_dim
+            )
             a = a.clip(-self.max_action, self.max_action)
 
         ns, r, d, _ = self.env.step(a)
@@ -160,23 +169,36 @@ class TD3Agent(AbstractAgent):
         self.reset_needed = d
 
         if self.total_steps >= self._begin_updating_weights:
-            batch_states, batch_actions, batch_next_states, batch_rewards, batch_terminal_flags = \
-                map(self.tt, self._replay_buffer.random_next_batch(self._batch_size))
+            (
+                batch_states,
+                batch_actions,
+                batch_next_states,
+                batch_rewards,
+                batch_terminal_flags,
+            ) = map(self.tt, self._replay_buffer.random_next_batch(self._batch_size))
 
             # Update the critic
             with torch.no_grad():
-                noise = (torch.randn_like(batch_actions) * self.policy_noise).clamp(-self.noise_clip, self.noise_clip)
-                next_actions = (self.actor_target(batch_next_states) + noise).clamp(-self.max_action, self.max_action)
+                noise = (torch.randn_like(batch_actions) * self.policy_noise).clamp(
+                    -self.noise_clip, self.noise_clip
+                )
+                next_actions = (self.actor_target(batch_next_states) + noise).clamp(
+                    -self.max_action, self.max_action
+                )
 
                 # Compute Targets
                 targetQ1, targetQ2 = self.critic_target(batch_next_states, next_actions)
                 targetQ = torch.min(targetQ1, targetQ2)
-                targetQ = batch_rewards.reshape(-1, 1) + (1 - batch_terminal_flags
-                                                          ).reshape(-1, 1) * self.gamma * targetQ
+                targetQ = (
+                    batch_rewards.reshape(-1, 1)
+                    + (1 - batch_terminal_flags).reshape(-1, 1) * self.gamma * targetQ
+                )
 
             # Get temporal differences
             currentQ1, currentQ2 = self.critic(batch_states, batch_actions)
-            critic_loss = F.mse_loss(currentQ1, targetQ) + F.mse_loss(currentQ2, targetQ)
+            critic_loss = F.mse_loss(currentQ1, targetQ) + F.mse_loss(
+                currentQ2, targetQ
+            )
 
             # Update weights
             self.critic_optimizer.zero_grad()
@@ -185,7 +207,9 @@ class TD3Agent(AbstractAgent):
 
             # Update actor
             if self.total_steps % self.policy_freq == 0:
-                actor_loss = -self.critic.Q1(batch_states, self.actor(batch_states)).mean()
+                actor_loss = -self.critic.Q1(
+                    batch_states, self.actor(batch_states)
+                ).mean()
 
                 self.actor_optimizer.zero_grad()
                 actor_loss.backward()
@@ -195,14 +219,18 @@ class TD3Agent(AbstractAgent):
                 soft_update(self.actor_target, self.actor, self._soft_update_weight)
 
             if self.writer is not None:
-                self.writer.add_scalar('CriticLoss/train', critic_loss, self.total_steps)
+                self.writer.add_scalar(
+                    "CriticLoss/train", critic_loss, self.total_steps
+                )
                 if self.total_steps % self.policy_freq == 0:
-                    self.writer.add_scalar('ActorLoss/train', actor_loss, self.total_steps)
-                self.writer.add_scalar('Action/train', a, self.total_steps)
+                    self.writer.add_scalar(
+                        "ActorLoss/train", actor_loss, self.total_steps
+                    )
+                self.writer.add_scalar("Action/train", a, self.total_steps)
                 # This apparently requires a module named "past" that the docs don't mention.
                 # Also this is not how arrays should be logged, I think, so it should be fixed
                 # self.writer.add_embedding('State/train', self.last_state, self.total_steps)
-                self.writer.add_scalar('Reward/train', r, self.total_steps)
+                self.writer.add_scalar("Reward/train", r, self.total_steps)
 
         if d:
             if engine is not None:
@@ -231,13 +259,13 @@ class TD3Agent(AbstractAgent):
     # TODO: should this maybe at least in part be in the superclass?
     # Basics should be in superclass, extensions here and everything should be extendable in runscript
     def train(
-            self,
-            episodes: int,
-            epsilon: float,  # FIXME why are these arguments still part of the train call?
-            max_env_time_steps: int,
-            n_episodes_eval: int = 1,
-            eval_every_n_steps: int = 1,
-            max_train_time_steps: int = 1_000_000,
+        self,
+        episodes: int,
+        epsilon: float,  # FIXME why are these arguments still part of the train call?
+        max_env_time_steps: int,
+        n_episodes_eval: int = 1,
+        eval_every_n_steps: int = 1,
+        max_train_time_steps: int = 1_000_000,
     ):
         # self._n_episodes_eval = n_episodes_eval
 
@@ -259,28 +287,44 @@ class TD3Agent(AbstractAgent):
             episodes=self._n_episodes_eval,
             max_env_time_steps=self._max_env_time_steps,
         )
-        trainer.add_event_handler(Events.ITERATION_COMPLETED(every=eval_every_n_steps), self.run_rollout, **eval_kwargs)
+        trainer.add_event_handler(
+            Events.ITERATION_COMPLETED(every=eval_every_n_steps),
+            self.run_rollout,
+            **eval_kwargs,
+        )
         trainer.add_event_handler(Events.ITERATION_COMPLETED, self.check_termination)
 
         # EPOCH_COMPLETED
 
-        checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='', n_saved=None, create_dir=True)
+        checkpoint_handler = ModelCheckpoint(
+            self.model_dir, filename_prefix="", n_saved=None, create_dir=True
+        )
         # TODO: add log mode saving everything (trainer, optimizer, etc.)
-        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=100), checkpoint_handler,
-                                  to_save={"actor_model": self.actor,
-                                           "critic_model": self.critic,
-                                           "actor_optimizer": self.actor_optimizer,
-                                           "critic_optimizer": self.critic_optimizer})
+        trainer.add_event_handler(
+            Events.EPOCH_COMPLETED(every=100),
+            checkpoint_handler,
+            to_save={
+                "actor_model": self.actor,
+                "critic_model": self.critic,
+                "actor_optimizer": self.actor_optimizer,
+                "critic_optimizer": self.critic_optimizer,
+            },
+        )
         trainer.add_event_handler(Events.EPOCH_COMPLETED(every=100), self.print_epoch)
 
         # COMPLETED
         # order of registering matters! first in, first out
         # we need to save the model first before evaluating
-        trainer.add_event_handler(Events.COMPLETED, checkpoint_handler,
-                                  to_save={"actor_model": self.actor,
-                                           "critic_model": self.critic,
-                                           "actor_optimizer": self.actor_optimizer,
-                                           "critic_optimizer": self.critic_optimizer})
+        trainer.add_event_handler(
+            Events.COMPLETED,
+            checkpoint_handler,
+            to_save={
+                "actor_model": self.actor,
+                "critic_model": self.critic,
+                "actor_optimizer": self.actor_optimizer,
+                "critic_optimizer": self.critic_optimizer,
+            },
+        )
         trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
 
         # RUN
@@ -302,9 +346,16 @@ class TD3Agent(AbstractAgent):
         worker.evaluate(env, episodes)
         # os.remove(self.output_dir / "Q")  # FIXME I don't know why this is here
 
-    def evaluate(self, engine, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
+    def evaluate(
+        self,
+        engine,
+        env: DACENV,
+        episodes: int = 1,
+        max_env_time_steps: int = 1_000_000,
+    ):
         eval_s, eval_r, eval_d, pols = self.eval(
-            env=env, episodes=episodes, max_env_time_steps=max_env_time_steps)
+            env=env, episodes=episodes, max_env_time_steps=max_env_time_steps
+        )
 
         eval_stats = dict(
             elapsed_time=engine.state.times[Events.EPOCH_COMPLETED.name],
@@ -315,21 +366,23 @@ class TD3Agent(AbstractAgent):
             avg_num_decs_per_eval_ep=float(np.mean(eval_d)),
             avg_rew_per_eval_ep=float(np.mean(eval_r)),
             std_rew_per_eval_ep=float(np.std(eval_r)),
-            eval_eps=episodes
+            eval_eps=episodes,
         )
         per_inst_stats = dict(
             # eval_insts=self._train_eval_env.instances,
             reward_per_isnts=eval_r,
             steps_per_insts=eval_s,
-            policies=pols
+            policies=pols,
         )
 
-        with open(os.path.join(self.output_dir, 'eval_scores.json'), 'a+') as out_fh:
+        with open(os.path.join(self.output_dir, "eval_scores.json"), "a+") as out_fh:
             json.dump(eval_stats, out_fh)
-            out_fh.write('\n')
-        with open(os.path.join(self.output_dir, 'eval_scores_per_inst.json'), 'a+') as out_fh:
+            out_fh.write("\n")
+        with open(
+            os.path.join(self.output_dir, "eval_scores_per_inst.json"), "a+"
+        ) as out_fh:
             json.dump(per_inst_stats, out_fh)
-            out_fh.write('\n')
+            out_fh.write("\n")
 
     def print_epoch(self, engine):
         episode = engine.state.epoch
@@ -337,7 +390,7 @@ class TD3Agent(AbstractAgent):
         print("%s/%s" % (episode + 1, n_episodes))
 
     def __repr__(self):
-        return 'TD3'
+        return "TD3"
 
     def eval(self, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
         """
@@ -352,7 +405,7 @@ class TD3Agent(AbstractAgent):
         with torch.no_grad():
             for e in range(episodes):
                 # this_env.instance_index = this_env.instance_index % 10  # for faster debuggin on only 10 insts
-                print(f'Eval Episode {e} of {episodes}')
+                print(f"Eval Episode {e} of {episodes}")
                 ed, es, er = 0, 0, 0
 
                 s = env.reset()
@@ -376,21 +429,30 @@ class TD3Agent(AbstractAgent):
         return steps, rewards, decisions, policies
 
     def checkpoint(self, filepath: str):
-        torch.save(self.critic.state_dict(), os.path.join(filepath, 'critic'))
-        torch.save(self.actor.state_dict(), os.path.join(filepath, 'actor'))
+        torch.save(self.critic.state_dict(), os.path.join(filepath, "critic"))
+        torch.save(self.actor.state_dict(), os.path.join(filepath, "actor"))
 
-        torch.save(self.actor_optimizer.state_dict(), os.path.join(filepath, 'actor_optimizer'))
-        torch.save(self.critic_optimizer.state_dict(), os.path.join(filepath, 'critic_optimizer'))
+        torch.save(
+            self.actor_optimizer.state_dict(), os.path.join(filepath, "actor_optimizer")
+        )
+        torch.save(
+            self.critic_optimizer.state_dict(),
+            os.path.join(filepath, "critic_optimizer"),
+        )
 
     def load(self, filepath: str):
-        self.actor.load_state_dict(torch.load(os.path.join(filepath, 'actor')))
-        self.critic.load_state_dict(torch.load(os.path.join(filepath, 'critic')))
+        self.actor.load_state_dict(torch.load(os.path.join(filepath, "actor")))
+        self.critic.load_state_dict(torch.load(os.path.join(filepath, "critic")))
 
-        self.critic_optimizer.load_state_dict(torch.load(os.path.join(filepath, 'critic_optimizer')))
-        self.actor_optimizer.load_state_dict(torch.load(os.path.join(filepath, 'actor_optimizer')))
+        self.critic_optimizer.load_state_dict(
+            torch.load(os.path.join(filepath, "critic_optimizer"))
+        )
+        self.actor_optimizer.load_state_dict(
+            torch.load(os.path.join(filepath, "actor_optimizer"))
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ##### THIS IS ONLY FOR DEBUGGING PURPOSES
     ##### THIS IS ONLY FOR DEBUGGING PURPOSES
     ##### THIS IS ONLY FOR DEBUGGING PURPOSES
@@ -409,15 +471,14 @@ if __name__ == '__main__':
     from mighty.iohandling.experiment_tracking import prepare_output_dir
 
     class TMP(TransformObservation):
-
         def __init__(self, env, f):
             super().__init__(env, lambda x: x)
 
         def get_inst_id(self):
             return 0
 
-    env = gym.make('Pendulum-v0')
-    eenv = gym.make('Pendulum-v0')
+    env = gym.make("Pendulum-v0")
+    eenv = gym.make("Pendulum-v0")
 
     env = TMP(env, None)
     eenv = TMP(eenv, None)
@@ -426,7 +487,7 @@ if __name__ == '__main__':
     action_dim = env.action_space.shape[0]
     max_action = float(env.action_space.high[0])
 
-    args = namedtuple('Args', ['seed'])
+    args = namedtuple("Args", ["seed"])
     args.seed = 12345
     out_dir = prepare_output_dir(args)
     train_logger = Logger(
@@ -445,12 +506,19 @@ if __name__ == '__main__':
 
     os.makedirs(out_dir, exist_ok=True)
 
-    agent = TD3Agent(env, eenv, logger=train_logger,
-                     eval_logger=eval_logger,
-                     max_action=max_action,
-                     epsilon=0.1,
-                     gamma=.99,
-                     batch_size=256, log_tensorboard=False,
-                     begin_updating_weights=1000, policy_noise=max_action * 0.2, noise_clip=max_action * 0.5,
-                     max_env_time_steps=int(1e3))
-    agent.train(1000, .1, 1000, eval_every_n_steps=500)
+    agent = TD3Agent(
+        env,
+        eenv,
+        logger=train_logger,
+        eval_logger=eval_logger,
+        max_action=max_action,
+        epsilon=0.1,
+        gamma=0.99,
+        batch_size=256,
+        log_tensorboard=False,
+        begin_updating_weights=1000,
+        policy_noise=max_action * 0.2,
+        noise_clip=max_action * 0.5,
+        max_env_time_steps=int(1e3),
+    )
+    agent.train(1000, 0.1, 1000, eval_every_n_steps=500)

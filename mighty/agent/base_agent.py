@@ -35,20 +35,23 @@ class MightyAgent(object):
     """
     Simple double DQN Agent
     """
+
     def __init__(
-            self,
-            env: DACENV,
-            logger: Logger,
-            eval_env: Optional[DACENV] = None,
-            learning_rate: float = 0.01,
-            epsilon: float = 0.1,
-            batch_size: int = 64,
-            render_progress: bool = True,
-            log_tensorboard: bool = False,
-            replay_buffer_class: Optional[Union[str, DictConfig, Type[BaseReplayBuffer]]] = None,
-            replay_buffer_kwargs: Optional[TKwargs] = None,
-            tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
-            tracer_kwargs: Optional[TKwargs] = None,
+        self,
+        env: DACENV,
+        logger: Logger,
+        eval_env: Optional[DACENV] = None,
+        learning_rate: float = 0.01,
+        epsilon: float = 0.1,
+        batch_size: int = 64,
+        render_progress: bool = True,
+        log_tensorboard: bool = False,
+        replay_buffer_class: Optional[
+            Union[str, DictConfig, Type[BaseReplayBuffer]]
+        ] = None,
+        replay_buffer_kwargs: Optional[TKwargs] = None,
+        tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
+        tracer_kwargs: Optional[TKwargs] = None,
     ):
         self.learning_rate = learning_rate
         self._epsilon = epsilon
@@ -59,7 +62,9 @@ class MightyAgent(object):
         self.policy: Optional = None
 
         # Replay Buffer
-        replay_buffer_class = retrieve_class(cls=replay_buffer_class, default_cls=SimpleReplayBuffer)
+        replay_buffer_class = retrieve_class(
+            cls=replay_buffer_class, default_cls=SimpleReplayBuffer
+        )
         if replay_buffer_kwargs is None:
             replay_buffer_kwargs = {
                 "capacity": 1_000_000,
@@ -70,12 +75,14 @@ class MightyAgent(object):
 
         # Reward Tracer
         # TODO create dac tracer receiving instance as additional info
-        tracer_class = retrieve_class(cls=tracer_class, default_cls=coax.reward_tracing.NStep)
+        tracer_class = retrieve_class(
+            cls=tracer_class, default_cls=coax.reward_tracing.NStep
+        )
         if tracer_kwargs is None:
             tracer_kwargs = {
                 "n": 1,
                 "gamma": 0.9,
-                }
+            }
             self.tracer_class = tracer_class
             self.tracer_kwargs = tracer_kwargs
 
@@ -94,7 +101,7 @@ class MightyAgent(object):
             self.render_progress = render_progress
             self.output_dir = output_dir
             if self.output_dir is not None:
-                self.model_dir = os.path.join(self.output_dir, 'models')
+                self.model_dir = os.path.join(self.output_dir, "models")
 
             self.last_state = None
             self.total_steps = 0
@@ -102,9 +109,11 @@ class MightyAgent(object):
             self.writer = None
             if log_tensorboard and output_dir is not None:
                 self.writer = SummaryWriter(output_dir)
-                self.writer.add_scalar('hyperparameter/learning_rate', self.learning_rate)
-                self.writer.add_scalar('hyperparameter/batch_size', self._batch_size)
-                self.writer.add_scalar('hyperparameter/policy_epsilon', self._epsilon)
+                self.writer.add_scalar(
+                    "hyperparameter/learning_rate", self.learning_rate
+                )
+                self.writer.add_scalar("hyperparameter/batch_size", self._batch_size)
+                self.writer.add_scalar("hyperparameter/policy_epsilon", self._epsilon)
 
             self.initialize_agent()
 
@@ -113,7 +122,9 @@ class MightyAgent(object):
             raise NotImplementedError
 
         def initialize_agent(self):
-            self.tracer = self.tracer_class(**self.tracer_kwargs)  # specify how to trace the transitions
+            self.tracer = self.tracer_class(
+                **self.tracer_kwargs
+            )  # specify how to trace the transitions
             self.replay_buffer = self.replay_buffer_class(**self.replay_buffer_kwargs)
 
             self._initialize_agent()
@@ -122,25 +133,27 @@ class MightyAgent(object):
             raise NotImplementedError
 
         def train(
-                self,
-                n_steps: int,
-                n_episodes_eval: int,
-                eval_every_n_steps: int = 1_000,
-                human_log_every_n_episodes: int = 100,
-                save_model_every_n_episodes: int = 100,
+            self,
+            n_steps: int,
+            n_episodes_eval: int,
+            eval_every_n_steps: int = 1_000,
+            human_log_every_n_episodes: int = 100,
+            save_model_every_n_episodes: int = 100,
         ):
             step_progress = 1 / n_steps
             episodes = 0
             with Progress(
-                    "[progress.description]{task.description}",
-                    BarColumn(),
-                    "[progress.percentage]{task.percentage:>3.0f}%",
-                    'Remaining:',
-                    TimeRemainingColumn(),
-                    'Elapsed:',
-                    TimeElapsedColumn()
+                "[progress.description]{task.description}",
+                BarColumn(),
+                "[progress.percentage]{task.percentage:>3.0f}%",
+                "Remaining:",
+                TimeRemainingColumn(),
+                "Elapsed:",
+                TimeElapsedColumn(),
             ) as progress:
-                steps_task = progress.add_task("Train Steps", total=n_steps, start=False, visible=False)
+                steps_task = progress.add_task(
+                    "Train Steps", total=n_steps, start=False, visible=False
+                )
                 progress.start_task(steps_task)
                 steps = 0
                 steps_since_eval = 0
@@ -167,7 +180,7 @@ class MightyAgent(object):
 
                         self.last_state = s
                         s = s_next
-                        
+
                     episodes += 1
 
                     if steps_since_eval >= eval_every_n_steps:
@@ -176,13 +189,15 @@ class MightyAgent(object):
 
                     # TODO: make this more informative
                     if episodes % human_log_every_n_episodes == 0:
-                        print(f"Steps: {steps}, Reward: {sum(log_reward_buffer) / len(log_reward_buffer)}")
+                        print(
+                            f"Steps: {steps}, Reward: {sum(log_reward_buffer) / len(log_reward_buffer)}"
+                        )
                         log_reward_buffer = []
 
                     if episodes % save_model_every_n_episodes == 0:
                         self.save()
 
-        #FIXME: should be removed once run_mighty is remodelled
+        # FIXME: should be removed once run_mighty is remodelled
         def run(
             self,
             n_steps: int,
@@ -190,30 +205,30 @@ class MightyAgent(object):
             eval_every_n_steps: int = 1_000,
             human_log_every_n_episodes: int = 100,
             save_model_every_n_episodes: int = 100,
-    ):
-        self.train(
-            n_steps=n_steps,
-            n_episodes_eval=n_episodes_eval,
-            eval_every_n_steps=eval_every_n_steps,
-            human_log_every_n_episodes=human_log_every_n_episodes,
-            save_model_every_n_episodes=save_model_every_n_episodes
-        )
+        ):
+            self.train(
+                n_steps=n_steps,
+                n_episodes_eval=n_episodes_eval,
+                eval_every_n_steps=eval_every_n_steps,
+                human_log_every_n_episodes=human_log_every_n_episodes,
+                save_model_every_n_episodes=save_model_every_n_episodes,
+            )
 
     def get_state(self):
-        """ Return internal state for checkpointing. """
+        """Return internal state for checkpointing."""
         raise NotImplementedError
 
     def set_state(self, state):
-        """ Set internal state after loading. """
+        """Set internal state after loading."""
         raise NotImplementedError
 
     def load(self, path):
-        """ Load checkpointed model. """
+        """Load checkpointed model."""
         state = coax.utils.load(path)
         self.set_state(state=state)
 
     def save(self):
-        """ Checkpoint model. """
+        """Checkpoint model."""
         logdir = os.getcwd()
         T = 0  # TODO get automatic checkpoint IDs
         filepath = Path(os.path.join(logdir, "checkpoints", f"checkpoint_{T}.pkl.lz4"))

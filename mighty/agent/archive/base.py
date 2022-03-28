@@ -14,6 +14,7 @@ from mighty.utils.logger import Logger
 from mighty.utils.rollout_worker import RolloutWorker
 from mighty.utils.extended_checkpointing import checkpoint_metadata
 
+
 def print_epoch(engine):
     """
     Print epoch.
@@ -41,14 +42,14 @@ class AbstractAgent:
     """
 
     def __init__(
-            self,
-            env: DACENV,
-            env_eval: DACENV,
-            gamma: float,
-            logger: Logger,
-            output_dir: str,
-            max_env_time_steps: int = 1_000_000,
-            checkpoint_mode: str = 'latest'
+        self,
+        env: DACENV,
+        env_eval: DACENV,
+        gamma: float,
+        logger: Logger,
+        output_dir: str,
+        max_env_time_steps: int = 1_000_000,
+        checkpoint_mode: str = "latest",
     ):
         """
         Initialize an Agent
@@ -60,7 +61,7 @@ class AbstractAgent:
         self.env = env
         self.logger = logger
         self.checkpoint_mode = checkpoint_mode
-        #TODO: make util function that can detect this correctly for all kinds of gym spaces and use it here
+        # TODO: make util function that can detect this correctly for all kinds of gym spaces and use it here
         try:
             self._action_dim = self.env.action_space.n
         except AttributeError:
@@ -71,7 +72,7 @@ class AbstractAgent:
 
         self.output_dir = output_dir
         if self.output_dir is not None:
-            self.model_dir = os.path.join(self.output_dir, 'models')
+            self.model_dir = os.path.join(self.output_dir, "models")
 
         self.last_state = None
         self.total_steps = 0
@@ -182,7 +183,10 @@ class AbstractAgent:
         -------
         None
         """
-        if not self._mapping_save_components or type(self._mapping_save_components) is not dict:
+        if (
+            not self._mapping_save_components
+            or type(self._mapping_save_components) is not dict
+        ):
             msg = "Please set '_mapping_save_components' in the child agent."
             raise ValueError(msg)
 
@@ -222,12 +226,12 @@ class AbstractAgent:
         raise NotImplementedError(msg)
 
     def train(
-            self,
-            n_episodes: int,
-            n_episodes_eval: int,
-            eval_every_n_steps: int = 1_000,
-            human_log_every_n_episodes: int = 100,
-            save_model_every_n_episodes: int = 100,
+        self,
+        n_episodes: int,
+        n_episodes_eval: int,
+        eval_every_n_steps: int = 1_000,
+        human_log_every_n_episodes: int = 100,
+        save_model_every_n_episodes: int = 100,
     ):
         """
         Train the agent.
@@ -271,42 +275,61 @@ class AbstractAgent:
             env=self._env_eval,
             episodes=n_episodes_eval,
         )
-        eval_checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='eval', n_saved=None, create_dir=True)
-        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=eval_every_n_steps), checkpoint_metadata, agent=self,
-                                  file=f"{self.model_dir}/checkpoint_list.json", checkpoint_handler=eval_checkpoint_handler, engine=trainer)
+        eval_checkpoint_handler = ModelCheckpoint(
+            self.model_dir, filename_prefix="eval", n_saved=None, create_dir=True
+        )
+        trainer.add_event_handler(
+            Events.EPOCH_COMPLETED(every=eval_every_n_steps),
+            checkpoint_metadata,
+            agent=self,
+            file=f"{self.model_dir}/checkpoint_list.json",
+            checkpoint_handler=eval_checkpoint_handler,
+            engine=trainer,
+        )
 
-        #trainer.add_event_handler(
+        # trainer.add_event_handler(
         #    Events.ITERATION_COMPLETED(every=eval_every_n_steps),
         #    self.run_rollout,
         #    **eval_kwargs
-        #)
+        # )
         trainer.add_event_handler(Events.ITERATION_COMPLETED, self.check_termination)
 
         # EPOCH_COMPLETED
         if self.checkpoint_mode is None:
             pass
         else:
-            if self.checkpoint_mode == 'debug':
+            if self.checkpoint_mode == "debug":
                 n_saved = None
-            elif self.checkpoint_mode == 'latest':
+            elif self.checkpoint_mode == "latest":
                 n_saved = 1
-            checkpoint_handler = ModelCheckpoint(self.model_dir, filename_prefix='', n_saved=n_saved, create_dir=True)
+            checkpoint_handler = ModelCheckpoint(
+                self.model_dir, filename_prefix="", n_saved=n_saved, create_dir=True
+            )
             trainer.add_event_handler(
-                Events.EPOCH_COMPLETED(every=save_model_every_n_episodes), checkpoint_handler, to_save=self._mapping_save_components)
-            if hasattr(self, '_replay_buffer'):
-                if self.checkpoint_mode == 'debug':
+                Events.EPOCH_COMPLETED(every=save_model_every_n_episodes),
+                checkpoint_handler,
+                to_save=self._mapping_save_components,
+            )
+            if hasattr(self, "_replay_buffer"):
+                if self.checkpoint_mode == "debug":
                     self._replay_buffer.save(self.model_dir, self.total_steps)
-                elif self.checkpoint_mode == 'latest':
-                    if os.path.exists(os.path.join(self.model_dir, 'rpb.pkl')):
-                        os.remove(os.path.join(self.model_dir, 'rpb.pkl'))
+                elif self.checkpoint_mode == "latest":
+                    if os.path.exists(os.path.join(self.model_dir, "rpb.pkl")):
+                        os.remove(os.path.join(self.model_dir, "rpb.pkl"))
                     self._replay_buffer.save(self.model_dir)
-        trainer.add_event_handler(Events.EPOCH_COMPLETED(every=human_log_every_n_episodes), print_epoch)
+        trainer.add_event_handler(
+            Events.EPOCH_COMPLETED(every=human_log_every_n_episodes), print_epoch
+        )
 
         # COMPLETED
         # order of registering matters! first in, first out
         # we need to save the model first before evaluating
-        trainer.add_event_handler(Events.COMPLETED, eval_checkpoint_handler, to_save=self._mapping_save_components)
-        #trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
+        trainer.add_event_handler(
+            Events.COMPLETED,
+            eval_checkpoint_handler,
+            to_save=self._mapping_save_components,
+        )
+        # trainer.add_event_handler(Events.COMPLETED, self.run_rollout, **eval_kwargs)
 
         # RUN
         iterations = range(self._max_env_time_steps)

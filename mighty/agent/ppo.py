@@ -16,36 +16,40 @@ from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TKwargs
 
-#PPO was first proposed by Schulman et al. in "Proximal Policy Optimization Algorithms" in 2017
+# PPO was first proposed by Schulman et al. in "Proximal Policy Optimization Algorithms" in 2017
+
 
 class PPOAgent(MightyAgent):
     """
     Simple double DQN Agent
     """
+
     def __init__(
-            self,
-            # MightyAgent Args
-            env: DACENV,
-            logger: Logger,
-            eval_env: DACENV = None,
-            learning_rate: float = 0.01,
-            epsilon: float = 0.1,
-            batch_size: int = 64,
-            render_progress: bool = True,
-            log_tensorboard: bool = False,
-            replay_buffer_class: Optional[Union[str, DictConfig, Type[BaseReplayBuffer]]] = None,
-            replay_buffer_kwargs: Optional[TKwargs] = None,
-            tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
-            tracer_kwargs: Optional[TKwargs] = None,
-            # PPO Specific Args
-            n_policy_units: int = 8,
-            n_critic_units: int = 8,
-            soft_update_weight: float = 1.,  # TODO which default value?
+        self,
+        # MightyAgent Args
+        env: DACENV,
+        logger: Logger,
+        eval_env: DACENV = None,
+        learning_rate: float = 0.01,
+        epsilon: float = 0.1,
+        batch_size: int = 64,
+        render_progress: bool = True,
+        log_tensorboard: bool = False,
+        replay_buffer_class: Optional[
+            Union[str, DictConfig, Type[BaseReplayBuffer]]
+        ] = None,
+        replay_buffer_kwargs: Optional[TKwargs] = None,
+        tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
+        tracer_kwargs: Optional[TKwargs] = None,
+        # PPO Specific Args
+        n_policy_units: int = 8,
+        n_critic_units: int = 8,
+        soft_update_weight: float = 1.0,  # TODO which default value?
     ):
         self.n_policy_units = n_policy_units
         self.n_critic_units = n_critic_units
 
-        assert 0. <= soft_update_weight <= 1.
+        assert 0.0 <= soft_update_weight <= 1.0
         self.soft_update_weight = soft_update_weight
 
         # Placeholder variables which are filled in self.initialize_agent
@@ -73,31 +77,47 @@ class PPOAgent(MightyAgent):
 
     def _initialize_agent(self):
         def func_pi(S, is_training):
-            shared = hk.Sequential((
-                hk.Linear(self.n_policy_units), jax.nn.relu,
-                hk.Linear(self.n_policy_units), jax.nn.relu,
-            ))
-            mu = hk.Sequential((
-                shared,
-                hk.Linear(self.n_policy_units), jax.nn.relu,
-                hk.Linear(prod(self.env.action_space.shape), w_init=jnp.zeros),
-                hk.Reshape(self.env.action_space.shape),
-            ))
-            logvar = hk.Sequential((
-                shared,
-                hk.Linear(self.n_policy_units), jax.nn.relu,
-                hk.Linear(prod(self.env.action_space.shape), w_init=jnp.zeros),
-                hk.Reshape(self.env.action_space.shape),
-            ))
-            return {'mu': mu(S), 'logvar': logvar(S)}
+            shared = hk.Sequential(
+                (
+                    hk.Linear(self.n_policy_units),
+                    jax.nn.relu,
+                    hk.Linear(self.n_policy_units),
+                    jax.nn.relu,
+                )
+            )
+            mu = hk.Sequential(
+                (
+                    shared,
+                    hk.Linear(self.n_policy_units),
+                    jax.nn.relu,
+                    hk.Linear(prod(self.env.action_space.shape), w_init=jnp.zeros),
+                    hk.Reshape(self.env.action_space.shape),
+                )
+            )
+            logvar = hk.Sequential(
+                (
+                    shared,
+                    hk.Linear(self.n_policy_units),
+                    jax.nn.relu,
+                    hk.Linear(prod(self.env.action_space.shape), w_init=jnp.zeros),
+                    hk.Reshape(self.env.action_space.shape),
+                )
+            )
+            return {"mu": mu(S), "logvar": logvar(S)}
 
         def func_v(S, is_training):
-            seq = hk.Sequential((
-                hk.Linear(self.n_critic_units), jax.nn.relu,
-                hk.Linear(self.n_critic_units), jax.nn.relu,
-                hk.Linear(self.n_critic_units), jax.nn.relu,
-                hk.Linear(1, w_init=jnp.zeros), jnp.ravel
-            ))
+            seq = hk.Sequential(
+                (
+                    hk.Linear(self.n_critic_units),
+                    jax.nn.relu,
+                    hk.Linear(self.n_critic_units),
+                    jax.nn.relu,
+                    hk.Linear(self.n_critic_units),
+                    jax.nn.relu,
+                    hk.Linear(1, w_init=jnp.zeros),
+                    jnp.ravel,
+                )
+            )
             return seq(S)
 
         self.policy = coax.Policy(func_pi, self.env)
@@ -108,13 +128,17 @@ class PPOAgent(MightyAgent):
         self.v_targ = self.v.copy()
 
         # update
-        self.td_update = coax.td_learning.SimpleTD(self.v, self.v_targ, optimizer=optax.adam(0.02))
-        self.ppo_clip = coax.policy_objectives.PPOClip(self.policy, optimizer=optax.adam(0.01))
+        self.td_update = coax.td_learning.SimpleTD(
+            self.v, self.v_targ, optimizer=optax.adam(0.02)
+        )
+        self.ppo_clip = coax.policy_objectives.PPOClip(
+            self.policy, optimizer=optax.adam(0.01)
+        )
 
         print("Initialized agent.")
 
     def update_agent(self, step):
-        transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)   
+        transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
         _, td_error = self.td_update.update(transition_batch, return_td_error=True)
         self.ppo_clip.update(transition_batch, td_error)
 
@@ -123,16 +147,28 @@ class PPOAgent(MightyAgent):
         self.pi_old.soft_update(self.policy, tau=self.soft_update_weight)
 
     def get_state(self):
-        return self.v.params, self.v.function_state, \
-                self.v_targ.params, self.v_targ.function_state, \
-                self.policy.params, self.policy.function_state, \
-                self.pi_old.params, self.pi_old.function_state
+        return (
+            self.v.params,
+            self.v.function_state,
+            self.v_targ.params,
+            self.v_targ.function_state,
+            self.policy.params,
+            self.policy.function_state,
+            self.pi_old.params,
+            self.pi_old.function_state,
+        )
 
     def set_state(self, state):
-        self.v.params, self.v.function_state, \
-            self.v_targ.params, self.v_targ.function_state, \
-            self.policy.params, self.policy.function_state, \
-            self.pi_old.params, self.pi_old.function_state = state
+        (
+            self.v.params,
+            self.v.function_state,
+            self.v_targ.params,
+            self.v_targ.function_state,
+            self.policy.params,
+            self.policy.function_state,
+            self.pi_old.params,
+            self.pi_old.function_state,
+        ) = state
 
     def eval(self, env: DACENV, episodes: int):
         """
@@ -142,9 +178,3 @@ class PPOAgent(MightyAgent):
         :return:
         """
         raise NotImplementedError
-
-
-
-
-
-
