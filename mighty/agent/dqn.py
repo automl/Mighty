@@ -16,6 +16,8 @@ from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TKwargs
 
+#DQN with possible extension to DDQN as first proposed in "Playing Atari with Deep Reinforcement Learn#DQN with possible extension to DDQN as first proposed in "Playing Atari with Deep Reinforcement Learning" by Mnih et al. in 2013
+#DDQN was proposed by van Hasselt et al. in 2016's "Deep Reinforcement Learning with Double Q-learning"
 
 class DQNAgent(MightyAgent):
     """

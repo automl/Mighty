@@ -16,6 +16,8 @@ from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TKwargs
 
+#SAC agent from Haarnoja et al.'s "Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor" Paper at ICML 2018
+#Original Code: https://github.com/haarnoja/sac
 
 class SACAgent(MightyAgent):
     """

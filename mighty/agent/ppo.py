@@ -16,6 +16,7 @@ from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TKwargs
 
+#PPO was first proposed by Schulman et al. in "Proximal Policy Optimization Algorithms" in 2017
 
 class PPOAgent(MightyAgent):
     """
