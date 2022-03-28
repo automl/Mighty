@@ -33,7 +33,6 @@ python setup.py develop
 TODO
 
 
-## Run Coax DDQN
+## Run Coax Agent
 ```bash
-python run_mighty.py 'num_steps=1000' '+algorithm=ddqn' 
-```
+python run_mighty.py 'num_steps=1000' '+algorithm=agent' 
