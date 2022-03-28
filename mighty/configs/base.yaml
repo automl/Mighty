@@ -7,7 +7,7 @@ defaults:
 debug: false
 seed: 0
 group: null
-output_dir: ./tmp
+output_dir: /tmp
 wandb_id: null
 
 num_steps: 1000000  # Maximum number of steps in the environment before episode ends.
