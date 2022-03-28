@@ -85,7 +85,7 @@ def main(cfg: DictConfig):
         #os.mkdir(os.path.join(logger.log_dir, 'final'))
         #agent.checkpoint(os.path.join(logger.log_dir, 'final'))
     else:
-        raise NotImplementedError
+        raise NotImplementedError('Checkpointing not yet supported')
         # print('#' * 80)
         # print(f'Loading {agent} from {args.load_model}')
         # print('#' * 80)
