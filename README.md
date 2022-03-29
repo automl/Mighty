@@ -31,3 +31,8 @@ python setup.py develop
 ## Learning a Configuration Policy via DAC
 
 TODO
+
+
+## Run Coax Agent
+```bash
+python run_mighty.py 'num_steps=1000' '+algorithm=agent' 

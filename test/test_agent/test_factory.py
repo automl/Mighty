@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 
 from mighty.agent.factory import get_agent_class
-from mighty.agent.ddqn import DDQNAgent
+from mighty.agent.archive.ddqn import DDQNAgent
 
 
 class FactoryTestCase(unittest.TestCase):

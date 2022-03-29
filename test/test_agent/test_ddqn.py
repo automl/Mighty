@@ -7,7 +7,7 @@ import numpy as np
 from torch.autograd import Variable
 from torch import from_numpy as tensor_from_numpy
 
-from mighty.agent.ddqn import DDQNAgent
+from mighty.agent.archive.ddqn import DDQNAgent
 from .mock_environment import MockEnvDiscreteActions
 
 

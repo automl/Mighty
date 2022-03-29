@@ -15,7 +15,7 @@ from mighty.utils.logger import Logger
 from mighty.utils.replay_buffer import ReplayBuffer
 from mighty.utils.value_function import FullyConnectedQ
 from mighty.utils.weight_updates import soft_update
-from mighty.agent.base import AbstractAgent
+from mighty.agent.archive.base import AbstractAgent
 from mighty.env.env_handling import DACENV
 
 from ignite.engine.engine import Engine
@@ -28,32 +28,34 @@ class DDQNAgent(AbstractAgent):
     Simple double DQN Agent
     """
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def tt(self, ndarray):
         """
         Helper Function to cast observation to correct type/device
         """
         if self.device == "cuda":
-            return Variable(torch.from_numpy(ndarray).float().cuda(), requires_grad=False)
+            return Variable(
+                torch.from_numpy(ndarray).float().cuda(), requires_grad=False
+            )
         else:
             return Variable(torch.from_numpy(ndarray).float(), requires_grad=False)
 
     def __init__(
-            self, 
-            env: DACENV,
-            env_eval: DACENV,
-            logger: Logger,
-            gamma: float = 0.99,
-            epsilon: float = 0.2,
-            batch_size: int = 64,
-            learning_rate: float = 0.001,
-            max_size_replay_buffer: int = 1_000_000,
-            begin_updating_weights: int = 1,
-            soft_update_weight: float = 0.01,
-            max_env_time_steps: int = 1_000_000,
-            log_tensorboard: bool = True,
-            args: argparse.Namespace = None  # from AgentConfigParser
+        self,
+        env: DACENV,
+        env_eval: DACENV,
+        logger: Logger,
+        gamma: float = 0.99,
+        epsilon: float = 0.2,
+        batch_size: int = 64,
+        learning_rate: float = 0.001,
+        max_size_replay_buffer: int = 1_000_000,
+        begin_updating_weights: int = 1,
+        soft_update_weight: float = 0.01,
+        max_env_time_steps: int = 1_000_000,
+        log_tensorboard: bool = True,
+        args: argparse.Namespace = None,  # from AgentConfigParser
     ):
         """
         Initialize the DQN Agent
@@ -75,16 +77,23 @@ class DDQNAgent(AbstractAgent):
             soft_update_weight = args.soft_update_weight
             max_env_time_steps = args.max_env_time_steps
 
+        if logger is not None:
+            outdir = logger.log_dir
+        else:
+            outdir = None
+
         super().__init__(
             env=env,
             gamma=gamma,
             logger=logger,
             max_env_time_steps=max_env_time_steps,
             env_eval=env_eval,
-            output_dir=logger.log_dir
+            output_dir=outdir,
         )
         self._q = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
-        self._q_target = FullyConnectedQ(self._state_shape, self._action_dim).to(self.device)
+        self._q_target = FullyConnectedQ(self._state_shape, self._action_dim).to(
+            self.device
+        )
 
         self._loss_function = nn.MSELoss()
         self.lr = learning_rate
@@ -94,17 +103,21 @@ class DDQNAgent(AbstractAgent):
         self._epsilon = epsilon
         self._batch_size = batch_size
         self._begin_updating_weights = begin_updating_weights
-        self._soft_update_weight = soft_update_weight  # type: float  # TODO add description
+        self._soft_update_weight = (
+            soft_update_weight
+        )  # type: float  # TODO add description
 
-        self._mapping_save_components = {"model": self._q,
-                                         "targets": self._q_target,
-                                         "optimizer": self._q_optimizer}
+        self._mapping_save_components = {
+            "model": self._q,
+            "targets": self._q_target,
+            "optimizer": self._q_optimizer,
+        }
         self.writer = None
-        if log_tensorboard:
-            self.writer = SummaryWriter(self.logger.log_dir)
-            self.writer.add_scalar('lr/Hyperparameter', self.lr)
-            self.writer.add_scalar('batch_size/Hyperparameter', self._batch_size)
-            self.writer.add_scalar('policy_epsilon/Hyperparameter', self._epsilon)
+        if log_tensorboard and outdir is not None:
+            self.writer = SummaryWriter(outdir)
+            self.writer.add_scalar("lr/Hyperparameter", self.lr)
+            self.writer.add_scalar("batch_size/Hyperparameter", self._batch_size)
+            self.writer.add_scalar("policy_epsilon/Hyperparameter", self._epsilon)
 
     def save_replay_buffer(self, path):
         self._replay_buffer.save(path)
@@ -122,7 +135,7 @@ class DDQNAgent(AbstractAgent):
             return np.random.randint(self._action_dim)
         return u
 
-    def step(self, engine: Engine=None, iteration=None):
+    def step(self, engine: Engine = None, iteration=None):
         """
         Used as process function for ignite. Must have as args: engine, batch.
 
@@ -133,78 +146,104 @@ class DDQNAgent(AbstractAgent):
         a = self.get_action(self.last_state, self._epsilon)
         ns, r, d, _ = self.env.step(a)
         self.total_steps += 1
-        self.logger.next_step()
+        if self.logger is not None:
+            self.logger.next_step()
         self._replay_buffer.add_transition(self.last_state, a, ns, r, d)
         self.reset_needed = d
 
         if self.total_steps >= self._begin_updating_weights:
-            batch_states, batch_actions, batch_next_states, batch_rewards, batch_terminal_flags = \
-                map(self.tt, self._replay_buffer.random_next_batch(self._batch_size))
+            (
+                batch_states,
+                batch_actions,
+                batch_next_states,
+                batch_rewards,
+                batch_terminal_flags,
+            ) = map(self.tt, self._replay_buffer.random_next_batch(self._batch_size))
 
-            target = batch_rewards + (1 - batch_terminal_flags) * self.gamma * \
-                     self._q_target(batch_next_states)[
-                         torch.arange(self._batch_size).long(), torch.argmax(
-                             self._q(batch_next_states), dim=1)]
-            current_prediction = self._q(batch_states)[torch.arange(self._batch_size).long(), batch_actions.long()]
-    
+            target = (
+                batch_rewards
+                + (1 - batch_terminal_flags)
+                * self.gamma
+                * self._q_target(batch_next_states)[
+                    torch.arange(self._batch_size).long(),
+                    torch.argmax(self._q(batch_next_states), dim=1),
+                ]
+            )
+            current_prediction = self._q(batch_states)[
+                torch.arange(self._batch_size).long(), batch_actions.long()
+            ]
+
             loss = self._loss_function(current_prediction, target.detach())
-            
+
             if self.writer is not None:
-                self.writer.add_scalar('Loss/train', loss, self.total_steps)
-                self.writer.add_scalar('Action/train', a, self.total_steps)
-                #This apparently requires a module named "past" that the docs don't mention. 
-                #Also this is not how arrays should be logged, I think, so it should be fixed
-                #self.writer.add_embedding('State/train', self.last_state, self.total_steps)
-                self.writer.add_scalar('Reward/train', r, self.total_steps)
+                self.writer.add_scalar("Loss/train", loss, self.total_steps)
+                self.writer.add_scalar("Action/train", a, self.total_steps)
+                # This apparently requires a module named "past" that the docs don't mention.
+                # Also this is not how arrays should be logged, I think, so it should be fixed
+                # self.writer.add_embedding('State/train', self.last_state, self.total_steps)
+                self.writer.add_scalar("Reward/train", r, self.total_steps)
 
             self._q_optimizer.zero_grad()
             loss.backward()
             self._q_optimizer.step()
-    
+
             soft_update(self._q_target, self._q, self._soft_update_weight)
 
         if d:
             if engine is not None:
                 engine.terminate_epoch()
-            self.end_logger_episode()
+            if self.logger is not None:
+                self.end_logger_episode()
 
         state = ns  # stored in engine.state # TODO
         self.last_state = state
         return state
 
     def end_logger_episode(self):
-        self.logger.next_episode()
+        if self.logger is not None:
+            self.logger.next_episode()
 
-    def evaluate(self, engine, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
+    def evaluate(
+        self,
+        engine,
+        env: DACENV,
+        episodes: int = 1,
+        max_env_time_steps: int = 1_000_000,
+    ):
         eval_s, eval_r, eval_d, pols = self.eval(
-            env=env, episodes=episodes, max_env_time_steps=max_env_time_steps)
+            env=env, episodes=episodes, max_env_time_steps=max_env_time_steps
+        )
 
         eval_stats = dict(
-            elapsed_time=engine.state.times[Events.EPOCH_COMPLETED.name],  # TODO check if this is the total time passed since start of training
+            elapsed_time=engine.state.times[
+                Events.EPOCH_COMPLETED.name
+            ],  # TODO check if this is the total time passed since start of training
             training_steps=engine.state.iteration,
             training_eps=engine.state.epoch,
             avg_num_steps_per_eval_ep=float(np.mean(eval_s)),
             avg_num_decs_per_eval_ep=float(np.mean(eval_d)),
             avg_rew_per_eval_ep=float(np.mean(eval_r)),
             std_rew_per_eval_ep=float(np.std(eval_r)),
-            eval_eps=episodes
+            eval_eps=episodes,
         )
         per_inst_stats = dict(
             # eval_insts=self._train_eval_env.instances,
             reward_per_isnts=eval_r,
             steps_per_insts=eval_s,
-            policies=pols
+            policies=pols,
         )
 
-        with open(os.path.join(self.output_dir, 'eval_scores.json'), 'a+') as out_fh:
+        with open(os.path.join(self.output_dir, "eval_scores.json"), "a+") as out_fh:
             json.dump(eval_stats, out_fh)
-            out_fh.write('\n')
-        with open(os.path.join(self.output_dir, 'eval_scores_per_inst.json'), 'a+') as out_fh:
+            out_fh.write("\n")
+        with open(
+            os.path.join(self.output_dir, "eval_scores_per_inst.json"), "a+"
+        ) as out_fh:
             json.dump(per_inst_stats, out_fh)
-            out_fh.write('\n')
-        
+            out_fh.write("\n")
+
     def __repr__(self):
-        return 'DoubleDQN'
+        return "DoubleDQN"
 
     def eval(self, env: DACENV, episodes: int = 1, max_env_time_steps: int = 1_000_000):
         """
@@ -219,7 +258,7 @@ class DDQNAgent(AbstractAgent):
         with torch.no_grad():
             for e in range(episodes):
                 # this_env.instance_index = this_env.instance_index % 10  # for faster debuggin on only 10 insts
-                print(f'Eval Episode {e} of {episodes}')
+                print(f"Eval Episode {e} of {episodes}")
                 ed, es, er = 0, 0, 0
 
                 s = env.reset()
@@ -239,14 +278,13 @@ class DDQNAgent(AbstractAgent):
                 decisions.append(ed)
                 policies.append(None)
 
-        #TODO: log this somehow
+        # TODO: log this somehow
         return steps, rewards, decisions, policies
 
     def load_checkpoint(self, path: str, replay_path: str = None):
         checkpoint = torch.load(path)
-        self._q.load_state_dict(checkpoint['model'])
-        self._q_target.load_state_dict(checkpoint['targets'])
-        self._q_optimizer.load_state_dict(checkpoint['optimizer'])
+        self._q.load_state_dict(checkpoint["model"])
+        self._q_target.load_state_dict(checkpoint["targets"])
+        self._q_optimizer.load_state_dict(checkpoint["optimizer"])
         if replay_path is not None:
             self._replay_buffer.load(replay_path)
-
