@@ -3,13 +3,13 @@ from unittest.mock import MagicMock
 
 import numpy as np
 from mighty.agent.ppo import PPOAgent
-from .mock_environment import MockEnvDiscreteActions
+from .mock_environment import MockEnvContinuousActions
 
 
 class MyTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
-        env = MockEnvDiscreteActions()
+        env = MockEnvContinuousActions()
         self.ppo = PPOAgent(env=env, eval_env=env, epsilon=.1,
                             batch_size=4, logger=MagicMock(), log_tensorboard=False)
         self.assertFalse(self.ppo.v is None)

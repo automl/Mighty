@@ -207,23 +207,6 @@ class MightyAgent(object):
                 if episodes % save_model_every_n_episodes == 0:
                     self.save()
 
-        # FIXME: should be removed once run_mighty is remodelled
-    def run(
-            self,
-            n_steps: int,
-            n_episodes_eval: int,
-            eval_every_n_steps: int = 1_000,
-            human_log_every_n_episodes: int = 100,
-            save_model_every_n_episodes: int = 100,
-        ):
-        self.train(
-                n_steps=n_steps,
-                n_episodes_eval=n_episodes_eval,
-                eval_every_n_steps=eval_every_n_steps,
-                human_log_every_n_episodes=human_log_every_n_episodes,
-                save_model_every_n_episodes=save_model_every_n_episodes,
-            )
-
     def get_state(self):
         """Return internal state for checkpointing."""
         raise NotImplementedError
