@@ -14,7 +14,7 @@ from omegaconf import DictConfig
 from mighty.agent.base_agent import MightyAgent, retrieve_class
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
-from mighty.utils.types import TKwargs
+from mighty.utils.types import TypeKwargs
 
 # DQN with possible extension to DDQN as first proposed in "Playing Atari with Deep Reinforcement Learn#DQN with possible extension to DDQN as first proposed in "Playing Atari with Deep Reinforcement Learning" by Mnih et al. in 2013
 # DDQN was proposed by van Hasselt et al. in 2016's "Deep Reinforcement Learning with Double Q-learning"
@@ -39,16 +39,16 @@ class DQNAgent(MightyAgent):
         replay_buffer_class: Optional[
             Union[str, DictConfig, Type[BaseReplayBuffer]]
         ] = None,
-        replay_buffer_kwargs: Optional[TKwargs] = None,
+        replay_buffer_kwargs: Optional[TypeKwargs] = None,
         tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
-        tracer_kwargs: Optional[TKwargs] = None,
+        tracer_kwargs: Optional[TypeKwargs] = None,
         # DDQN Specific Args
         n_units: int = 8,
         soft_update_weight: float = 1.0,  # TODO which default value?
         policy_class: Optional[
             Union[str, DictConfig, Type[BaseValueBasedPolicy]]
         ] = None,
-        policy_kwargs: Optional[TKwargs] = None,
+        policy_kwargs: Optional[TypeKwargs] = None,
         td_update_class: Optional[
             Union[
                 Type[coax.td_learning.QLearning],
@@ -58,7 +58,7 @@ class DQNAgent(MightyAgent):
                 Type[coax.td_learning.SoftClippedDoubleQLearning],
             ]
         ] = None,
-        td_update_kwargs: Optional[TKwargs] = None,
+        td_update_kwargs: Optional[TypeKwargs] = None,
     ):
         self.n_units = n_units
         assert 0.0 <= soft_update_weight <= 1.0

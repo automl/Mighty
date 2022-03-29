@@ -18,7 +18,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
-from mighty.utils.types import TKwargs
+from mighty.utils.types import TypeKwargs
 
 
 def retrieve_class(cls: Union[str, DictConfig, Type], default_cls: Type) -> Type:
@@ -49,9 +49,9 @@ class MightyAgent(object):
         replay_buffer_class: Optional[
             Union[str, DictConfig, Type[BaseReplayBuffer]]
         ] = None,
-        replay_buffer_kwargs: Optional[TKwargs] = None,
+        replay_buffer_kwargs: Optional[TypeKwargs] = None,
         tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
-        tracer_kwargs: Optional[TKwargs] = None,
+        tracer_kwargs: Optional[TypeKwargs] = None,
     ):
         self.learning_rate = learning_rate
         self._epsilon = epsilon

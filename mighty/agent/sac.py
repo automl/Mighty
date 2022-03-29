@@ -14,7 +14,7 @@ from omegaconf import DictConfig
 from mighty.agent.base_agent import MightyAgent, retrieve_class
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
-from mighty.utils.types import TKwargs
+from mighty.utils.types import TypeKwargs
 
 # SAC agent from Haarnoja et al.'s "Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor" Paper at ICML 2018
 # Original Code: https://github.com/haarnoja/sac
@@ -39,9 +39,9 @@ class SACAgent(MightyAgent):
         replay_buffer_class: Optional[
             Union[str, DictConfig, Type[BaseReplayBuffer]]
         ] = None,
-        replay_buffer_kwargs: Optional[TKwargs] = None,
+        replay_buffer_kwargs: Optional[TypeKwargs] = None,
         tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
-        tracer_kwargs: Optional[TKwargs] = None,
+        tracer_kwargs: Optional[TypeKwargs] = None,
         # SAC Specific Args
         n_policy_units: int = 8,
         n_critic_units: int = 8,
@@ -55,7 +55,7 @@ class SACAgent(MightyAgent):
                 Type[coax.td_learning.SoftClippedDoubleQLearning],
             ]
         ] = None,
-        td_update_kwargs: Optional[TKwargs] = None,
+        td_update_kwargs: Optional[TypeKwargs] = None,
     ):
         assert 0.0 <= soft_update_weight <= 1.0
         self.soft_update_weight = soft_update_weight
@@ -70,7 +70,6 @@ class SACAgent(MightyAgent):
         self.qlearning1: Optional[coax.td_learning.DoubleQLearning] = None
         self.qlearning2: Optional[coax.td_learning.DoubleQLearning] = None
         self.soft_pg: Optional[coax.policy_objectives.SoftPG] = None
-        self.buffer: Optional[coax.experience_replay.SimpleReplayBuffer] = None
         self.policy_regularizer: Optional[
             coax.regularizers.NStepEntropyRegularizer
         ] = None

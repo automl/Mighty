@@ -14,7 +14,7 @@ from omegaconf import DictConfig
 from mighty.agent.base_agent import MightyAgent
 from mighty.env.env_handling import DACENV
 from mighty.utils.logger import Logger
-from mighty.utils.types import TKwargs
+from mighty.utils.types import TypeKwargs
 
 # PPO was first proposed by Schulman et al. in "Proximal Policy Optimization Algorithms" in 2017
 
@@ -38,9 +38,9 @@ class PPOAgent(MightyAgent):
         replay_buffer_class: Optional[
             Union[str, DictConfig, Type[BaseReplayBuffer]]
         ] = None,
-        replay_buffer_kwargs: Optional[TKwargs] = None,
+        replay_buffer_kwargs: Optional[TypeKwargs] = None,
         tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
-        tracer_kwargs: Optional[TKwargs] = None,
+        tracer_kwargs: Optional[TypeKwargs] = None,
         # PPO Specific Args
         n_policy_units: int = 8,
         n_critic_units: int = 8,
