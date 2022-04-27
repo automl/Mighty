@@ -64,7 +64,7 @@ class TestDQN(unittest.TestCase):
 
         q_previous = deepcopy(self.dqn.q.params)
         target_previous = deepcopy(self.dqn.q_target.params)
-        self.dqn.update_agent(5)
+        self.dqn.update_agent(8)
         self.assertFalse(
             np.all(self.dqn.q.params["linear_3"]["w"] == q_previous["linear_3"]["w"])
         )
