@@ -102,12 +102,6 @@ class TestSAC(unittest.TestCase):
             )
         )
         self.assertFalse(
-            np.any(self.sac.q1.params["linear_3"]["w"] != q1_previous["linear_3"]["w"])
-            and np.any(
-                self.sac.q2.params["linear_3"]["w"] != q2_previous["linear_3"]["w"]
-            )
-        )
-        self.assertFalse(
             np.all(
                 self.sac.policy.params["linear_3"]["w"]
                 == policy_previous["linear_3"]["w"]

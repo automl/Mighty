@@ -105,13 +105,11 @@ class MightyAgent(object):
 
         self.last_state = None
         self.total_steps = 0
-            
+
         self.writer = None
         if log_tensorboard and output_dir is not None:
             self.writer = SummaryWriter(output_dir)
-            self.writer.add_scalar(
-                "hyperparameter/learning_rate", self.learning_rate
-            )
+            self.writer.add_scalar("hyperparameter/learning_rate", self.learning_rate)
             self.writer.add_scalar("hyperparameter/batch_size", self._batch_size)
             self.writer.add_scalar("hyperparameter/policy_epsilon", self._epsilon)
 
@@ -126,10 +124,10 @@ class MightyAgent(object):
         General initialization of tracer and buffer for all agents.
         Algorithm specific initialization like policies etc. are done in _initialize_agent
         """
-        
+
         self.tracer = self.tracer_class(
-                **self.tracer_kwargs
-            )  # specify how to trace the transitions
+            **self.tracer_kwargs
+        )  # specify how to trace the transitions
         self.replay_buffer = self.replay_buffer_class(**self.replay_buffer_kwargs)
 
         self._initialize_agent()
@@ -139,13 +137,13 @@ class MightyAgent(object):
         raise NotImplementedError
 
     def train(
-            self,
-            n_steps: int,
-            n_episodes_eval: int,
-            eval_every_n_steps: int = 1_000,
-            human_log_every_n_episodes: int = 100,
-            save_model_every_n_episodes: int = 100,
-        ):
+        self,
+        n_steps: int,
+        n_episodes_eval: int,
+        eval_every_n_steps: int = 1_000,
+        human_log_every_n_episodes: int = 100,
+        save_model_every_n_episodes: int = 100,
+    ):
         """
         Trains the agent for n steps.
         Evaluation is done for the given number of episodes each evaluation interval.
@@ -160,7 +158,7 @@ class MightyAgent(object):
             TimeRemainingColumn(),
             "Elapsed:",
             TimeElapsedColumn(),
-            ) as progress:
+        ) as progress:
             steps_task = progress.add_task(
                 "Train Steps", total=n_steps, start=False, visible=False
             )

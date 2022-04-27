@@ -7,6 +7,7 @@ import haiku as hk
 import jax.numpy as jnp
 from coax.experience_replay._simple import BaseReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
+from coax.reward_tracing import NStep
 from numpy import prod
 
 from omegaconf import DictConfig
@@ -40,8 +41,8 @@ class SACAgent(MightyAgent):
             Union[str, DictConfig, Type[BaseReplayBuffer]]
         ] = None,
         replay_buffer_kwargs: Optional[TypeKwargs] = None,
-        tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
-        tracer_kwargs: Optional[TypeKwargs] = None,
+        tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = NStep,
+        tracer_kwargs: Optional[TypeKwargs] = {"record_extra_info": True, "n": 5},
         # SAC Specific Args
         n_policy_units: int = 8,
         n_critic_units: int = 8,
@@ -80,7 +81,9 @@ class SACAgent(MightyAgent):
         if td_update_kwargs is None:
             td_update_kwargs = {"q_targ": None, "optimizer": optax.adam(learning_rate)}
         self.td_update_kwargs = td_update_kwargs
-        
+
+        tracer_kwargs["gamma"] = 0.9
+
         super().__init__(
             env=env,
             logger=logger,
@@ -97,7 +100,7 @@ class SACAgent(MightyAgent):
         )
 
     def policy_function(self, S, is_training):
-        """ Policy base function """
+        """Policy base function"""
         seq = hk.Sequential(
             (
                 hk.Linear(self.n_policy_units),
@@ -115,7 +118,7 @@ class SACAgent(MightyAgent):
         return {"mu": mu, "logvar": logvar}
 
     def q_function(self, S, A, is_training):
-        """ Q-function base for critic """
+        """Q-function base for critic"""
         seq = hk.Sequential(
             (
                 hk.Linear(self.n_critic_units),

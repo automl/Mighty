@@ -76,7 +76,7 @@ class PPOAgent(MightyAgent):
         )
 
     def policy_function(self, S, is_training):
-        """ Policy base """    
+        """Policy base"""
         shared = hk.Sequential(
             (
                 hk.Linear(self.n_policy_units),
@@ -106,7 +106,7 @@ class PPOAgent(MightyAgent):
         return {"mu": mu(S), "logvar": logvar(S)}
 
     def value_function(self, S, is_training):
-        """ value base """
+        """value base"""
         seq = hk.Sequential(
             (
                 hk.Linear(self.n_critic_units),
@@ -122,7 +122,7 @@ class PPOAgent(MightyAgent):
         return seq(S)
 
     def _initialize_agent(self):
-        """ Initialize PPO specific components """
+        """Initialize PPO specific components"""
 
         self.policy = coax.Policy(self.policy_function, self.env)
         self.v = coax.V(self.value_function, self.env)

@@ -100,7 +100,7 @@ class DQNAgent(MightyAgent):
         )
 
     def q_function(self, S, is_training):
-        """ Q-function base """
+        """Q-function base"""
         seq = hk.Sequential(
             (
                 hk.Linear(self.n_units),
@@ -117,7 +117,7 @@ class DQNAgent(MightyAgent):
         return seq(S)
 
     def _initialize_agent(self):
-        """ Initialize DQN specific things like q-function """
+        """Initialize DQN specific things like q-function"""
 
         self.q = coax.Q(self.q_function, self.env)
         self.policy = self.policy_class(q=self.q, **self.policy_kwargs)
