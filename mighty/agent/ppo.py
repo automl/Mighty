@@ -173,12 +173,3 @@ class PPOAgent(MightyAgent):
             self.pi_old.params,
             self.pi_old.function_state,
         ) = state
-
-    def eval(self, env: DACENV, episodes: int):
-        """
-        Eval agent on an environment. (Full evaluation)
-        :param env:
-        :param episodes:
-        :return:
-        """
-        raise NotImplementedError

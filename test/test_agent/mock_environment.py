@@ -3,12 +3,13 @@ from gym.spaces import Discrete, Box
 
 
 class MockEnvDiscreteActions:
-
     def __init__(self):
         self.action_space = Discrete(5)
-        self.observation_space = Box(low=np.array([0., 0.], dtype=np.float32),
-                                     high=np.array([10., 1.], dtype=np.float32),
-                                     dtype=np.float32)
+        self.observation_space = Box(
+            low=np.array([0.0, 0.0], dtype=np.float32),
+            high=np.array([10.0, 1.0], dtype=np.float32),
+            dtype=np.float32,
+        )
         self.__count = 0
         self.instance_set = {0: [0]}
 
@@ -22,12 +23,13 @@ class MockEnvDiscreteActions:
 
 
 class MockEnvContinuousActions:
-
     def __init__(self):
-        self.action_space = Box(low=[-1, -1], high=[1, 1])
-        self.observation_space = Box(low=np.array([0., 0.], dtype=np.float32),
-                                     high=np.array([10., 1.], dtype=np.float32),
-                                     dtype=np.float32)
+        self.action_space = Box(low=np.array([-1, -1]), high=np.array([1, 1]))
+        self.observation_space = Box(
+            low=np.array([0.0, 0.0], dtype=np.float32),
+            high=np.array([10.0, 1.0], dtype=np.float32),
+            dtype=np.float32,
+        )
         self.__count = 0
         self.instance_set = {0: [0]}
 

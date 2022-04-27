@@ -21,6 +21,5 @@ class FactoryTestCase(unittest.TestCase):
             self.assertRaises(ValueError, get_agent_class, wrong_input)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
-

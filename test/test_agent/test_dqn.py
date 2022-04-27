@@ -4,13 +4,21 @@ from unittest.mock import MagicMock
 from mighty.agent.dqn import DQNAgent
 from .mock_environment import MockEnvDiscreteActions
 
+from copy import deepcopy
+import numpy as np
 
-class MyTestCase(unittest.TestCase):
 
+class TestDQN(unittest.TestCase):
     def setUp(self) -> None:
         env = MockEnvDiscreteActions()
-        self.dqn = DQNAgent(env=env, eval_env=env, epsilon=.1,
-                            batch_size=4, logger=MagicMock(), log_tensorboard=False)
+        self.dqn = DQNAgent(
+            env=env,
+            eval_env=env,
+            epsilon=0.1,
+            batch_size=4,
+            logger=MagicMock(),
+            log_tensorboard=False,
+        )
         self.assertFalse(self.dqn.q is None)
         self.assertFalse(self.dqn.q_target is None)
         self.assertFalse(self.dqn.policy is None)
@@ -26,32 +34,55 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(target_state is None)
 
     def testSetState(self):
-        self.dqn.set_state((1, 2, 3, 4))
-        self.assertTrue(self.dqn.q.params == 1)
-        self.assertTrue(self.dqn.q.function_state == 2)
-        self.assertTrue(self.dqn.q_target.params == 3)
-        self.assertTrue(self.dqn.q_target.function_state == 4)
+        altered_q_params = deepcopy(self.dqn.q.params)
+        altered_q_params["linear"]["b"] += 1
+        altered_q_target_params = deepcopy(self.dqn.q_target.params)
+        altered_q_target_params["linear"]["b"] += 3
+
+        self.dqn.set_state(
+            (
+                altered_q_params,
+                self.dqn.q.function_state,
+                altered_q_target_params,
+                self.dqn.q_target.function_state,
+            )
+        )
+        self.assertTrue(self.dqn.q.params["linear"]["b"][0] == 1)
+        self.assertTrue(self.dqn.q_target.params["linear"]["b"][0] == 3)
 
     def testUpdate(self):
-        self.dqn.tracer.add(0, 0, 5, False)
-        self.dqn.tracer.add(0, 1, -1, False)
-        self.dqn.tracer.add(0, 0, 5, False)
-        self.dqn.tracer.add(0, 0, 5, False)
-        self.dqn.tracer.add(0, 1, -1, False)
-        self.dqn.tracer.add(0, 0, 5, False)
-        self.dqn.tracer.add(0, 1, -1, False)
-        self.dqn.tracer.add(0, 1, -1, True)
+        self.dqn.tracer.add([0, 0], 1, 5, False)
+        self.dqn.tracer.add([0, 1], 1, -5, False)
+        self.dqn.tracer.add([0, 1], 1, -5, False)
+        self.dqn.tracer.add([0, 1], 1, -5, False)
+        self.dqn.tracer.add([0, 0], 1, 5, False)
+        self.dqn.tracer.add([0, 0], 1, 5, False)
+        self.dqn.tracer.add([0, 0], 1, 5, False)
+        self.dqn.tracer.add([0, 0], 0, 5, True)
         while self.dqn.tracer:
             self.dqn.replay_buffer.add(self.dqn.tracer.pop())
 
-        q_previous = self.dqn.q.copy(True)
-        target_previous = self.dqn.q_target.copy(True)
-        self.dqn.update_agent(1)
-        self.assertFalse(self.dqn.q.params == q_previous.params)
-        self.assertTrue(self.dqn.q_target.params == target_previous.params)
+        q_previous = deepcopy(self.dqn.q.params)
+        target_previous = deepcopy(self.dqn.q_target.params)
+        self.dqn.update_agent(5)
+        self.assertFalse(
+            np.all(self.dqn.q.params["linear_3"]["w"] == q_previous["linear_3"]["w"])
+        )
+        self.assertTrue(
+            np.all(
+                self.dqn.q_target.params["linear_3"]["w"]
+                == target_previous["linear_3"]["w"]
+            )
+        )
 
         self.dqn.update_agent(10)
-        self.assertFalse(self.dqn.q_target.params == target_previous.params)
+        self.assertFalse(
+            np.all(
+                self.dqn.q_target.params["linear_3"]["w"]
+                == target_previous["linear_3"]["w"]
+            )
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

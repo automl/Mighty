@@ -155,12 +155,3 @@ class DQNAgent(MightyAgent):
             self.q_target.params,
             self.q_target.function_state,
         ) = state
-
-    def eval(self, env: DACENV, episodes: int):
-        """
-        Eval agent on an environment. (Full evaluation)
-        :param env:
-        :param episodes:
-        :return:
-        """
-        raise NotImplementedError

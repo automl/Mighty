@@ -233,12 +233,3 @@ class SACAgent(MightyAgent):
             self.q2_target.params,
             self.q2_target.function_state,
         ) = state
-
-    def eval(self, env: DACENV, episodes: int):
-        """
-        Eval agent on an environment. (Full evaluation)
-        :param env:
-        :param episodes:
-        :return:
-        """
-        raise NotImplementedError

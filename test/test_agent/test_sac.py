@@ -3,15 +3,23 @@ from unittest.mock import MagicMock
 
 import numpy as np
 from mighty.agent.sac import SACAgent
-from .mock_environment import MockEnvContinuousActions
+from .mock_environment import MockEnvDiscreteActions
+
+from copy import deepcopy
+import gym
 
 
-class MyTestCase(unittest.TestCase):
-
+class TestSAC(unittest.TestCase):
     def setUp(self) -> None:
-        env = MockEnvContinuousActions()
-        self.sac = SACAgent(env=env, eval_env=env, epsilon=.1,
-                            batch_size=4, logger=MagicMock(), log_tensorboard=False)
+        env = gym.make("Pendulum-v1")
+        self.sac = SACAgent(
+            env=env,
+            eval_env=env,
+            epsilon=0.1,
+            batch_size=4,
+            logger=MagicMock(),
+            log_tensorboard=False,
+        )
         self.assertFalse(self.sac.q1 is None)
         self.assertFalse(self.sac.q1_target is None)
         self.assertFalse(self.sac.q2 is None)
@@ -25,7 +33,18 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(self.sac.policy_regularizer is None)
 
     def testGetState(self):
-        policy_dist, policy_state, q1_params, q1_state, q2_params, q2_state, target1_params, target1_state, target2_params, target2_state = self.sac.get_state()
+        (
+            policy_dist,
+            policy_state,
+            q1_params,
+            q1_state,
+            q2_params,
+            q2_state,
+            target1_params,
+            target1_state,
+            target2_params,
+            target2_state,
+        ) = self.sac.get_state()
         self.assertFalse(policy_dist is None)
         self.assertFalse(policy_state is None)
         self.assertFalse(q1_params is None)
@@ -38,48 +57,93 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(target2_state is None)
 
     def testSetState(self):
-        self.sac.set_state((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
-        self.assertTrue(self.sac.policy.proba_dist == 1)
-        self.assertTrue(self.sac.policy.function_state == 2)
-        self.assertTrue(self.sac.q1.params == 3)
-        self.assertTrue(self.sac.q1.function_state == 4)
-        self.assertTrue(self.sac.q2.params == 5)
-        self.assertTrue(self.sac.q2.function_state == 6)
-        self.assertTrue(self.sac.q1_target.params == 7)
-        self.assertTrue(self.sac.q1_target.function_state == 8)
-        self.assertTrue(self.sac.q1_target.params == 9)
-        self.assertTrue(self.sac.q1_target.function_state == 10)
+        altered_q1_params = deepcopy(self.sac.q1.params)
+        altered_q1_params["linear"]["b"] += 1
+        altered_q1_target_params = deepcopy(self.sac.q1_target.params)
+        altered_q1_target_params["linear"]["b"] += 3
+        altered_q2_params = deepcopy(self.sac.q2.params)
+        altered_q2_params["linear"]["b"] += 2
+        altered_q2_target_params = deepcopy(self.sac.q2_target.params)
+        altered_q2_target_params["linear"]["b"] += 4
+
+        self.sac.set_state(
+            (
+                self.sac.policy.proba_dist,
+                self.sac.policy.function_state,
+                altered_q1_params,
+                self.sac.q1.function_state,
+                altered_q2_params,
+                self.sac.q2.function_state,
+                altered_q1_target_params,
+                self.sac.q1_target.function_state,
+                altered_q2_target_params,
+                self.sac.q1_target.function_state,
+            )
+        )
+        self.assertTrue(self.sac.q1.params["linear"]["b"][0] == 1)
+        self.assertTrue(self.sac.q2.params["linear"]["b"][0] == 2)
+        self.assertTrue(self.sac.q1_target.params["linear"]["b"][0] == 3)
+        self.assertTrue(self.sac.q2_target.params["linear"]["b"][0] == 4)
 
     def testUpdate(self):
-        self.sac.tracer.add(0, 0, 5, False)
-        self.sac.tracer.add(0, 1, -1, False)
-        self.sac.tracer.add(0, 0, 5, False)
-        self.sac.tracer.add(0, 0, 5, False)
-        self.sac.tracer.add(0, 1, -1, False)
-        self.sac.tracer.add(0, 0, 5, False)
-        self.sac.tracer.add(0, 1, -1, False)
-        self.sac.tracer.add(0, 1, -1, True)
-        while self.sac.tracer:
-            self.sac.replay_buffer.add(self.sac.tracer.pop())
+        q1_previous = deepcopy(self.sac.q1.params)
+        target1_previous = deepcopy(self.sac.q1_target.params)
+        q2_previous = deepcopy(self.sac.q2.params)
+        target2_previous = deepcopy(self.sac.q2_target.params)
+        policy_previous = deepcopy(self.sac.policy.params)
 
-        q1_previous = self.sac.q1.copy(True)
-        target1_previous = self.sac.q1_target.copy(True)
-        q2_previous = self.sac.q2.copy(True)
-        target2_previous = self.sac.q2_target.copy(True)
-        policy_previous = self.sac.policy.copy(True)
-
-        self.sac.update_agent(1)
+        self.sac.train(10, 1)
 
         # Check that policy and v have been updated
-        self.assertFalse(self.sac.q1.params == q1_previous.params and self.sac.q2.params == q2_previous.params)
-        self.assertFalse(self.sac.q1.params != q1_previous.params and self.sac.q2.params != q2_previous.params)
-        self.assertFalse(self.sac.policy.params == policy_previous.params)
+        self.assertFalse(
+            np.all(self.sac.q1.params["linear_3"]["w"] == q1_previous["linear_3"]["w"])
+            and np.all(
+                self.sac.q2.params["linear_3"]["w"] == q2_previous["linear_3"]["w"]
+            )
+        )
+        self.assertFalse(
+            np.any(self.sac.q1.params["linear_3"]["w"] != q1_previous["linear_3"]["w"])
+            and np.any(
+                self.sac.q2.params["linear_3"]["w"] != q2_previous["linear_3"]["w"]
+            )
+        )
+        self.assertFalse(
+            np.all(
+                self.sac.policy.params["linear_3"]["w"]
+                == policy_previous["linear_3"]["w"]
+            )
+        )
 
         # Check that target updates are small enough
-        self.assertTrue(np.abs(target1_previous.params * self.sac.soft_update_weight) >= np.abs(
-            self.sac.q1_target.params - target1_previous.params))
-        self.assertTrue(np.abs(target2_previous.params * self.sac.soft_update_weight) >= np.abs(
-            self.sac.q2_target.params - target2_previous.params))
+        self.assertTrue(
+            np.all(
+                np.abs(
+                    (target1_previous["linear_3"]["w"] + 1)
+                    * self.sac.soft_update_weight
+                    * 15
+                )
+                >= np.abs(
+                    self.sac.q1_target.params["linear_3"]["w"]
+                    - target1_previous["linear_3"]["w"]
+                    + 1
+                )
+            )
+        )
+        self.assertTrue(
+            np.all(
+                np.abs(
+                    (target2_previous["linear_3"]["w"] + 1)
+                    * self.sac.soft_update_weight
+                    * 15
+                )
+                >= np.abs(
+                    self.sac.q2_target.params["linear_3"]["w"]
+                    - target2_previous["linear_3"]["w"]
+                    + 1
+                )
+            )
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
