@@ -1,4 +1,5 @@
 import json
+import os
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict, ChainMap
 from datetime import datetime
@@ -220,7 +221,6 @@ class AbstractLogger(metaclass=ABCMeta):
     def __init__(
         self,
         experiment_name: str,
-        output_path: Path,
         step_write_frequency: int = None,
         episode_write_frequency: int = 1,
     ):
@@ -239,8 +239,8 @@ class AbstractLogger(metaclass=ABCMeta):
             see step_write_frequency
         """
         self.experiment_name = experiment_name
-        self.output_path = output_path
-        self.log_dir = self._init_logging_dir(self.output_path / self.experiment_name)
+        self.output_path = os.getcwd()
+        self.log_dir = self._init_logging_dir(Path(self.output_path) / self.experiment_name)
         self.step_write_frequency = step_write_frequency
         self.episode_write_frequency = episode_write_frequency
         self.additional_info = {"instance": None}
@@ -374,7 +374,6 @@ class Logger(AbstractLogger):
     def __init__(
         self,
         experiment_name: str,
-        output_path: Path,
         step_write_frequency: int = None,
         episode_write_frequency: int = 1,
         log_to_wandb: str = None,
@@ -396,7 +395,7 @@ class Logger(AbstractLogger):
             see step_write_frequency
         """
         super(Logger, self).__init__(
-            experiment_name, output_path, step_write_frequency, episode_write_frequency
+            experiment_name, step_write_frequency, episode_write_frequency
         )
         self.log_to_wandb = log_to_wandb
         if log_to_wandb:
@@ -404,11 +403,10 @@ class Logger(AbstractLogger):
 
         self.log_to_tb = log_to_tensorboad
         if log_to_tensorboad:
-            configure(self.log_to_tb)
+            configure(Path(self.log_dir) / self.log_to_tb)
 
         self.instance = None
 
-        self.log_dir = output_path
         self.reward_log_file = open(self.log_dir / f"rewards.jsonl", "w")
         self.eval_log_file = open(self.log_dir / f"eval.jsonl", "w")
         self.log_file = self.reward_log_file
@@ -417,7 +415,7 @@ class Logger(AbstractLogger):
         self.step = 0
         self.episode = 0
         self.buffer = []
-        self.current_step = self.__init_dict()
+        self.current_step = {}
 
     def set_eval(self, eval):
         if eval:
@@ -436,6 +434,7 @@ class Logger(AbstractLogger):
         """
         return Path(self.log_file.name)
 
+    @staticmethod
     def __json_default(object):
         """
         Add supoort for dumping numpy arrays and numbers to json
@@ -451,10 +450,6 @@ class Logger(AbstractLogger):
             return object.item()
         else:
             raise ValueError(f"Type {type(object)} not supported")
-
-    @staticmethod
-    def __init_dict():
-        return defaultdict(lambda: {"times": [], "values": []})
 
     def close(self):
         """
@@ -478,7 +473,7 @@ class Logger(AbstractLogger):
             self.buffer.append(
                 json.dumps(self.current_step, default=self.__json_default)
             )
-        self.current_step = self.__init_dict()
+        self.current_step = {}
 
     def next_step(self):
         """
@@ -515,10 +510,7 @@ class Logger(AbstractLogger):
             self.episode += 1
 
         if self.log_to_wandb:
-            run.log({'instance': instance}, step=self.step)
-
-        if self.log_to_tb:
-            log_value('instance', instance, self.step)
+            self.run.log({'instance': instance}, step=self.step)
 
     def __buffer_to_file(self):
         if len(self.buffer) > 0:
@@ -534,10 +526,7 @@ class Logger(AbstractLogger):
         self.step = 0
 
         if self.log_to_wandb is not None:
-            run.log({'instance': instance}, step=self.step)
-
-        if self.log_to_tb is not None:
-            log_value('instance', instance, self.step)
+            self.run.log({'instance': instance}, step=self.step)
 
     def write(self):
         """
@@ -549,14 +538,13 @@ class Logger(AbstractLogger):
         self.__end_step()
         self.__buffer_to_file()
 
-    def __log(self, key, value, time):
+    def __log(self, key, value):
         if not self.is_of_valid_type(value):
             valid_types = self._pretty_valid_types()
             raise ValueError(
                 f"value {type(value)} is not of valid type or a recursive composition of valid types ({valid_types})"
             )
-        self.current_step[key]["times"].append(time)
-        self.current_step[key]["values"].append(value)
+        self.current_step[key] = value
 
     def log(
         self, key: str, value: Union[Dict, List, Tuple, str, int, float, bool]
@@ -572,12 +560,16 @@ class Logger(AbstractLogger):
         Returns
         -------
         """
-        self.__log(key, value, datetime.now().strftime("%d-%m-%y %H:%M:%S.%f"))
+        self.__log(key, value)
         if self.log_to_wandb:
-            run.log({key: value}, step=self.step)
+            self.run.log({key: value}, step=self.step)
 
         if self.log_to_tb:
-            log_value(key, value, self.step)
+            # This only logs floats, so we skip the rest
+            try:
+                log_value(key, value, self.step)
+            except:
+                pass
 
     def log_dict(self, data: Dict) -> None:
         """
@@ -589,13 +581,12 @@ class Logger(AbstractLogger):
         Returns
         -------
         """
-        time = datetime.now().strftime("%d-%m-%y %H:%M:%S.%f")
         for key, value in data.items():
-            self.__log(key, value, time)
+            self.__log(key, value)
 
         if self.log_to_wandb:
-            run.log(data, step=self.step)
+            self.run.log(data, step=self.step)
 
         if self.log_to_tb:
-            for k in data:
-                log_value(k, data[k], self.step)
+            for key, value in data.items():
+                log_value(key, value, self.step)

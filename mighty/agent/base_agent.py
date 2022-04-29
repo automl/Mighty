@@ -74,7 +74,6 @@ class MightyAgent(object):
         self.replay_buffer_kwargs = replay_buffer_kwargs
 
         # Reward Tracer
-        # TODO create dac tracer receiving instance as additional info
         tracer_class = retrieve_class(
             cls=tracer_class, default_cls=coax.reward_tracing.NStep
         )
@@ -173,8 +172,16 @@ class MightyAgent(object):
                 while not done:
                     a = self.policy(s)
                     s_next, r, done, info = self.env.step(a)
+
+                    self.logger.log("reward", r)
+                    self.logger.log("action", a)
+                    self.logger.log("next_state", s_next)
+                    self.logger.log("state", s)
+                    self.logger.log("done", done)
+
                     log_reward_buffer.append(r)
                     steps += 1
+                    steps_since_eval += 1
                     progress.advance(steps_task)
 
                     # add transition to buffer
@@ -203,7 +210,6 @@ class MightyAgent(object):
                     steps_since_eval = 0
                     self.eval(self.eval_env, n_episodes_eval)
 
-                    # TODO: make this more informative
                 if episodes % human_log_every_n_episodes == 0:
                     print(
                         f"Steps: {steps}, Reward: {sum(log_reward_buffer) / len(log_reward_buffer)}"

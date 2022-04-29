@@ -18,7 +18,7 @@ if carl_found:
     import carl
     if MIGHTYENV is None:
         MIGHTYENV = carl.envs.CARLEnv
-    CARLENV = carl.envs.CARLEnv
+    CARLENV = int#carl.envs.CARLEnv
 else:
     CARLENV = int
 

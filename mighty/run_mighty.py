@@ -23,9 +23,8 @@ def main(cfg: DictConfig):
 
     logger = Logger(
         experiment_name=f"{cfg.experiment_name}_{seed}",
-        output_path=Path(cfg.output_dir),
-        step_write_frequency=None,
-        episode_write_frequency=10,
+        step_write_frequency=10,
+        episode_write_frequency=None,
         log_to_wandb=cfg.wandb_project,
         log_to_tensorboad=cfg.tensorboard_file,
         hydra_config=cfg
