@@ -13,7 +13,7 @@ from numpy import prod
 from omegaconf import DictConfig
 
 from mighty.agent.base_agent import MightyAgent, retrieve_class
-from mighty.env.env_handling import DACENV
+from mighty.env.env_handling import MIGHTYENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TypeKwargs
 
@@ -29,9 +29,9 @@ class SACAgent(MightyAgent):
     def __init__(
         self,
         # MightyAgent Args
-        env: DACENV,
+        env: MIGHTYENV,
         logger: Logger,
-        eval_env: DACENV = None,
+        eval_env: MIGHTYENV = None,
         learning_rate: float = 0.01,
         epsilon: float = 0.1,
         batch_size: int = 64,

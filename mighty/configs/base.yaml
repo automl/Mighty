@@ -8,7 +8,8 @@ debug: false
 seed: 0
 group: null
 output_dir: /tmp
-wandb_id: null
+wandb_project: null
+tensorboard_file: null
 experiment_name: "mighty_experiment"
 
 algorithm: SAC

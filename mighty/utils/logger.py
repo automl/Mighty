@@ -14,7 +14,10 @@ import numpy as np
 import pandas as pd
 
 from typing import Callable, Iterable
-from mighty.env.env_handling import DACENV
+from mighty.env.env_handling import MIGHTYENV
+
+import wandb
+from tensorboard_logger import configure, log_value
 
 
 def get_standard_logger(
@@ -357,305 +360,6 @@ class AbstractLogger(metaclass=ABCMeta):
         """
         pass
 
-    @abstractmethod
-    def log_space(self, key: str, value: Union[np.ndarray, Dict], space_info=None):
-        """
-        Special for logging gym.spaces.
-        Currently three types are supported:
-        * Numbers: e.g. samples from Discrete
-        * Fixed length arrays like MultiDiscrete or Box
-        * Dict: assuming each key has fixed length array
-        Parameters
-        ----------
-        key:
-            see log
-        value:
-            see log
-        space_info:
-            a list of column names. The length of this list must equal the resulting number of columns.
-        Returns
-        -------
-        """
-        pass
-
-
-class ModuleLogger(AbstractLogger):
-    """
-    A logger for handling logging of one module. e.g. a wrapper or toplevel general logging.
-    Don't create manually use Logger to manage ModuleLoggers
-    """
-
-    def __init__(
-        self,
-        output_path: Path,
-        experiment_name: str,
-        module: str,
-        step_write_frequency: int = None,
-        episode_write_frequency: int = 1,
-        log_file = None
-    ) -> None:
-        """
-        All results are placed under 'output_path / experiment_name'
-        Parameters
-        ----------
-        experiment_name: str
-            Name of the folder to store the result in
-        output_path: pathlib.Path
-            Path under which the experiment folder is created
-        module: str
-            the module (mostly name of the wrapper), each wrapper gets its own file
-        step_write_frequency: int
-            number of steps after which the loggers writes to file.
-            If None only the data is only written to file if  write is called, if triggered by episode_write_frequency
-            or on close
-        episode_write_frequency: int
-            see step_write_frequency
-        output_path:
-            The path where logged information should be stored
-        """
-        super(ModuleLogger, self).__init__(
-            experiment_name, output_path, step_write_frequency, episode_write_frequency
-        )
-
-        if log_file is None:
-            self.log_file = open(self.log_dir / f"{module}.jsonl", "w")
-        else:
-            self.log_file = open(self.log_dir / f"{log_file}.jsonl", "w")
-
-        self.env = None
-        self.step = 0
-        self.episode = 0
-        self.buffer = []
-        self.current_step = self.__init_dict()
-
-    def get_logfile(self) -> Path:
-        """
-        Returns
-        -------
-        pathlib.Path
-            the path to the log file of this logger
-        """
-        return Path(self.log_file.name)
-
-    def close(self):
-        """
-        Makes sure, that all remaining entries in the are written to file and the file is closed.
-        Returns
-        -------
-        """
-        if not self.log_file.closed:
-            self.write()
-            self.log_file.close()
-
-    def __del__(self):
-        if not self.log_file.closed:
-            self.close()
-
-    @staticmethod
-    def __json_default(object):
-        """
-        Add supoort for dumping numpy arrays and numbers to json
-        Parameters
-        ----------
-        object
-        Returns
-        -------
-        """
-        if isinstance(object, np.ndarray):
-            return object.tolist()
-        elif isinstance(object, np.number):
-            return object.item()
-        else:
-            raise ValueError(f"Type {type(object)} not supported")
-
-    def __end_step(self):
-        if self.current_step:
-            self.current_step["step"] = self.step
-            self.current_step["episode"] = self.episode
-            self.current_step.update(self.additional_info)
-            self.buffer.append(
-                json.dumps(self.current_step, default=self.__json_default)
-            )
-        self.current_step = self.__init_dict()
-
-    @staticmethod
-    def __init_dict():
-        return defaultdict(lambda: {"times": [], "values": []})
-
-    def set_env(self, env):
-        self.env = env
-
-    def reset_episode(self) -> None:
-        """
-         Resets the episode and step.
-         Be aware that this can lead to ambitious keys if no instance or seed or other identifying additional info is set
-        Returns
-         -------
-        """
-        self.__end_step()
-        self.step = 0
-
-    def __reset_step(self):
-        self.__end_step()
-        self.step = 0
-
-    def next_step(self):
-        """
-        Call at the end of the step.
-        Updates the internal state and dumps the information of the last step into a json
-        Returns
-        -------
-        """
-        self.__end_step()
-        if (
-            self.step_write_frequency is not None
-            and self.step % self.step_write_frequency == 0
-        ):
-            self.write()
-        self.step += 1
-
-    def next_episode(self):
-        """
-        Writes buffered logs to file.
-        Invoke manually if you want to load logs during a run.
-        Returns
-        -------
-        """
-        self.__reset_step()
-        if (
-            self.episode_write_frequency is not None
-            and self.episode % self.episode_write_frequency == 0
-        ):
-            self.write()
-        self.episode += 1
-
-    def write(self):
-        """
-        Writes buffered logs to file.
-        Invoke manually if you want to load logs during a run.
-        Returns
-        -------
-        """
-        self.__end_step()
-        self.__buffer_to_file()
-
-    def __buffer_to_file(self):
-        if len(self.buffer) > 0:
-            self.log_file.write("\n".join(self.buffer))
-            self.log_file.write("\n")
-            self.buffer.clear()
-            self.log_file.flush()
-
-    def set_additional_info(self, **kwargs):
-        """
-        Can be used to log additional information for each step e.g. for seed, and instance id.
-        Parameters
-        ----------
-        kwargs
-        Returns
-        -------
-        """
-        self.additional_info.update(kwargs)
-
-    def log(
-        self, key: str, value: Union[Dict, List, Tuple, str, int, float, bool]
-    ) -> None:
-        f"""
-        Writes value to list of values and save the current time for key
-        Parameters
-        ----------
-        key: str
-        value:
-           the value must of of a type that is json serializable.
-           Currently only {AbstractLogger._pretty_valid_types()} and recursive types of those are supported.
-        Returns
-        -------
-        """
-        self.__log(key, value, datetime.now().strftime("%d-%m-%y %H:%M:%S.%f"))
-
-    def __log(self, key, value, time):
-        if not self.is_of_valid_type(value):
-            valid_types = self._pretty_valid_types()
-            raise ValueError(
-                f"value {type(value)} is not of valid type or a recursive composition of valid types ({valid_types})"
-            )
-        self.current_step[key]["times"].append(time)
-        self.current_step[key]["values"].append(value)
-
-    def log_dict(self, data: Dict) -> None:
-        """
-        Alternative to log if more the one value should be logged at once.
-        Parameters
-        ----------
-        data: dict
-            a dict with key-value so that each value is a valid value for log
-        Returns
-        -------
-        """
-        time = datetime.now().strftime("%d-%m-%y %H:%M:%S.%f")
-        for key, value in data.items():
-            self.__log(key, value, time)
-
-    @staticmethod
-    def __space_dict(key: str, value, space_info):
-        if isinstance(value, np.ndarray) and len(value.shape) == 0:
-            value = value.item()
-
-        if isinstance(value, Number):
-            if space_info is None:
-                data = {key: value}
-            else:
-                if len(space_info) != 1:
-                    raise ValueError(
-                        f"Space info must match length (expect 1 != got{len(space_info)}"
-                    )
-
-                data = {f"{key}_{space_info[0]}": value}
-
-        elif isinstance(value, np.ndarray):
-            if space_info is not None and len(space_info) != len(value):
-                raise ValueError(
-                    f"Space info must match length (expect {len(value)} != got{len(space_info)}"
-                )
-            key_suffix = (
-                enumerate(value) if space_info is None else zip(space_info, value)
-            )
-            data = {f"{key}_{suffix}": x for suffix, x in key_suffix}
-
-        elif isinstance(value, dict):
-            key_suffix = (
-                value.items() if space_info is None else zip(space_info, value.values())
-            )
-            dicts = (
-                ModuleLogger.__space_dict(f"{key}_{sub_key}", sub_value, None)
-                for sub_key, sub_value in key_suffix
-            )
-            data = dict(ChainMap(*dicts))
-        else:
-            raise ValueError("Space does not seem be supported")
-
-        return data
-
-    def log_space(self, key, value, space_info=None):
-        """
-        Special for logging gym.spaces.
-        Currently three types are supported:
-        * Numbers: e.g. samples from Discrete
-        * Fixed length arrays like MultiDiscrete or Box
-        * Dict: assuming each key has fixed length array
-        Parameters
-        ----------
-        key:
-            see log
-        value:
-            see log
-        space_info:
-            a list of column names. The length of this list must equal the resulting number of columns.
-        Returns
-        -------
-        """
-        data = self.__space_dict(key, value, space_info)
-        self.log_dict(data)
 
 
 class Logger(AbstractLogger):
@@ -673,6 +377,9 @@ class Logger(AbstractLogger):
         output_path: Path,
         step_write_frequency: int = None,
         episode_write_frequency: int = 1,
+        log_to_wandb: str = None,
+        log_to_tensorboad: str = None,
+        hydra_config=None
     ) -> None:
         """
         Parameters
@@ -691,9 +398,63 @@ class Logger(AbstractLogger):
         super(Logger, self).__init__(
             experiment_name, output_path, step_write_frequency, episode_write_frequency
         )
-        self.train_env: DACENV = None
-        self.eval_env: DACENV = None
-        self.module_logger: Dict[str, ModuleLogger] = dict()
+        self.log_to_wandb = log_to_wandb
+        if log_to_wandb:
+            self.run = wandb.init(config=hydra_config, project=self.log_to_wandb)
+
+        self.log_to_tb = log_to_tensorboad
+        if log_to_tensorboad:
+            configure(self.log_to_tb)
+
+        self.instance = None
+
+        self.log_dir = output_path
+        self.reward_log_file = open(self.log_dir / f"rewards.jsonl", "w")
+        self.eval_log_file = open(self.log_dir / f"eval.jsonl", "w")
+        self.log_file = self.reward_log_file
+        self.eval = False
+
+        self.step = 0
+        self.episode = 0
+        self.buffer = []
+        self.current_step = self.__init_dict()
+
+    def set_eval(self, eval):
+        if eval:
+            self.log_file = self.eval_log_file
+            self.eval = True
+        else:
+            self.log_file = self.reward_log_file
+            self.eval = False
+
+    def get_logfile(self) -> Path:
+        """
+        Returns
+        -------
+        pathlib.Path
+            the path to the log file of this logger
+        """
+        return Path(self.log_file.name)
+
+    def __json_default(object):
+        """
+        Add supoort for dumping numpy arrays and numbers to json
+        Parameters
+        ----------
+        object
+        Returns
+        -------
+        """
+        if isinstance(object, np.ndarray):
+            return object.tolist()
+        elif isinstance(object, np.number):
+            return object.item()
+        else:
+            raise ValueError(f"Type {type(object)} not supported")
+
+    @staticmethod
+    def __init_dict():
+        return defaultdict(lambda: {"times": [], "values": []})
 
     def close(self):
         """
@@ -701,11 +462,23 @@ class Logger(AbstractLogger):
         Returns
         -------
         """
-        for _, module_logger in self.module_logger.items():
-            module_logger.close()
+        for log_file in [self.reward_log_file, self.eval_log_file]:
+            if not log_file.closed:
+                self.write()
+                log_file.close()
 
     def __del__(self):
         self.close()
+
+    def __end_step(self):
+        if self.current_step:
+            self.current_step["step"] = self.step
+            self.current_step["episode"] = self.episode
+            self.current_step["instance"] = self.instance
+            self.buffer.append(
+                json.dumps(self.current_step, default=self.__json_default)
+            )
+        self.current_step = self.__init_dict()
 
     def next_step(self):
         """
@@ -714,32 +487,57 @@ class Logger(AbstractLogger):
         Returns
         -------
         """
-        for _, module_logger in self.module_logger.items():
-            module_logger.next_step()
+        self.__end_step()
+        if (
+                self.step_write_frequency is not None
+                and self.step % self.step_write_frequency == 0
+        ):
+            self.write()
+        if not self.eval:
+            self.step += 1
 
-    def next_episode(self):
+    def next_episode(self, instance):
         """
         Call at the end of episode.
         See next_step
         Returns
         -------
         """
-        for _, module_logger in self.module_logger.items():
-            module_logger.next_episode()
-        self.__update_auto_additional_info()
+        self.__end_step()
+        self.step = 0
+        self.instance = instance
+        if (
+                self.episode_write_frequency is not None
+                and self.episode % self.episode_write_frequency == 0
+        ):
+            self.write()
+        if not self.eval:
+            self.episode += 1
 
-    def __update_auto_additional_info(self):
-        if self.train_env is None:
-            raise ValueError("No training environment found! Please set environment!")
-        self.set_additional_info(instance=self.train_env.get_inst_id())
-        if not self.eval_env is None:
-            self.set_additional_info(eval_instance=self.eval_env.get_inst_id())
+        if self.log_to_wandb:
+            run.log({'instance': instance}, step=self.step)
 
-    def reset_episode(self):
-        for _, module_logger in self.module_logger.items():
-            module_logger.reset_episode()
-        for _, module_logger in self.module_logger.items():
-            print(module_logger.episode)
+        if self.log_to_tb:
+            log_value('instance', instance, self.step)
+
+    def __buffer_to_file(self):
+        if len(self.buffer) > 0:
+            self.log_file.write("\n".join(self.buffer))
+            self.log_file.write("\n")
+            self.buffer.clear()
+            self.log_file.flush()
+
+    def reset_episode(self, instance):
+        self.instance = instance
+        self.__end_step()
+        self.episode = 0
+        self.step = 0
+
+        if self.log_to_wandb is not None:
+            run.log({'instance': instance}, step=self.step)
+
+        if self.log_to_tb is not None:
+            log_value('instance', instance, self.step)
 
     def write(self):
         """
@@ -748,87 +546,56 @@ class Logger(AbstractLogger):
         Returns
         -------
         """
-        for _, module_logger in self.module_logger.items():
-            module_logger.write()
+        self.__end_step()
+        self.__buffer_to_file()
 
-    def add_module(self, module: Union[str, type], env: DACENV, module_name: str = None) -> ModuleLogger:
-        """
-        Creates a sub-logger. For more details see class level documentation
-        Parameters
-        ----------
-        module: str or type
-            The module name or Wrapper-Type to create a sub-logger for
-        Returns
-        -------
-        ModuleLogger
-        """
-        if isinstance(module, str):
-            pass
-        elif isinstance(module, type):
-            module = module.__name__
-        else:
-            module = module.__class__
-
-        if module_name is None:
-            module_name = module
-
-        if module_name in self.module_logger:
-            raise ValueError(f"Module {module} already registered")
-        else:
-            self.module_logger[module_name] = ModuleLogger(
-                self.output_path,
-                self.experiment_name,
-                module,
-                self.step_write_frequency,
-                self.episode_write_frequency,
-                module_name
+    def __log(self, key, value, time):
+        if not self.is_of_valid_type(value):
+            valid_types = self._pretty_valid_types()
+            raise ValueError(
+                f"value {type(value)} is not of valid type or a recursive composition of valid types ({valid_types})"
             )
-            self.module_logger[module_name].env = env
-            self.module_logger[module_name].set_additional_info(
-                    instance=self.module_logger[module_name].env.get_inst_id()
-                )
+        self.current_step[key]["times"].append(time)
+        self.current_step[key]["values"].append(value)
 
-        return self.module_logger[module_name]
-
-    def set_train_env(self, env: DACENV) -> None:
-        """
-        Needed to infer automatically logged information like the instance id
+    def log(
+        self, key: str, value: Union[Dict, List, Tuple, str, int, float, bool]
+    ) -> None:
+        f"""
+        Writes value to list of values and save the current time for key
         Parameters
         ----------
-        env: DACENV
+        key: str
+        value:
+           the value must of of a type that is json serializable.
+           Currently only {AbstractLogger._pretty_valid_types()} and recursive types of those are supported.
         Returns
         -------
         """
-        self.train_env = env
-        self.__update_auto_additional_info()
+        self.__log(key, value, datetime.now().strftime("%d-%m-%y %H:%M:%S.%f"))
+        if self.log_to_wandb:
+            run.log({key: value}, step=self.step)
 
-    def set_eval_env(self, env: DACENV) -> None:
+        if self.log_to_tb:
+            log_value(key, value, self.step)
+
+    def log_dict(self, data: Dict) -> None:
         """
-        Needed to infer automatically logged information like the instance id
+        Alternative to log if more than one value should be logged at once.
         Parameters
         ----------
-        env: DACENV
+        data: dict
+            a dict with key-value so that each value is a valid value for log
         Returns
         -------
         """
-        self.eval_env = env
-        self.__update_auto_additional_info()
+        time = datetime.now().strftime("%d-%m-%y %H:%M:%S.%f")
+        for key, value in data.items():
+            self.__log(key, value, time)
 
-    def set_additional_info(self, **kwargs):
-        for _, module_logger in self.module_logger.items():
-            module_logger.set_additional_info(**kwargs)
+        if self.log_to_wandb:
+            run.log(data, step=self.step)
 
-    def log(self, key, value, module):
-        if module not in self.module_logger:
-            raise ValueError(f"Module {module} not registered yet")
-        self.module_logger.log(key, value)
-
-    def log_space(self, key, value, module, space_info=None):
-        if module not in self.module_logger:
-            raise ValueError(f"Module {module} not registered yet")
-        self.module_logger.log_space(key, value, space_info)
-
-    def log_dict(self, data, module):
-        if module not in self.module_logger:
-            raise ValueError(f"Module {module} not registered yet")
-        self.module_logger.log_space(data)
+        if self.log_to_tb:
+            for k in data:
+                log_value(k, data[k], self.step)

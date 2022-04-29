@@ -21,15 +21,15 @@ def main(cfg: DictConfig):
     out_dir = os.getcwd()  # working directory changes to hydra.run.dir
     seed = cfg.seed
 
-    """
-    FIXME: redo/improve logger
     logger = Logger(
         experiment_name=f"{cfg.experiment_name}_{seed}",
-        output_path=Path(out_dir),
+        output_path=Path(cfg.output_dir),
         step_write_frequency=None,
         episode_write_frequency=10,
+        log_to_wandb=cfg.wandb_project,
+        log_to_tensorboad=cfg.tensorboard_file,
+        hydra_config=cfg
     )
-    """
 
     if cfg.env in dir(benchmarks):
         bench = getattr(benchmarks, cfg.env)()
@@ -57,25 +57,13 @@ def main(cfg: DictConfig):
         eval_env = gym.make(cfg.env)
         eval_default = 1
 
-    """
-    FIXME: All of this needs to be redone
-    
-    performance_logger = logger.add_module(PerformanceTrackingWrapper, env, "train_performance")
-    eval_logger = logger.add_module(PerformanceTrackingWrapper, eval_env, "eval_performance")
-    env = PerformanceTrackingWrapper(env, logger=performance_logger)
-    eval_env = PerformanceTrackingWrapper(eval_env, logger=eval_logger)
-
-    logger.set_train_env(env)
-    logger.set_eval_env(env)
-    """
-
     # Setup agent
     agent_class = get_agent_class(cfg.algorithm)
     args_agent = dict(cfg.algorithm_kwargs)
     agent = agent_class(
         env=env,
         eval_env=eval_env,
-        logger=None,
+        logger=logger,
         **args_agent,
     )
 
@@ -96,11 +84,7 @@ def main(cfg: DictConfig):
         n_episodes_eval=n_episodes_eval,
         eval_every_n_steps=eval_every_n_steps,
     )
-
-    """
-    FIXME: more logger stuff
     logger.close()
-    """
 
 if __name__ == "__main__":
     main()

@@ -16,7 +16,7 @@ from typing import Optional
 from rich.progress import Progress, TimeRemainingColumn, TimeElapsedColumn, BarColumn
 from torch.utils.tensorboard import SummaryWriter
 
-from mighty.env.env_handling import DACENV
+from mighty.env.env_handling import MIGHTYENV, DACENV, CARLENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TypeKwargs
 
@@ -38,9 +38,9 @@ class MightyAgent(object):
 
     def __init__(
         self,
-        env: DACENV,
+        env: MIGHTYENV,
         logger: Logger,
-        eval_env: Optional[DACENV] = None,
+        eval_env: Optional[MIGHTYENV] = None,
         learning_rate: float = 0.01,
         epsilon: float = 0.1,
         batch_size: int = 64,
@@ -188,7 +188,15 @@ class MightyAgent(object):
 
                     self.last_state = s
                     s = s_next
+                    self.logger.next_step()
 
+                if isinstance(self.env, DACENV):
+                    instance = self.env.instance
+                elif isinstance(self.env, CARLENV):
+                    instance = self.env.context
+                else:
+                    instance = None
+                self.logger.next_episode(instance)
                 episodes += 1
 
                 if steps_since_eval >= eval_every_n_steps:
@@ -204,6 +212,9 @@ class MightyAgent(object):
 
                 if episodes % save_model_every_n_episodes == 0:
                     self.save()
+
+        # At the end make sure logger writes buffer to file
+        self.logger.write()
 
     def get_state(self):
         """Return internal state for checkpointing."""
@@ -228,16 +239,29 @@ class MightyAgent(object):
             coax.utils.dump(state, str(filepath))
             print(f"Saved checkpoint to {filepath}")
 
-    def eval(self, env: DACENV, episodes: int):
+    def eval(self, env: MIGHTYENV, episodes: int):
         """
         Eval agent on an environment. (Full evaluation)
         :param env:
         :param episodes:
         :return:
         """
+        self.logger.set_eval(True)
         for e in range(episodes):
             done = False
             state = env.reset()
             while not done:
                 action = self.policy(state)
                 state, reward, done, _ = env.step(action)
+                self.logger.next_step()
+
+            if isinstance(self.env, DACENV):
+                instance = self.env.instance
+            elif isinstance(self.env, CARLENV):
+                instance = self.env.context
+            else:
+                instance = None
+            self.logger.next_episode(instance)
+
+        self.logger.write()
+        self.logger.set_eval(False)
