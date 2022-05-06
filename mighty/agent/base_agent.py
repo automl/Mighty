@@ -217,7 +217,7 @@ class MightyAgent(object):
                     log_reward_buffer = []
 
                 if episodes % save_model_every_n_episodes == 0:
-                    self.save()
+                    self.save(episodes)
 
         # At the end make sure logger writes buffer to file
         self.logger.write()
@@ -235,10 +235,9 @@ class MightyAgent(object):
         state = coax.utils.load(path)
         self.set_state(state=state)
 
-    def save(self):
+    def save(self, T):
         """Checkpoint model."""
         logdir = os.getcwd()
-        T = 0  # TODO get automatic checkpoint IDs
         filepath = Path(os.path.join(logdir, "checkpoints", f"checkpoint_{T}.pkl.lz4"))
         if not filepath.is_file() or True:  # TODO build logic
             state = self.get_state()
