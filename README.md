@@ -15,8 +15,8 @@ The code has been tested with python 3.9.
 First create a clean python environment:
 
 ```bash
-conda create --name mightydac python=3.9
-conda activate mightydac
+conda create --name mighty python=3.9
+conda activate mighty
 ```
 
 Then install the needed packages:
