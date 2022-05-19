@@ -19,16 +19,10 @@ conda create --name mighty python=3.9
 conda activate mighty
 ```
 
-Then install the needed packages:
+Then  install Mighty:
 
 ```bash
-pip install -r requirements.txt
-```
-
-And finally install Mighty:
-
-```bash
-python setup.py develop
+pip install .
 ```
 
 ## Run a Mighty Agent
