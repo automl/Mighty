@@ -1,7 +1,7 @@
 defaults:
   - slurm
   - _self_
-  - help: mighty_help
+  - algorithm: sac
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
 
@@ -13,7 +13,6 @@ wandb_project: null
 tensorboard_file: null
 experiment_name: "mighty_experiment"
 
-algorithm: SAC
 algorithm_kwargs: {}
 
 num_steps: 1000000  # Maximum number of steps in the environment before episode ends.

@@ -14,7 +14,6 @@ from coax.experience_replay import SimpleReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
 from typing import Optional
 from rich.progress import Progress, TimeRemainingColumn, TimeElapsedColumn, BarColumn
-from torch.utils.tensorboard import SummaryWriter
 
 from mighty.env.env_handling import MIGHTYENV, DACENV, CARLENV
 from mighty.utils.logger import Logger
@@ -66,7 +65,7 @@ class MightyAgent(object):
         :param render_progress: Render progress
         :param log_tensorboard: Log to tensorboard as well as to file
         :param replay_buffer_class: Replay buffer class from coax replay buffers
-        :param replay_bugger_kwargs: Arguments for the replay buffer
+        :param replay_buffer_kwargs: Arguments for the replay buffer
         :param tracer_class: Reward tracing class from coax tracers
         :param tracer_kwargs: Arguments for the reward tracer
         :return:
@@ -212,7 +211,11 @@ class MightyAgent(object):
                     # add transition to buffer
                     self.tracer.add(s, a, r, done)
                     while self.tracer:
-                        self.replay_buffer.add(self.tracer.pop())
+                        if isinstance(self.replay_buffer, coax.experience_replay.PrioritizedReplayBuffer):
+                            transition = self.tracer.pop()
+                            self.replay_buffer.add(transition, self.qlearning.td_error(transition))
+                        else:
+                            self.replay_buffer.add(self.tracer.pop())
 
                     # update
                     if len(self.replay_buffer) >= self._batch_size:
