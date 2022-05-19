@@ -1,7 +1,7 @@
 defaults:
   - slurm
   - _self_
-  - algorithm: sac
+  - algorithm: dqn
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
 
