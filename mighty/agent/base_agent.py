@@ -44,7 +44,7 @@ class MightyAgent(object):
         learning_rate: float = 0.01,
         epsilon: float = 0.1,
         batch_size: int = 64,
-        render_progress: bool = True,
+        render_progress: bool = True, #FIXME: Does this actually do anything or can we take it out?
         log_tensorboard: bool = False,
         replay_buffer_class: Optional[
             Union[str, DictConfig, Type[BaseReplayBuffer]]
@@ -53,6 +53,24 @@ class MightyAgent(object):
         tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
         tracer_kwargs: Optional[TypeKwargs] = None,
     ):
+        """
+        Base agent initialization
+        Creates all relevant class variables and calls agent-specific init function
+
+        :param env: Train environment
+        :param logger: Mighty logger
+        :param eval_env: Evaluation environment
+        :param learning_rate: Learning rate for training
+        :param epsilon: Exploration factor for training
+        :param batch_size: Batch size for training
+        :param render_progress: Render progress
+        :param log_tensorboard: Log to tensorboard as well as to file
+        :param replay_buffer_class: Replay buffer class from coax replay buffers
+        :param replay_bugger_kwargs: Arguments for the replay buffer
+        :param tracer_class: Reward tracing class from coax tracers
+        :param tracer_kwargs: Arguments for the reward tracer
+        :return:
+        """
         self.learning_rate = learning_rate
         self._epsilon = epsilon
         self._batch_size = batch_size
@@ -146,6 +164,13 @@ class MightyAgent(object):
         """
         Trains the agent for n steps.
         Evaluation is done for the given number of episodes each evaluation interval.
+
+        :param n_steps: The number of training steps
+        :param n_episodes_eval: The number of episodes to evaluate
+        :param eval_every_n_steps: Evaluation intervall
+        :param human_log_every_n_episodes: Intervall for human readable logging to the command line
+        :param save_mode_every_n_episodes: Intervall for model checkpointing
+        :return:
         """
         step_progress = 1 / n_steps
         episodes = 0
@@ -231,12 +256,20 @@ class MightyAgent(object):
         raise NotImplementedError
 
     def load(self, path):
-        """Load checkpointed model."""
+        """
+        Load checkpointed model.
+        :param path: Model path
+        :return:
+        """
         state = coax.utils.load(path)
         self.set_state(state=state)
 
     def save(self, T):
-        """Checkpoint model."""
+        """
+        Checkpoint model.
+        :param T: Current timestep
+        :return:
+        """
         logdir = os.getcwd()
         filepath = Path(os.path.join(logdir, "checkpoints", f"checkpoint_{T}.pkl.lz4"))
         if not filepath.is_file() or True:  # TODO build logic
@@ -246,9 +279,9 @@ class MightyAgent(object):
 
     def eval(self, env: MIGHTYENV, episodes: int):
         """
-        Eval agent on an environment. (Full evaluation)
-        :param env:
-        :param episodes:
+        Eval agent on an environment. (Full rollouts)
+        :param env: The environment to evaluate on
+        :param episodes: The number of episodes to evaluate
         :return:
         """
         self.logger.set_eval(True)

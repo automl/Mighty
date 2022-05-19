@@ -1,6 +1,7 @@
 defaults:
   - slurm
   - _self_
+  - help: mighty_help
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
 

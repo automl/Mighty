@@ -2,15 +2,15 @@ import unittest
 import numpy as np
 
 from mighty.agent.factory import get_agent_class
-from mighty.agent.dqn import DQNAgent
-from mighty.agent.sac import SACAgent
-from mighty.agent.ppo import PPOAgent
+from mighty.agent.dqn import MightyDQNAgent
+from mighty.agent.sac import MightySACAgent
+from mighty.agent.ppo import MightyPPOAgent
 
 
 class FactoryTestCase(unittest.TestCase):
     def test_get_agent_classes(self):
         agent_types = ["DQN", "DDQN", "SAC", "PPO"]
-        agent_classes = [DQNAgent, DQNAgent, SACAgent, PPOAgent]
+        agent_classes = [MightyDQNAgent, MightyDQNAgent, MightySACAgent, MightyPPOAgent]
 
         factory_agent_classes = [get_agent_class(a) for a in agent_types]
         self.assertTrue(np.all(np.equal(agent_classes, factory_agent_classes)))

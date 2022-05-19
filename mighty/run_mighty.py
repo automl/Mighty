@@ -1,13 +1,10 @@
 import os
-from pathlib import Path
 from rich import print
-
-from dacbench import benchmarks
-from dacbench.wrappers import PerformanceTrackingWrapper
 
 from mighty.agent.factory import get_agent_class
 from mighty.utils.logger import Logger
 
+#FIXME: has this parser been replaced? Do we still use it?
 import importlib
 import mighty.utils.main_parser
 
@@ -19,9 +16,12 @@ import hydra
 
 @hydra.main("./configs", "base")
 def main(cfg: DictConfig):
+    """Parse config and run Mighty agent"""
+    #FIXME: this out_dir isn't used, do we need it?
     out_dir = os.getcwd()  # working directory changes to hydra.run.dir
     seed = cfg.seed
 
+    #Initialize Logger
     logger = Logger(
         experiment_name=f"{cfg.experiment_name}_{seed}",
         step_write_frequency=100,
@@ -31,7 +31,10 @@ def main(cfg: DictConfig):
         hydra_config=cfg,
     )
 
-    if cfg.env in dir(benchmarks):
+    # Check whether env is from DACBench, CARL or gym
+    # Make train and eval env
+    if cfg.env.endswith("Benchmark"):
+        from dacbench import benchmarks
         bench = getattr(benchmarks, cfg.env)()
         env = bench.get_environment()
         eval_env = bench.get_environment()
@@ -72,15 +75,16 @@ def main(cfg: DictConfig):
     n_episodes_eval = cfg.n_episodes_eval if cfg.n_episodes_eval else eval_default
     eval_every_n_steps = cfg.eval_every_n_steps
 
-    if not cfg.checkpoint is None:
+    # Load checkpoint if one is given
+    if cfg.checkpoint is not None:
         agent.load(cfg.checkpoint)
         print("#" * 80)
         print(f"Loading checkpoint at {cfg.checkpoint}")
 
+    # Train
     print("#" * 80)
     print(f'Using agent type "{agent}" to learn')
     print("#" * 80)
-    num_eval_episodes = 100
     agent.train(
         n_steps=cfg.num_steps,
         n_episodes_eval=n_episodes_eval,

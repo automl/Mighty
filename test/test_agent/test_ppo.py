@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock
 
 import numpy as np
-from mighty.agent.ppo import PPOAgent
+from mighty.agent.ppo import MightyPPOAgent
 from copy import deepcopy
 import gym
 
@@ -10,7 +10,7 @@ import gym
 class TestPPO(unittest.TestCase):
     def setUp(self) -> None:
         env = gym.make("Pendulum-v1")
-        self.ppo = PPOAgent(
+        self.ppo = MightyPPOAgent(
             env=env,
             eval_env=env,
             epsilon=0.1,

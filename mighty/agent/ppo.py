@@ -16,14 +16,16 @@ from mighty.env.env_handling import MIGHTYENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TypeKwargs
 
-# PPO was first proposed by Schulman et al. in "Proximal Policy Optimization Algorithms" in 2017
 
-
-class PPOAgent(MightyAgent):
+class MightyPPOAgent(MightyAgent):
     """
-    Simple double DQN Agent
-    """
+    Mighty PPO agent
 
+    This agent implements the PPO algorithm first proposed by Schulman et al. in "Proximal Policy Optimization Algorithms" in 2017.
+    Like all Mighty agents, it's supposed to be called via the train method.
+    Policy and value architectures can be altered by overwriting the policy_function and value_function with a suitable
+    haiku/coax architecture.
+    """
     def __init__(
         self,
         # MightyAgent Args
@@ -46,6 +48,27 @@ class PPOAgent(MightyAgent):
         n_critic_units: int = 8,
         soft_update_weight: float = 1.0,  # TODO which default value?
     ):
+        """
+        PPO initialization
+        Creates all relevant class variables and calls agent-specific init function
+
+        :param env: Train environment
+        :param logger: Mighty logger
+        :param eval_env: Evaluation environment
+        :param learning_rate: Learning rate for training
+        :param epsilon: Exploration factor for training
+        :param batch_size: Batch size for training
+        :param render_progress: Render progress
+        :param log_tensorboard: Log to tensorboard as well as to file
+        :param replay_buffer_class: Replay buffer class from coax replay buffers
+        :param replay_buffer_kwargs: Arguments for the replay buffer
+        :param tracer_class: Reward tracing class from coax tracers
+        :param tracer_kwargs: Arguments for the reward tracer
+        :param n_policy_units: Number of units for policy network
+        :param n_critic_units: Number of units for critic network
+        :param soft_update_weight: Size of soft updates for target network
+        :return:
+        """
         self.n_policy_units = n_policy_units
         self.n_critic_units = n_critic_units
 
@@ -142,6 +165,11 @@ class PPOAgent(MightyAgent):
         print("Initialized agent.")
 
     def update_agent(self, step):
+        """
+        Compute and apply PPO update
+        :param step: Current training step
+        :return:
+        """
         transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
         _, td_error = self.td_update.update(transition_batch, return_td_error=True)
         self.ppo_clip.update(transition_batch, td_error)
@@ -151,6 +179,19 @@ class PPOAgent(MightyAgent):
         self.pi_old.soft_update(self.policy, tau=self.soft_update_weight)
 
     def get_state(self):
+        """
+        Return current agent state, e.g. for saving.
+        For PPO, this consists of:
+            - the value network parameters
+            - the value network function state
+            - the value target parameters
+            - the value target function state
+            - the policy network parameters
+            - the policy network function state
+            - the policy target parameters
+            - the policy target function state
+        :return: Agent state
+        """
         return (
             self.v.params,
             self.v.function_state,
@@ -163,6 +204,7 @@ class PPOAgent(MightyAgent):
         )
 
     def set_state(self, state):
+        """Set the internal state of the agent, e.g. after loading"""
         (
             self.v.params,
             self.v.function_state,

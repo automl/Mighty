@@ -1,6 +1,6 @@
 import unittest
 
-from mighty.agent.dqn import DQNAgent
+from mighty.agent.dqn import MightyDQNAgent
 from mighty.utils.logger import Logger
 from .test_agent.mock_environment import MockEnvDiscreteActions
 
@@ -26,7 +26,7 @@ class TestBaseAgent(unittest.TestCase):
         self.assertTrue(len(logger.current_step.keys()) == 0)
 
         # Use DQN to check basic functionality
-        self.agent = DQNAgent(
+        self.agent = MightyDQNAgent(
             env=env,
             eval_env=env,
             epsilon=0.1,

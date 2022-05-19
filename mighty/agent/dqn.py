@@ -16,15 +16,17 @@ from mighty.env.env_handling import MIGHTYENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TypeKwargs
 
-# DQN with possible extension to DDQN as first proposed in "Playing Atari with Deep Reinforcement Learn#DQN with possible extension to DDQN as first proposed in "Playing Atari with Deep Reinforcement Learning" by Mnih et al. in 2013
-# DDQN was proposed by van Hasselt et al. in 2016's "Deep Reinforcement Learning with Double Q-learning"
 
-
-class DQNAgent(MightyAgent):
+class MightyDQNAgent(MightyAgent):
     """
-    Simple double DQN Agent
-    """
+    Mighty DQN agent
 
+    This agent implements the DQN algorithm and extension as first proposed in "Playing Atari with
+    Deep Reinforcement Learning" by Mnih et al. in 2013.
+    DDQN was proposed by van Hasselt et al. in 2016's "Deep Reinforcement Learning with Double Q-learning".
+    Like all Mighty agents, it's supposed to be called via the train method.
+    The Q-function architecture can be altered by overwriting the q_function with a suitable haiku/coax architecture.
+    """
     def __init__(
         self,
         # MightyAgent Args
@@ -60,6 +62,30 @@ class DQNAgent(MightyAgent):
         ] = None,
         td_update_kwargs: Optional[TypeKwargs] = None,
     ):
+        """
+        DQN initialization
+        Creates all relevant class variables and calls agent-specific init function
+
+        :param env: Train environment
+        :param logger: Mighty logger
+        :param eval_env: Evaluation environment
+        :param learning_rate: Learning rate for training
+        :param epsilon: Exploration factor for training
+        :param batch_size: Batch size for training
+        :param render_progress: Render progress
+        :param log_tensorboard: Log to tensorboard as well as to file
+        :param replay_buffer_class: Replay buffer class from coax replay buffers
+        :param replay_buffer_kwargs: Arguments for the replay buffer
+        :param tracer_class: Reward tracing class from coax tracers
+        :param tracer_kwargs: Arguments for the reward tracer
+        :param n_units: Number of units for Q network
+        :param soft_update_weight: Size of soft updates for target network
+        :param policy_class: Policy class from coax value-based policies
+        :param policy_kwargs: Arguments for the policy
+        :param td_update_class: Kind of TD update used from coax TD updates
+        :param td_update_kwargs: Arguments for the TD update
+        :return:
+        """
         self.n_units = n_units
         assert 0.0 <= soft_update_weight <= 1.0
         self.soft_update_weight = soft_update_weight
@@ -131,6 +157,11 @@ class DQNAgent(MightyAgent):
         print("Initialized agent.")
 
     def update_agent(self, step):
+        """
+        Compute and apply TD update
+        :param step: Current training step
+        :return:
+        """
         transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
         metrics_q = self.qlearning.update(transition_batch)
         # TODO: log these properly
@@ -141,6 +172,15 @@ class DQNAgent(MightyAgent):
             self.q_target.soft_update(self.q, tau=self.soft_update_weight)
 
     def get_state(self):
+        """
+        Return current agent state, e.g. for saving.
+        For DQN, this consists of:
+            - the Q network parameters
+            - the Q network function state
+            - the target network parameters
+            - the target network function state
+        :return: Agent state
+        """
         return (
             self.q.params,
             self.q.function_state,
@@ -149,6 +189,7 @@ class DQNAgent(MightyAgent):
         )
 
     def set_state(self, state):
+        """Set the internal state of the agent, e.g. after loading"""
         (
             self.q.params,
             self.q.function_state,

@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock
 
 from mighty.agent.base_agent import MightyAgent
-from mighty.agent.dqn import DQNAgent
+from mighty.agent.dqn import MightyDQNAgent
 from .mock_environment import MockEnvDiscreteActions
 
 
@@ -20,7 +20,7 @@ class TestBaseAgent(unittest.TestCase):
             )
 
         # Use DQN to check basic functionality
-        self.agent = DQNAgent(
+        self.agent = MightyDQNAgent(
             env=env,
             eval_env=env,
             epsilon=0.1,

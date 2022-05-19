@@ -17,15 +17,17 @@ from mighty.env.env_handling import MIGHTYENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TypeKwargs
 
-# SAC agent from Haarnoja et al.'s "Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor" Paper at ICML 2018
-# Original Code: https://github.com/haarnoja/sac
 
-
-class SACAgent(MightyAgent):
+class MightySACAgent(MightyAgent):
     """
-    SAC Agent
-    """
+    Mighty SAC agent
 
+    This agent implements the SAC algorithm from Haarnoja et al.'s "Soft Actor-Critic: Off-Policy
+    Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor" Paper at ICML 2018.
+    Like all Mighty agents, it's supposed to be called via the train method.
+    Policy and Q-function architectures can be altered by overwriting the policy_function and q_function with a suitable
+    haiku/coax architecture.
+    """
     def __init__(
         self,
         # MightyAgent Args
@@ -58,6 +60,30 @@ class SACAgent(MightyAgent):
         ] = None,
         td_update_kwargs: Optional[TypeKwargs] = None,
     ):
+        """
+        SAC initialization
+        Creates all relevant class variables and calls agent-specific init function
+
+        :param env: Train environment
+        :param logger: Mighty logger
+        :param eval_env: Evaluation environment
+        :param learning_rate: Learning rate for training
+        :param epsilon: Exploration factor for training
+        :param batch_size: Batch size for training
+        :param render_progress: Render progress
+        :param log_tensorboard: Log to tensorboard as well as to file
+        :param replay_buffer_class: Replay buffer class from coax replay buffers
+        :param replay_buffer_kwargs: Arguments for the replay buffer
+        :param tracer_class: Reward tracing class from coax tracers
+        :param tracer_kwargs: Arguments for the reward tracer
+        :param n_policy_units: Number of units for policy network
+        :param n_critic_units: Number of units for critic network
+        :param soft_update_weight: Size of soft updates for target network
+        :param td_update_class: Kind of TD update used from coax TD updates
+        :param td_update_kwargs: Arguments for the TD update
+        :return:
+        """
+
         assert 0.0 <= soft_update_weight <= 1.0
         self.soft_update_weight = soft_update_weight
         self.n_policy_units = n_policy_units
@@ -193,6 +219,11 @@ class SACAgent(MightyAgent):
         print("Initialized agent.")
 
     def update_agent(self, step):
+        """
+        Compute and apply SAC update
+        :param step: Current training step
+        :return:
+        """
         transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
         metrics = {}
         # flip a coin to decide which of the q-functions to update
@@ -210,6 +241,21 @@ class SACAgent(MightyAgent):
         self.q2_target.soft_update(self.q2, tau=self.soft_update_weight)
 
     def get_state(self):
+        """
+        Return current agent state, e.g. for saving.
+        For SAC, this consists of:
+            - the policy action probability distribution
+            - the policy function state
+            - the first Q network's parameters
+            - the first Q network's function state
+            - the second Q network's parameters
+            - the second Q network's function state
+            - the first target network's parameters
+            - the first target network's function state
+            - the second target network's parameters
+            - the second target network's function state
+        :return: Agent state
+        """
         return (
             self.policy.proba_dist,
             self.policy.function_state,
@@ -224,6 +270,7 @@ class SACAgent(MightyAgent):
         )
 
     def set_state(self, state):
+        """Set the internal state of the agent, e.g. after loading"""
         (
             self.policy.proba_dist,
             self.policy.function_state,

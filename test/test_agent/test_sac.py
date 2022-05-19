@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock
 
 import numpy as np
-from mighty.agent.sac import SACAgent
+from mighty.agent.sac import MightySACAgent
 from .mock_environment import MockEnvDiscreteActions
 
 from copy import deepcopy
@@ -12,7 +12,7 @@ import gym
 class TestSAC(unittest.TestCase):
     def setUp(self) -> None:
         env = gym.make("Pendulum-v1")
-        self.sac = SACAgent(
+        self.sac = MightySACAgent(
             env=env,
             eval_env=env,
             epsilon=0.1,

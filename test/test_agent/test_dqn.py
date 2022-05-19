@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 
-from mighty.agent.dqn import DQNAgent
+from mighty.agent.dqn import MightyDQNAgent
 from .mock_environment import MockEnvDiscreteActions
 
 from copy import deepcopy
@@ -11,7 +11,7 @@ import numpy as np
 class TestDQN(unittest.TestCase):
     def setUp(self) -> None:
         env = MockEnvDiscreteActions()
-        self.dqn = DQNAgent(
+        self.dqn = MightyDQNAgent(
             env=env,
             eval_env=env,
             epsilon=0.1,
