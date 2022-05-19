@@ -4,6 +4,6 @@ matplotlib~=3.4.1
 seaborn~=0.11.1
 tensorboard~=2.5.0
 ConfigArgParse~=1.4.1
-hydra~=2.5
+hydra-core~=1.2
 pandas~=0.23
 scipy~=1.8.1
