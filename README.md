@@ -19,6 +19,22 @@ conda create --name mighty python=3.9
 conda activate mighty
 ```
 
+<details>
+<summary> :warning: Additional steps for mac users to get all dependencies running :warning:</summary>
+
+You should first install jaxlib and jax via (as suggested in [this thread](https://github.com/google/jax/issues/5501#issuecomment-1032891169))
+```bash
+conda install -c conda-forge jaxlib
+conda install -c conda-forge jax
+```
+To install box2d-py you also need swig installed, which you can do via
+```bash
+conda install swig
+```
+</details>
+
+
+
 Then  install Mighty:
 
 ```bash
