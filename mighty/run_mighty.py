@@ -1,6 +1,8 @@
 import warnings
 warnings.filterwarnings("ignore")
-
+# warnings.filterwarnings("ignore", category=DeprecationWarning)
+# warnings.filterwarnings("ignore", category=FutureWarning)
+import logging
 import os
 from rich import print
 
@@ -17,7 +19,7 @@ from omegaconf import DictConfig
 import hydra
 
 
-@hydra.main("./configs", "base")
+@hydra.main("./configs", "base", version_base=None)
 def main(cfg: DictConfig):
     """Parse config and run Mighty agent"""
     #FIXME: this out_dir isn't used, do we need it?
@@ -27,12 +29,15 @@ def main(cfg: DictConfig):
     #Initialize Logger
     logger = Logger(
         experiment_name=f"{cfg.experiment_name}_{seed}",
+        output_path=cfg.output_dir,
         step_write_frequency=100,
         episode_write_frequency=None,
         log_to_wandb=cfg.wandb_project,
         log_to_tensorboad=cfg.tensorboard_file,
         hydra_config=cfg,
+        cli_log_lvl=logging.INFO
     )
+    logger.info(f'Output will be written to {logger.log_dir}')
 
     # Check whether env is from DACBench, CARL or gym
     # Make train and eval env

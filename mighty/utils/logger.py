@@ -11,6 +11,8 @@ from typing import Union, Dict, Any, Tuple, List
 import logging
 import sys
 
+from rich.logging import RichHandler
+
 import numpy as np
 import pandas as pd
 
@@ -22,9 +24,9 @@ from tensorboard_logger import configure, log_value
 
 
 def get_standard_logger(
-    identifier: str,
-    level: int = logging.INFO,
-    stream_format: str = "%(asctime)s|%(levelname)s|%(name)s|%(message)s",
+        identifier: str,
+        level: int = logging.INFO,
+        stream_format: str = "%(asctime)s|%(levelname)s|%(name)s|%(message)s",
 ):
     logger = logging.getLogger(identifier)
     logger.setLevel(logging.DEBUG)
@@ -150,7 +152,7 @@ def list_to_tuple(list_: List) -> Tuple:
 
 
 def log2dataframe(
-    logs: List[dict], wide: bool = False, drop_columns: List[str] = ["time"]
+        logs: List[dict], wide: bool = False, drop_columns: List[str] = ["time"]
 ) -> pd.DataFrame:
     """
     Converts a list of log entries to a pandas dataframe.
@@ -219,10 +221,11 @@ class AbstractLogger(metaclass=ABCMeta):
     }
 
     def __init__(
-        self,
-        experiment_name: str,
-        step_write_frequency: int = None,
-        episode_write_frequency: int = 1,
+            self,
+            experiment_name: str,
+            output_path: str,
+            step_write_frequency: int = None,
+            episode_write_frequency: int = 1,
     ):
         """
         Parameters
@@ -239,7 +242,7 @@ class AbstractLogger(metaclass=ABCMeta):
             see step_write_frequency
         """
         self.experiment_name = experiment_name
-        self.output_path = os.getcwd()
+        self.output_path = output_path
         self.log_dir = self._init_logging_dir(Path(self.output_path) / self.experiment_name)
         self.step_write_frequency = step_write_frequency
         self.episode_write_frequency = episode_write_frequency
@@ -259,7 +262,7 @@ class AbstractLogger(metaclass=ABCMeta):
         return ", ".join(map(lambda type_: type_.__name__, valid_types))
 
     @staticmethod
-    def _init_logging_dir(log_dir: Path) -> None:
+    def _init_logging_dir(log_dir: Path) -> Path:
         """
          Prepares the logging directory
         Parameters
@@ -361,8 +364,7 @@ class AbstractLogger(metaclass=ABCMeta):
         pass
 
 
-
-class Logger(AbstractLogger):
+class Logger(AbstractLogger, logging.Logger):
     """
     A logger that manages the creation of the module loggers.
     To get a ModuleLogger for you module (e.g. wrapper) call module_logger = Logger(...).add_module("my_wrapper").
@@ -372,13 +374,15 @@ class Logger(AbstractLogger):
     """
 
     def __init__(
-        self,
-        experiment_name: str,
-        step_write_frequency: int = None,
-        episode_write_frequency: int = 1,
-        log_to_wandb: str = None,
-        log_to_tensorboad: str = None,
-        hydra_config=None
+            self,
+            experiment_name: str,
+            output_path: str,
+            step_write_frequency: int = None,
+            episode_write_frequency: int = 1,
+            log_to_wandb: str = None,
+            log_to_tensorboad: str = None,
+            hydra_config=None,
+            cli_log_lvl=logging.NOTSET
     ) -> None:
         """
         Parameters
@@ -394,8 +398,10 @@ class Logger(AbstractLogger):
         episode_write_frequency: int
             see step_write_frequency
         """
-        super(Logger, self).__init__(
-            experiment_name, step_write_frequency, episode_write_frequency
+        logging.Logger.__init__(self, name='MightyLogger')
+        self.addHandler(RichHandler(level=cli_log_lvl))
+        AbstractLogger.__init__(self,
+            experiment_name, output_path, step_write_frequency, episode_write_frequency
         )
         self.log_to_wandb = log_to_wandb
         if log_to_wandb:
@@ -547,7 +553,7 @@ class Logger(AbstractLogger):
         self.current_step[key] = value
 
     def log(
-        self, key: str, value: Union[Dict, List, Tuple, str, int, float, bool]
+            self, key: str, value: Union[Dict, List, Tuple, str, int, float, bool]
     ) -> None:
         f"""
         Writes value to list of values and save the current time for key
