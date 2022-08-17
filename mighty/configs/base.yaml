@@ -28,6 +28,6 @@ checkpoint: null  # Path to load model checkpoint
 
 hydra:
   run:
-    dir: ${output_dir}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${output_dir}/${experiment_name}_${seed}/${now:%Y-%m-%d}/${now:%H-%M-%S}
   sweep:
-    dir: ${output_dir}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${output_dir}/${experiment_name}_${seed}/${now:%Y-%m-%d}/${now:%H-%M-%S}

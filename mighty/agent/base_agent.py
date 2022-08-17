@@ -273,7 +273,7 @@ class MightyAgent(object):
         :param T: Current timestep
         :return:
         """
-        logdir = os.getcwd()
+        logdir = self.logger.log_dir
         filepath = Path(os.path.join(logdir, "checkpoints", f"checkpoint_{T}.pkl.lz4"))
         if not filepath.is_file() or True:  # TODO build logic
             state = self.get_state()

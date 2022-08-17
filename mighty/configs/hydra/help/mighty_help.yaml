@@ -22,7 +22,7 @@ template: |-
   * debug:              flag to toggle debug output (default: false)
   * seed:               Which seed to use (default: 0)
   * output_dir:         Where to store result data (default: /tmp)
-                        In case of hydra-run the path will be "output_dir/timestamp/timestamp"
+                        hydra specific information will be in "output_dir/year-month-day/timestamp/.hydra"
   
   * wandb_project:      For wandb integration (default: null)
   * tensorboard_file:   For tensorboard integration (default: null)
