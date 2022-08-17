@@ -72,3 +72,6 @@ and information about the context distribution as keywords:
 ```bash
 python mighty/run_mighty.py 'algorithm=dqn' 'env=CARLCartPoleEnv' '+env_kwargs.num_contexts=10' '+env_kwargs.context_feature_args=[gravity]'
 ```
+
+## Further Examples
+We provide further examples, such as how to plot the logged evaluation data, in the [examples](examples) folder.
