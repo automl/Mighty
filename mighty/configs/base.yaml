@@ -4,10 +4,10 @@ defaults:
   - algorithm: dqn
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
+  - override hydra/help: mighty_help
 
 debug: false
 seed: 0
-group: null
 output_dir: /tmp
 wandb_project: null
 tensorboard_file: null
@@ -16,14 +16,14 @@ experiment_name: "mighty_experiment"
 algorithm_kwargs: {}
 
 num_steps: 1000000  # Maximum number of steps in the environment before episode ends.
-env: CartPole-v0
+env: CartPole-v1
 env_kwargs: {}
 env_wrappers: []
 
 # Training
 eval_every_n_steps: 1000  # After how many steps to evaluate.
 n_episodes_eval: null
-checkpoint: null  # Path to model checkpoint to load model from.
+checkpoint: null  # Path to load model checkpoint
 
 
 hydra:

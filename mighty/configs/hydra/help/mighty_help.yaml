@@ -1,0 +1,61 @@
+# App name, override to match the name your app is known by
+app_name: Mighty-DACs
+
+# Help header, customize to describe your app to your users
+header: |-
+  == ${hydra.help.app_name} ==
+  The Mighty cRL library you've been looking for!
+
+footer: |-
+  Powered by Hydra (https://hydra.cc)
+  Use --hydra-help to view Hydra specific help
+
+template: |-
+  ${hydra.help.header}
+  
+  == Configuration groups ==
+  Compose your configuration from those algorithms (algorithm=dqn)
+
+  $APP_CONFIG_GROUPS
+  
+  == Common Hyperparameters ==
+  * debug:              flag to toggle debug output (default: false)
+  * seed:               Which seed to use (default: 0)
+  * output_dir:         Where to store result data (default: /tmp)
+                        In case of hydra-run the path will be "output_dir/timestamp/timestamp"
+  
+  * wandb_project:      For wandb integration (default: null)
+  * tensorboard_file:   For tensorboard integration (default: null)
+  * experiment_name:    The folder in which the specific experiment data is to be stored.
+                        I.e. the path will be "output_dir/experiment_name"
+  
+  * algorithm_kwargs:   A dictionary to specify hyperparameter settings to the algorithms.
+                        Will be overwritten/populated with the choice of algorithm.
+  * num_steps:          Maximum number of steps in the environment before episode ends. (default: 1000000)
+  * env:                The environment string name to use, e.g., MountainCarContinuous (default: CartPole-v1)
+                        For gym environments please see https://www.gymlibrary.ml/ (simple control environments are by
+                        default supported)
+                        For DACBench environments please see https://github.com/automl/DACBench
+                        For CARL environments please see https://github.com/automl/CARL
+  * env_kwargs:         Dict to modify environment parameters. Note: Currently only supported for CARL envs
+  * env_warppers:       List of wrapper classes to apply to the environment. (default: [])
+  
+  * eval_every_n_steps: Training steps interval after which the agent is evaluated on a separate eval_env, i.e., a 
+                        second copy of the training env (default: 1000)
+  * n_episodes_eval:    Training episodes interval after which the agent is evlauted on a separate eval_env, i.e., a 
+                        second copy of the training environment (default: null)
+  * checkpoint:         Path to load a checkpointed model from. This allows to contnue training. If unset a new model is
+                        trained from scratch (default: null)
+
+  == Config ==
+  Any key=value argument can be overridden (use dots for.nested=overrides), for example:
+  python mighty/run_mighty.py 'algorithm=ppo' 'env=MountainCarContinuous' 'num_steps=1000' 'algorithm_kwargs.learning_rate=0.1'
+  or
+  python mighty/run_mighty.py 'algorithm=dqn' 'env=SigmoidBenchmark' 'num_steps=100000'
+  
+  This is the configuration that was generated for this run:
+  -------
+  $CONFIG
+  -------
+
+  ${hydra.help.footer}
