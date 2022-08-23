@@ -244,16 +244,16 @@ class MightySACAgent(MightyAgent):
         """
         Return current agent state, e.g. for saving.
         For SAC, this consists of:
-            - the policy action probability distribution
-            - the policy function state
-            - the first Q network's parameters
-            - the first Q network's function state
-            - the second Q network's parameters
-            - the second Q network's function state
-            - the first target network's parameters
-            - the first target network's function state
-            - the second target network's parameters
-            - the second target network's function state
+        - the policy action probability distribution
+        - the policy function state
+        - the first Q network's parameters
+        - the first Q network's function state
+        - the second Q network's parameters
+        - the second Q network's function state
+        - the first target network's parameters
+        - the first target network's function state
+        - the second target network's parameters
+        - the second target network's function state
         :return: Agent state
         """
         return (

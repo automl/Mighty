@@ -1,4 +1,4 @@
-﻿mighty.run\_mighty
+mighty.run\_mighty
 ==================
 
 .. automodule:: mighty.run_mighty

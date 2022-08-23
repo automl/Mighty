@@ -175,10 +175,10 @@ class MightyDQNAgent(MightyAgent):
         """
         Return current agent state, e.g. for saving.
         For DQN, this consists of:
-            - the Q network parameters
-            - the Q network function state
-            - the target network parameters
-            - the target network function state
+        - the Q network parameters
+        - the Q network function state
+        - the target network parameters
+        - the target network function state
         :return: Agent state
         """
         return (

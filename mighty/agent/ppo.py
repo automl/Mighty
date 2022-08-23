@@ -182,14 +182,14 @@ class MightyPPOAgent(MightyAgent):
         """
         Return current agent state, e.g. for saving.
         For PPO, this consists of:
-            - the value network parameters
-            - the value network function state
-            - the value target parameters
-            - the value target function state
-            - the policy network parameters
-            - the policy network function state
-            - the policy target parameters
-            - the policy target function state
+        - the value network parameters
+        - the value network function state
+        - the value target parameters
+        - the value target function state
+        - the policy network parameters
+        - the policy network function state
+        - the policy target parameters
+        - the policy target function state
         :return: Agent state
         """
         return (

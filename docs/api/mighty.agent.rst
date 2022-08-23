@@ -1,4 +1,4 @@
-﻿mighty.agent
+mighty.agent
 ============
 
 .. automodule:: mighty.agent
