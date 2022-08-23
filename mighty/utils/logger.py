@@ -418,6 +418,7 @@ class Logger(AbstractLogger, logging.Logger):
         self.log_file = self.reward_log_file
         self.eval = False
 
+        self.total_steps = 0
         self.step = 0
         self.episode = 0
         self.buffer = []
@@ -475,6 +476,7 @@ class Logger(AbstractLogger, logging.Logger):
         if self.current_step:
             self.current_step["step"] = self.step
             self.current_step["episode"] = self.episode
+            self.current_step["total_steps"] = self.total_steps
             self.current_step["instance"] = self.instance
             self.buffer.append(
                 json.dumps(self.current_step, default=self.__json_default)
@@ -491,11 +493,12 @@ class Logger(AbstractLogger, logging.Logger):
         self.__end_step()
         if (
                 self.step_write_frequency is not None
-                and self.step % self.step_write_frequency == 0
+                and self.total_steps % self.step_write_frequency == 0
         ):
             self.write()
         if not self.eval:
             self.step += 1
+            self.total_steps += 1
 
     def next_episode(self, instance):
         """
@@ -516,7 +519,7 @@ class Logger(AbstractLogger, logging.Logger):
             self.episode += 1
 
         if self.log_to_wandb:
-            self.run.log({'instance': instance}, step=self.step)
+            self.run.log({'instance': instance}, step=self.total_steps)
 
     def __buffer_to_file(self):
         if len(self.buffer) > 0:
@@ -532,7 +535,7 @@ class Logger(AbstractLogger, logging.Logger):
         self.step = 0
 
         if self.log_to_wandb is not None:
-            self.run.log({'instance': instance}, step=self.step)
+            self.run.log({'instance': instance}, step=self.total_step)
 
     def write(self):
         """
@@ -568,12 +571,12 @@ class Logger(AbstractLogger, logging.Logger):
         """
         self.__log(key, value)
         if self.log_to_wandb:
-            self.run.log({key: value}, step=self.step)
+            self.run.log({key: value}, step=self.total_steps)
 
         if self.log_to_tb:
             # This only logs floats, so we skip the rest
             try:
-                log_value(key, value, self.step)
+                log_value(key, value, self.total_steps)
             except:
                 pass
 
@@ -591,8 +594,8 @@ class Logger(AbstractLogger, logging.Logger):
             self.__log(key, value)
 
         if self.log_to_wandb:
-            self.run.log(data, step=self.step)
+            self.run.log(data, step=self.total_steps)
 
         if self.log_to_tb:
             for key, value in data.items():
-                log_value(key, value, self.step)
+                log_value(key, value, self.total_steps)
