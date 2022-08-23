@@ -11,8 +11,6 @@ options = {
         "github_url": "https://github.com/automl/Mighty",
         "twitter_url": "https://twitter.com/automl_org?lang=de",
     },
-    "autosummary_generate": False,
-    "exclude_patterns": ["static", "templates", "archive"]
 }
 
 automl_sphinx_theme.set_options(globals(), options)
