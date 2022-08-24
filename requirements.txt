@@ -13,3 +13,4 @@ rich~=12.4
 jax~=0.3.13
 coax~=0.1.10
 wandb~=0.12
+automl-sphinx-theme

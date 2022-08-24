@@ -50,16 +50,8 @@ def load_logs(log_file: Path) -> List[Dict]:
     """
     Loads the logs from a jsonl written by any logger.
     The result is the list of dicts in the format:
-    {
-        'instance': 0,
-        'episode': 0,
-        'step': 1,
-        'example_log_val':  {
-            'values': [val1, val2, ... valn],
-            'times: [time1, time2, ..., timen],
-        }
-        ...
-    }
+    {'instance': 0, 'episode': 0, 'step': 1, 'total_step': 1,
+    'example_log_val':  {'values': [val1, val2, ... valn],'times: [time1, time2, ..., timen],},...}
 
     :param log_file: The path to the log file as pathlib.Path
     :return: [Dict, ...]
@@ -71,37 +63,29 @@ def load_logs(log_file: Path) -> List[Dict]:
 
 
 def split(predicate: Callable, iterable: Iterable) -> Tuple[List, List]:
-    """
-    Splits the iterable into two list depending on the result of predicate.
+     """
+     Splits the iterable into two list depending on the result of predicate.
 
-    :param predicate: A function taking an element of the iterable and return Ture or False
-    :param iterable: Iterable
-    :return: (positives, negatives)
-    """
-    positives, negatives = [], []
+     :param predicate: A function taking an element of the iterable and return Ture or False
+     :param iterable: Iterable
+     :return: (positives, negatives)
+     """
+     positives, negatives = [], []
 
-    for item in iterable:
-        (positives if predicate(item) else negatives).append(item)
+     for item in iterable:
+         (positives if predicate(item) else negatives).append(item)
 
-    return positives, negatives
+     return positives, negatives
 
 
 def flatten_log_entry(log_entry: Dict) -> List[Dict]:
     """
     Transforms a log entry of format like
-    {
-        'step': 0,
-        'episode': 2,
-        'some_value': {
-            'values' : [34, 45],
-            'times':['28-12-20 16:20:53', '28-12-20 16:21:30'],
-        }
-    }
+    {'step': 0, 'episode': 2,
+    'some_value': {'values' : [34, 45], 'times':['28-12-20 16:20:53', '28-12-20 16:21:30'],}}
     into
-    [
-        { 'step': 0,'episode': 2, 'value': 34, 'time': '28-12-20 16:20:53'},
-        { 'step': 0,'episode': 2, 'value': 45, 'time': '28-12-20 16:21:30'}
-    ]
+    [{ 'step': 0,'episode': 2, 'value': 34, 'time': '28-12-20 16:20:53'},
+    { 'step': 0,'episode': 2, 'value': 45, 'time': '28-12-20 16:21:30'}]
 
     :param log_entry: A log entry as Dict
     :return:
@@ -239,8 +223,8 @@ class AbstractLogger(metaclass=ABCMeta):
         return log_dir
 
     def is_of_valid_type(self, value: Any) -> bool:
-        f"""
-        Checks if the value of any type in {AbstractLogger._pretty_valid_types()}
+        """
+        Checks if the value of any type in AbstractLogger._pretty_valid_types()
 
         :param value:
         :return: bool
@@ -293,11 +277,11 @@ class AbstractLogger(metaclass=ABCMeta):
 
     @abstractmethod
     def log(self, key: str, value) -> None:
-        f"""
+        """
         Writes value to list of values and save the current time for key
 
         :param key: keyword to log
-        :param value: the value must of of a type that is json serializable. Currently only {AbstractLogger._pretty_valid_types()} and recursive types of those are supported.
+        :param value: the value must of of a type that is json serializable. Currently only AbstractLogger._pretty_valid_types() and recursive types of those are supported.
         :return:
         """
         pass
@@ -493,11 +477,11 @@ class Logger(AbstractLogger, logging.Logger):
     def log(
             self, key: str, value: Union[Dict, List, Tuple, str, int, float, bool]
     ) -> None:
-        f"""
+        """
         Writes value to list of values and save the current time for key
 
         :param key: keyword to log
-        :param value: the value must of of a type that is json serializable. Currently only {AbstractLogger._pretty_valid_types()} and recursive types of those are supported.
+        :param value: the value must of of a type that is json serializable. Currently only AbstractLogger._pretty_valid_types() and recursive types of those are supported.
         :return:
         """
         self.__log(key, value)

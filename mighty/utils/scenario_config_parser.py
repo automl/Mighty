@@ -7,10 +7,7 @@ class ScenarioConfigParser(BaseConfigParser):
         """
         Initialize the scenario configuration parser.
 
-        Parameters
-        ----------
-        default_config_files: list[str], optional
-            When specified, this list of config files will
+        :param default_config_files: When specified, this list of config files will
             be parsed in order, with the values from each config file
             taking precedence over previous ones. This allows an application
             to look for config files in multiple standard locations such as
@@ -37,11 +34,7 @@ class ScenarioConfigParser(BaseConfigParser):
     def _add_arguments(self):
         """
         Adds scenario/train specific and top-level arguments.
-
-        Returns
-        -------
-        None
-
+        :return:
         """
         # Training
         self._p.add_argument(

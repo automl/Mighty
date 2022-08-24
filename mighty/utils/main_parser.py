@@ -10,7 +10,6 @@ class MainParser(object):
     def __init__(self):
         """
         Initialize parser.
-
         The parser for the scenario and the agent are created via the parse call.
         """
         self.parser_scenario = None  # type: Optional[ScenarioConfigParser]
@@ -26,20 +25,12 @@ class MainParser(object):
         Parse command line arguments and prepare output directory.
 
         Instantiate parsers and pare arguments in following order:
-            1. parse scenario arguments
-            2. parse agent arguments
+        1. parse scenario arguments
+        2. parse agent arguments
 
+        :param args: optional command line arguments.
 
-        Parameters
-        ----------
-        args: List[str], optional
-            Command line arguments.
-
-        Returns
-        -------
-        args_dict: Dict[str, configargparse.Namespace]
-            Dictionary containing the arguments for the scenario and the agent as namespaces.
-            Keys: ["scenario", "agent"].
+        :return: Dictionary containing the arguments for the scenario and the agent as namespaces. Keys: ["scenario", "agent"].
         """
 
         # 1. Parse scenario arguments.
@@ -73,11 +64,7 @@ class MainParser(object):
     def to_ini(self):
         """
         Write the scenario and the agent arguments to an ini-file.
-
-        Returns
-        -------
-        None
-
+        :return:
         """
         if self.args_dict:
             self.parser_scenario.to_ini(self.scenario_fn, self.args_dict["scenario"])
