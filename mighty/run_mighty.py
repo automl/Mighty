@@ -64,7 +64,7 @@ def main(cfg: DictConfig):
         eval_env = env_class(contexts=eval_contexts)
         eval_default = len(eval_contexts)
     else:
-        import gym
+        import gymnasium as gym
 
         env = gym.make(cfg.env)
         eval_env = gym.make(cfg.env)

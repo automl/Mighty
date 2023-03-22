@@ -23,6 +23,6 @@ else:
     CARLENV = int
 
 if not carl_found and not dacbench_found:
-    import gym
+    import gymnasium as gym
     MIGHTYENV = gym.Env
     print("Warning: you do not have DACBench or CARL installed, will default to gym.Env. These environment may not behave the same!")

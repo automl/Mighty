@@ -1,14 +1,10 @@
 from pathlib import Path
 import os
-from typing import Optional, Dict, Any, Union, Tuple, Type
+from typing import Optional, Union, Type
 import hydra
 from omegaconf import DictConfig
 
-import jax
 import coax
-import optax
-import haiku as hk
-import jax.numpy as jnp
 from coax.experience_replay._simple import BaseReplayBuffer
 from coax.experience_replay import SimpleReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
@@ -191,17 +187,18 @@ class MightyAgent(object):
             log_reward_buffer = []
             while steps < n_steps:
                 progress.update(steps_task, visible=True)
-                s = self.env.reset()
-                done = False
-                while not done:
+                s, _ = self.env.reset()
+                terminated, truncated = False, False
+                while not (terminated or truncated):
                     a = self.policy(s)
-                    s_next, r, done, info = self.env.step(a)
+                    s_next, r, terminated, truncated, _ = self.env.step(a)
 
                     self.logger.log("reward", r)
                     self.logger.log("action", a)
                     self.logger.log("next_state", s_next)
                     self.logger.log("state", s)
-                    self.logger.log("done", done)
+                    self.logger.log("terminated", terminated)
+                    self.logger.log("truncated", truncated)
 
                     log_reward_buffer.append(r)
                     steps += 1
@@ -209,7 +206,7 @@ class MightyAgent(object):
                     progress.advance(steps_task)
 
                     # add transition to buffer
-                    self.tracer.add(s, a, r, done)
+                    self.tracer.add(s, a, r, terminated or truncated)
                     while self.tracer:
                         if isinstance(self.replay_buffer, coax.experience_replay.PrioritizedReplayBuffer):
                             transition = self.tracer.pop()
@@ -288,12 +285,12 @@ class MightyAgent(object):
         :return:
         """
         self.logger.set_eval(True)
-        for e in range(episodes):
-            done = False
-            state = env.reset()
-            while not done:
+        for _ in range(episodes):
+            terminated, truncated = False, False
+            state, _ = env.reset()
+            while not (terminated or truncated):
                 action = self.policy(state)
-                state, reward, done, _ = env.step(action)
+                state, _, terminated, truncated, _ = env.step(action)
                 self.logger.next_step()
 
             if isinstance(self.env, DACENV):

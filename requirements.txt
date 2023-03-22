@@ -1,5 +1,5 @@
 numpy~=1.21
-gym~=0.23
+gymnasium==0.27.1
 matplotlib~=3.4
 seaborn~=0.11
 tensorboard.logger~=0.1
@@ -10,7 +10,8 @@ hydra-submitit-launcher~=1.2
 pandas~=1.4
 scipy~=1.8
 rich~=12.4
-jax~=0.3.13
-coax~=0.1.10
+jax==0.4.6
+jaxlib==0.4.6
+coax~=0.1.13
 wandb~=0.12
 automl-sphinx-theme
