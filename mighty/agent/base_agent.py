@@ -4,6 +4,8 @@ from typing import Optional, Union, Type
 import hydra
 from omegaconf import DictConfig
 
+import jax.numpy as jnp
+from jax import vmap, jit
 import coax
 from coax.experience_replay._simple import BaseReplayBuffer
 from coax.experience_replay import SimpleReplayBuffer
@@ -233,7 +235,12 @@ class MightyAgent(object):
 
                 if steps_since_eval >= eval_every_n_steps:
                     steps_since_eval = 0
-                    self.eval(self.eval_env, n_episodes_eval)
+                    #TODO: make it work with CARL
+                    if isinstance(self.eval_env, DACENV):
+                        eval_instance_ids = self.eval_env.instance_id_list
+                        vmap(self.eval, in_axes=(None, 0), out_axes=0)(n_episodes_eval,jnp.array([0,0,0,0,0]))
+                    else:
+                        self.eval(n_episodes_eval)
 
                 if episodes % human_log_every_n_episodes == 0:
                     print(
@@ -277,7 +284,7 @@ class MightyAgent(object):
             coax.utils.dump(state, str(filepath))
             print(f"Saved checkpoint to {filepath}")
 
-    def eval(self, env: MIGHTYENV, episodes: int):
+    def eval(self, episodes: int, instance_id=None):
         """
         Eval agent on an environment. (Full rollouts)
         :param env: The environment to evaluate on
@@ -287,16 +294,20 @@ class MightyAgent(object):
         self.logger.set_eval(True)
         for _ in range(episodes):
             terminated, truncated = False, False
-            state, _ = env.reset()
+            #TODO: this doesn't work for CARL, can we change that?
+            if instance_id is not None:
+                state, _ = self.eval_env.reset(options={"instance_id":instance_id})
+            else:
+                state, _ = self.eval_env.reset()
             while not (terminated or truncated):
                 action = self.policy(state)
-                state, _, terminated, truncated, _ = env.step(action)
+                state, _, terminated, truncated, _ = self.eval_env.step(action)
                 self.logger.next_step()
 
-            if isinstance(self.env, DACENV):
-                instance = self.env.instance
-            elif isinstance(self.env, CARLENV):
-                instance = self.env.context
+            if isinstance(self.eval_env, DACENV):
+                instance = self.eval_env.instance
+            elif isinstance(self.eval_env, CARLENV):
+                instance = self.eval_env.context
             else:
                 instance = None
             self.logger.next_episode(instance)
