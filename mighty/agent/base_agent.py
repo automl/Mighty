@@ -5,7 +5,7 @@ import hydra
 from omegaconf import DictConfig
 
 import jax.numpy as jnp
-from jax import vmap, jit
+from jax import vmap
 import coax
 from coax.experience_replay._simple import BaseReplayBuffer
 from coax.experience_replay import SimpleReplayBuffer
@@ -194,7 +194,7 @@ class MightyAgent(object):
                 while not (terminated or truncated):
                     a = self.policy(s)
                     s_next, r, terminated, truncated, _ = self.env.step(a)
-
+                    
                     self.logger.log("reward", r)
                     self.logger.log("action", a)
                     self.logger.log("next_state", s_next)
@@ -238,7 +238,7 @@ class MightyAgent(object):
                     #TODO: make it work with CARL
                     if isinstance(self.eval_env, DACENV):
                         eval_instance_ids = self.eval_env.instance_id_list
-                        vmap(self.eval, in_axes=(None, 0), out_axes=0)(n_episodes_eval,jnp.array([0,0,0,0,0]))
+                        vmap(self.eval, in_axes=(None, 0), out_axes=0)(n_episodes_eval,jnp.array(eval_instance_ids))
                     else:
                         self.eval(n_episodes_eval)
 
