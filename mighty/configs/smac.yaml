@@ -1,0 +1,35 @@
+defaults:
+  - slurm
+  - _self_
+  - algorithm: dqn
+  - search_space: ppo_sigmoid
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
+  - override hydra/help: mighty_help
+  - override hydra/sweeper: SMAC #TODO: this as well as the launcher might change with the dask setup
+
+debug: false
+seed: 0
+output_dir: /tmp
+wandb_project: null
+tensorboard_file: null
+experiment_name: "mighty_tuning_experiment"
+
+algorithm_kwargs: {}
+
+num_steps: 1000000  # Maximum number of steps in the environment before episode ends.
+env: CartPole-v1
+env_kwargs: {}
+env_wrappers: []
+
+# Training
+eval_every_n_steps: 1000  # After how many steps to evaluate.
+n_episodes_eval: null
+checkpoint: null  # Path to load model checkpoint
+
+
+hydra:
+  run:
+    dir: ${output_dir}/${experiment_name}_${seed}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: ${output_dir}/${experiment_name}_${seed}/${now:%Y-%m-%d}/${now:%H-%M-%S}
