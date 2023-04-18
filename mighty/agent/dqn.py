@@ -128,6 +128,10 @@ class MightyDQNAgent(MightyAgent):
             tracer_kwargs=tracer_kwargs,
         )
 
+    @property
+    def vf(self):
+        return self.q
+
     def q_function(self, S, is_training):
         """Q-function base"""
         seq = hk.Sequential(
@@ -174,9 +178,14 @@ class MightyDQNAgent(MightyAgent):
             self.q_target.soft_update(self.q, tau=self.soft_update_weight)
         return metrics_q
 
-    def get_transition_metrics(self, transition):
-        metrics = {}
+    def get_transition_metrics(self, transition, metrics):
+        if 'td_error' not in metrics.keys():
+            metrics['rollout_errors'] = []
+            metrics['rollout_values'] = []
+
         metrics['td_error'] = self.qlearning.td_error(transition)
+        metrics['rollout_errors'].append(self.qlearning.td_error(transition))
+        metrics['rollout_values'].append(self.vf(transition.S))
         return metrics
 
     def get_state(self):

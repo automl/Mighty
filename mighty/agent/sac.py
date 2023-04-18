@@ -139,6 +139,13 @@ class MightySACAgent(MightyAgent):
             tracer_kwargs=tracer_kwargs,
         )
 
+    @property
+    def vf(self):
+        q = (
+            self.q1 if jax.random.bernoulli(self.q1.rng) else self.q2
+        )
+        return q
+
     def policy_function(self, S, is_training):
         """Policy base function"""
         seq = hk.Sequential(
@@ -254,12 +261,20 @@ class MightySACAgent(MightyAgent):
         self.q2_target.soft_update(self.q2, tau=self.soft_update_weight)
         return q_metrics
     
-    def get_transition_metrics(self, transition):
+    def get_transition_metrics(self, transition, metrics):
         qlearning = (
             self.qlearning1 if jax.random.bernoulli(self.q1.rng) else self.qlearning2
         )
-        metrics = {}
-        metrics['td_error'] = qlearning.td_error(transition)
+        if 'td_error' not in metrics.keys():
+            metrics['rollout_errors'] = []
+            metrics['rollout_values'] = []
+            metrics['rollout_logits'] = []
+
+        metrics["td_error"] = qlearning.td_error(transition)
+        metrics['rollout_errors'].append(qlearning.td_error(transition))
+        metrics['rollout_values'].append(self.vf(transition.S))
+        _, logprobs = self.policy(transition.S, return_logp=True)
+        metrics['rollout_logits'].append(logprobs)
         return metrics
 
     def get_state(self):

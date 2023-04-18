@@ -111,6 +111,10 @@ class MightyPPOAgent(MightyAgent):
             tracer_class=tracer_class,
             tracer_kwargs=tracer_kwargs,
         )
+    
+    @property
+    def vf(self):
+        return self.v
 
     def policy_function(self, S, is_training):
         """Policy base"""
@@ -196,9 +200,17 @@ class MightyPPOAgent(MightyAgent):
         self.pi_old.soft_update(self.policy, tau=self.soft_update_weight)
         return td_metrics
 
-    def get_transition_metrics(self, transition):
-        metrics = {}
+    def get_transition_metrics(self, transition, metrics):
+        if 'td_error' not in metrics.keys():
+            metrics['rollout_errors'] = []
+            metrics['rollout_values'] = []
+            metrics['rollout_logits'] = []
+
         metrics['td_error'] = self.td_update.td_error(transition)
+        metrics['rollout_errors'].append(self.td_update.td_error(transition))
+        metrics['rollout_values'].append(self.vf(transition.S))
+        _, logprobs = self.policy(transition.S, return_logp=True)
+        metrics['rollout_logits'].append(logprobs)
         return metrics
 
     def get_state(self):

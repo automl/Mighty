@@ -208,19 +208,22 @@ class MightyAgent(object):
             self.steps = 0
             steps_since_eval = 0
             log_reward_buffer = []
-            metrics = {}
+            metrics = {"env": self.env, "vf": self.vf, "policy": self.policy, "step": self.steps}
             while self.steps < n_steps:
                 for k in self.meta_modules.keys():
                     self.meta_modules[k].pre_episode(metrics)
                 progress.update(steps_task, visible=True)
                 s, _ = self.env.reset()
                 terminated, truncated = False, False
+                episode_reward = 0
+                metrics["episode_reward"] = episode_reward
                 while not (terminated or truncated):
                     for k in self.meta_modules.keys():
                         self.meta_modules[k].pre_step(metrics)
 
                     a = self.policy(s, metrics = metrics)
                     s_next, r, terminated, truncated, _ = self.env.step(a)
+                    episode_reward += r
                     
                     self.logger.log("reward", r)
                     self.logger.log("action", a)
@@ -229,6 +232,7 @@ class MightyAgent(object):
                     self.logger.log("terminated", terminated)
                     self.logger.log("truncated", truncated)
                     t = {"step": self.steps, "reward": r, "action": a, "terminated": terminated, "truncated": truncated}
+                    metrics["episode_reward"] = episode_reward
 
                     if self.writer is not None:
                         self.writer.add_scalars("transition", t, global_step=self.steps)
@@ -248,7 +252,7 @@ class MightyAgent(object):
                     self.tracer.add(s, a, r, terminated or truncated)
                     while self.tracer:
                         transition = self.tracer.pop()
-                        transition_metrics = self.get_transition_metrics(transition)
+                        transition_metrics = self.get_transition_metrics(transition, metrics)
                         self.replay_buffer.add(transition, transition_metrics)
 
                     # update
@@ -257,9 +261,10 @@ class MightyAgent(object):
                         for k in self.meta_modules.keys():
                             self.meta_modules[k].pre_step(metrics)
 
-                        # TODO: log metrics
-                        metrics = self.update_agent(self.steps)
+                        metrics.update(self.update_agent(self.steps))
                         metrics = {k:np.array(v) for k,v in metrics.items()}
+                        metrics["step"] = self.steps
+
                         if self.writer is not None:
                             self.writer.add_scalars("training_metrics", metrics, global_step=self.steps)
 
