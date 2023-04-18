@@ -3,17 +3,11 @@ warnings.filterwarnings("ignore")
 # warnings.filterwarnings("ignore", category=DeprecationWarning)
 # warnings.filterwarnings("ignore", category=FutureWarning)
 import logging
-import os
 from rich import print
+import importlib
 
 from mighty.agent.factory import get_agent_class
 from mighty.utils.logger import Logger
-
-#FIXME: has this parser been replaced? Do we still use it?
-import importlib
-import mighty.utils.main_parser
-
-importlib.reload(mighty.utils.main_parser)
 
 from omegaconf import DictConfig
 import hydra
@@ -22,8 +16,6 @@ import hydra
 @hydra.main("./configs", "base", version_base=None)
 def main(cfg: DictConfig):
     """Parse config and run Mighty agent"""
-    #FIXME: this out_dir isn't used, do we need it?
-    out_dir = os.getcwd()  # working directory changes to hydra.run.dir
     seed = cfg.seed
 
     #Initialize Logger
@@ -69,6 +61,12 @@ def main(cfg: DictConfig):
         env = gym.make(cfg.env)
         eval_env = gym.make(cfg.env)
         eval_default = 1
+
+    for w in cfg.env_wrappers:
+        class_name = w.split('.')[-1]
+        import_from = importlib.import_module('.'.join(w.split('.')[:-1]))
+        env = getattr(import_from, class_name)(env)
+        eval_env = getattr(import_from, class_name)(eval_env)
 
     # Setup agent
     agent_class = get_agent_class(cfg.algorithm)
