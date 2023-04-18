@@ -7,7 +7,6 @@ import haiku as hk
 import jax.numpy as jnp
 from coax.experience_replay._simple import BaseReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
-from coax._core.value_based_policy import BaseValueBasedPolicy
 
 from omegaconf import DictConfig
 
@@ -15,7 +14,7 @@ from mighty.agent.base_agent import MightyAgent, retrieve_class
 from mighty.env.env_handling import MIGHTYENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TypeKwargs
-
+from mighty.mighty_exploration import MightyExplorationPolicy, EpsilonGreedy
 
 class MightyDQNAgent(MightyAgent):
     """
@@ -38,6 +37,8 @@ class MightyDQNAgent(MightyAgent):
         batch_size: int = 64,
         render_progress: bool = True,
         log_tensorboard: bool = False,
+        log_wandb: bool = False,
+        wandb_kwargs: dict = {},
         replay_buffer_class: Optional[
             Union[str, DictConfig, Type[BaseReplayBuffer]]
         ] = None,
@@ -48,7 +49,7 @@ class MightyDQNAgent(MightyAgent):
         n_units: int = 8,
         soft_update_weight: float = 1.0,  # TODO which default value?
         policy_class: Optional[
-            Union[str, DictConfig, Type[BaseValueBasedPolicy]]
+            Union[str, DictConfig, Type[MightyExplorationPolicy]]
         ] = None,
         policy_kwargs: Optional[TypeKwargs] = None,
         td_update_class: Optional[
@@ -92,12 +93,12 @@ class MightyDQNAgent(MightyAgent):
 
         # Placeholder variables which are filled in self.initialize_agent
         self.q: Optional[coax.Q] = None
-        self.policy: Optional[BaseValueBasedPolicy] = None
+        self.policy: Optional[MightyExplorationPolicy] = None
         self.q_target: Optional[coax.Q] = None
         self.qlearning: Optional[coax.td_learning.DoubleQLearning] = None
 
         # Policy Class
-        policy_class = retrieve_class(cls=policy_class, default_cls=coax.EpsilonGreedy)
+        policy_class = retrieve_class(cls=policy_class, default_cls=EpsilonGreedy)
         if policy_kwargs is None:
             policy_kwargs = {"epsilon": 0.1}
         self.policy_class = policy_class
@@ -119,6 +120,8 @@ class MightyDQNAgent(MightyAgent):
             batch_size=batch_size,
             render_progress=render_progress,
             log_tensorboard=log_tensorboard,
+            log_wandb=log_wandb,
+            wandb_kwargs=wandb_kwargs,
             replay_buffer_class=replay_buffer_class,
             replay_buffer_kwargs=replay_buffer_kwargs,
             tracer_class=tracer_class,
@@ -146,7 +149,7 @@ class MightyDQNAgent(MightyAgent):
         """Initialize DQN specific things like q-function"""
 
         self.q = coax.Q(self.q_function, self.env)
-        self.policy = self.policy_class(q=self.q, **self.policy_kwargs)
+        self.policy = self.policy_class(algo='q', func=self.q, **self.policy_kwargs)
 
         # target network
         self.q_target = self.q.copy()
@@ -164,12 +167,17 @@ class MightyDQNAgent(MightyAgent):
         """
         transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
         metrics_q = self.qlearning.update(transition_batch)
-        # TODO: log these properly
-        # env.record_metrics(metrics_q)
+        metrics_q = {f"Q-Update/{k.split('/')[-1]}": metrics_q[k] for k in metrics_q.keys()}
 
         # periodically sync target models
         if step % 10 == 0:
             self.q_target.soft_update(self.q, tau=self.soft_update_weight)
+        return metrics_q
+
+    def get_transition_metrics(self, transition):
+        metrics = {}
+        metrics['td_error'] = self.qlearning.td_error(transition)
+        return metrics
 
     def get_state(self):
         """

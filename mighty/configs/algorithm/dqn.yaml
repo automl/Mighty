@@ -7,7 +7,7 @@ algorithm_kwargs:
   epsilon: 0.2  # Controls epsilon-greedy action selection in policy.
 
   replay_buffer_class:
-    _target_: coax.experience_replay.PrioritizedReplayBuffer #Using prioritized experience replay
+    _target_: mighty.mighty_replay.PrioritizedReplay #Using prioritized experience replay
   replay_buffer_kwargs:
     capacity: 1000000  # Maximum size of replay buffer.
     random_seed: ${seed}

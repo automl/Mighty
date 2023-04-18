@@ -16,6 +16,7 @@ from mighty.agent.base_agent import MightyAgent, retrieve_class
 from mighty.env.env_handling import MIGHTYENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TypeKwargs
+from mighty.mighty_exploration import MightyExplorationPolicy
 
 
 class MightySACAgent(MightyAgent):
@@ -39,12 +40,18 @@ class MightySACAgent(MightyAgent):
         batch_size: int = 64,
         render_progress: bool = True,
         log_tensorboard: bool = False,
+        log_wandb: bool = False,
+        wandb_kwargs: dict = {},
         replay_buffer_class: Optional[
             Union[str, DictConfig, Type[BaseReplayBuffer]]
         ] = None,
         replay_buffer_kwargs: Optional[TypeKwargs] = None,
         tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = NStep,
         tracer_kwargs: Optional[TypeKwargs] = {"record_extra_info": True, "n": 5},
+        policy_class: Optional[
+            Union[str, DictConfig, Type[MightyExplorationPolicy]]
+        ] = None,
+        policy_kwargs: Optional[TypeKwargs] = None,
         # SAC Specific Args
         n_policy_units: int = 8,
         n_critic_units: int = 8,
@@ -108,6 +115,11 @@ class MightySACAgent(MightyAgent):
             td_update_kwargs = {"q_targ": None, "optimizer": optax.adam(learning_rate)}
         self.td_update_kwargs = td_update_kwargs
 
+        self.policy_class = retrieve_class(cls=policy_class, default_cls=MightyExplorationPolicy)
+        if policy_kwargs is None:
+            policy_kwargs = {'func': self.policy_function, 'env': env}
+        self.policy_kwargs = policy_kwargs
+
         tracer_kwargs["gamma"] = 0.9
 
         super().__init__(
@@ -119,6 +131,8 @@ class MightySACAgent(MightyAgent):
             batch_size=batch_size,
             render_progress=render_progress,
             log_tensorboard=log_tensorboard,
+            log_wandb=log_wandb,
+            wandb_kwargs=wandb_kwargs,
             replay_buffer_class=replay_buffer_class,
             replay_buffer_kwargs=replay_buffer_kwargs,
             tracer_class=tracer_class,
@@ -163,7 +177,7 @@ class MightySACAgent(MightyAgent):
     def _initialize_agent(self):
         """Initialize algorithm components like policy and critic"""
         # main function approximators
-        self.policy = coax.Policy(self.policy_function, self.env)
+        self.policy = self.policy_class('ppo', **self.policy_kwargs)
         self.q1 = coax.Q(
             self.q_function,
             self.env,
@@ -225,20 +239,28 @@ class MightySACAgent(MightyAgent):
         :return:
         """
         transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
-        metrics = {}
         # flip a coin to decide which of the q-functions to update
         qlearning = (
             self.qlearning1 if jax.random.bernoulli(self.q1.rng) else self.qlearning2
         )
-        metrics.update(qlearning.update(transition_batch))
-        metrics.update(self.soft_pg.update(transition_batch))
-
-        # TODO: log metrics
-        # env.record_metrics(metrics)
+        q_metrics = qlearning.update(transition_batch)
+        q_metrics = {f"Q-Update/{k.split('/')[-1]}": q_metrics[k] for k in q_metrics.keys()}
+        pg_metrics = self.soft_pg.update(transition_batch)
+        pg_metrics = {f"PolicyUpdate/{k.split('/')[-1]}": pg_metrics[k] for k in pg_metrics.keys()}
+        q_metrics.update(pg_metrics)
 
         # sync target networks
         self.q1_target.soft_update(self.q1, tau=self.soft_update_weight)
         self.q2_target.soft_update(self.q2, tau=self.soft_update_weight)
+        return q_metrics
+    
+    def get_transition_metrics(self, transition):
+        qlearning = (
+            self.qlearning1 if jax.random.bernoulli(self.q1.rng) else self.qlearning2
+        )
+        metrics = {}
+        metrics['td_error'] = qlearning.td_error(transition)
+        return metrics
 
     def get_state(self):
         """

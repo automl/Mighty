@@ -1,10 +1,10 @@
 import numpy as onp
 import chex
 import jax
-from coax.experience_replay._simple import BaseReplayBuffer
 from coax.reward_tracing import TransitionBatch
+from mighty.mighty_replay import MightyReplay
 
-class HERBuffer(BaseReplayBuffer):
+class HER(MightyReplay):
     """
 
     Hindsight Experience Replay Buffer
@@ -32,7 +32,7 @@ class HERBuffer(BaseReplayBuffer):
         To get reproducible results.
 
     """
-    def __init__(self, capacity, gamma, random_seed=None, n_sampled_goal: int = 4, goal_selection_strategy: Union[GoalSelectionStrategy, str] = "future"):
+    def __init__(self, capacity, gamma, random_seed=None, n_sampled_goal: int = 4, goal_selection_strategy: str = "future"):
         if not (isinstance(capacity, int) and capacity > 0):
             raise TypeError(f"capacity must be a positive int, got: {capacity}")
 
@@ -50,7 +50,7 @@ class HERBuffer(BaseReplayBuffer):
     def capacity(self):
         return self._capacity
 
-    def add(self, transition_batch, Adv):
+    def add(self, transition_batch, metrics):
         r"""
 
         Add a transition to the experience replay buffer.

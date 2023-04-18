@@ -1,14 +1,15 @@
 from pathlib import Path
 import os
-from typing import Optional, Union, Type
+from typing import Optional, Union, Type, List
 import hydra
 from omegaconf import DictConfig
+import numpy as np
+import wandb
 
 import jax.numpy as jnp
 from jax import vmap
 import coax
 from coax.experience_replay._simple import BaseReplayBuffer
-from coax.experience_replay import SimpleReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
 from typing import Optional
 from rich.progress import Progress, TimeRemainingColumn, TimeElapsedColumn, BarColumn
@@ -16,6 +17,7 @@ from rich.progress import Progress, TimeRemainingColumn, TimeElapsedColumn, BarC
 from mighty.env.env_handling import MIGHTYENV, DACENV, CARLENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TypeKwargs
+from mighty.mighty_replay import MightyReplay
 
 
 def retrieve_class(cls: Union[str, DictConfig, Type], default_cls: Type) -> Type:
@@ -43,12 +45,16 @@ class MightyAgent(object):
         batch_size: int = 64,
         render_progress: bool = True, #FIXME: Does this actually do anything or can we take it out?
         log_tensorboard: bool = False,
+        log_wandb: bool = False,
+        wandb_kwargs: dict = {},
         replay_buffer_class: Optional[
             Union[str, DictConfig, Type[BaseReplayBuffer]]
         ] = None,
         replay_buffer_kwargs: Optional[TypeKwargs] = None,
         tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
         tracer_kwargs: Optional[TypeKwargs] = None,
+        meta_methods: Optional[List[Union[str, Type]]] = [],
+        meta_kwargs: Optional[list[TypeKwargs]] = None,
     ):
         """
         Base agent initialization
@@ -66,6 +72,8 @@ class MightyAgent(object):
         :param replay_buffer_kwargs: Arguments for the replay buffer
         :param tracer_class: Reward tracing class from coax tracers
         :param tracer_kwargs: Arguments for the reward tracer
+        :param meta_methods: Class names or types of mighty meta learning modules to use
+        :param meta_kwargs: List of kwargs for the meta learning modules
         :return:
         """
         self.learning_rate = learning_rate
@@ -78,7 +86,7 @@ class MightyAgent(object):
 
         # Replay Buffer
         replay_buffer_class = retrieve_class(
-            cls=replay_buffer_class, default_cls=SimpleReplayBuffer
+            cls=replay_buffer_class, default_cls=MightyReplay
         )
         if replay_buffer_kwargs is None:
             replay_buffer_kwargs = {
@@ -99,6 +107,14 @@ class MightyAgent(object):
             }
         self.tracer_class = tracer_class
         self.tracer_kwargs = tracer_kwargs
+
+        # Create meta modules
+        self.meta_modules = {}
+        for i, m in enumerate(meta_methods):
+            meta_class = retrieve_class(cls=m)
+            if len(meta_kwargs) > i:
+                kwargs = meta_kwargs[i]
+            self.meta_modules[meta_class.__name__] = meta_class(algo=self.__class__.__name__, **kwargs)
 
         if logger is not None:
             output_dir = logger.log_dir
@@ -122,10 +138,15 @@ class MightyAgent(object):
 
         self.writer = None
         if log_tensorboard and output_dir is not None:
+            from torch.utils.tensorboard import SummaryWriter
             self.writer = SummaryWriter(output_dir)
             self.writer.add_scalar("hyperparameter/learning_rate", self.learning_rate)
             self.writer.add_scalar("hyperparameter/batch_size", self._batch_size)
             self.writer.add_scalar("hyperparameter/policy_epsilon", self._epsilon)
+
+        self.log_wandb = log_wandb
+        if log_wandb:
+            wandb.init(**wandb_kwargs)
 
         self.initialize_agent()
 
@@ -184,15 +205,21 @@ class MightyAgent(object):
                 "Train Steps", total=n_steps, start=False, visible=False
             )
             progress.start_task(steps_task)
-            steps = 0
+            self.steps = 0
             steps_since_eval = 0
             log_reward_buffer = []
-            while steps < n_steps:
+            metrics = {}
+            while self.steps < n_steps:
+                for k in self.meta_modules.keys():
+                    self.meta_modules[k].pre_episode(metrics)
                 progress.update(steps_task, visible=True)
                 s, _ = self.env.reset()
                 terminated, truncated = False, False
                 while not (terminated or truncated):
-                    a = self.policy(s)
+                    for k in self.meta_modules.keys():
+                        self.meta_modules[k].pre_step(metrics)
+
+                    a = self.policy(s, metrics = metrics)
                     s_next, r, terminated, truncated, _ = self.env.step(a)
                     
                     self.logger.log("reward", r)
@@ -201,24 +228,43 @@ class MightyAgent(object):
                     self.logger.log("state", s)
                     self.logger.log("terminated", terminated)
                     self.logger.log("truncated", truncated)
+                    t = {"step": self.steps, "reward": r, "action": a, "terminated": terminated, "truncated": truncated}
+
+                    if self.writer is not None:
+                        self.writer.add_scalars("transition", t, global_step=self.steps)
+
+                    if self.log_wandb:
+                        wandb.log(t)
+
+                    for k in self.meta_modules.keys():
+                        self.meta_modules[k].post_step(metrics)
 
                     log_reward_buffer.append(r)
-                    steps += 1
+                    self.steps += 1
                     steps_since_eval += 1
                     progress.advance(steps_task)
 
                     # add transition to buffer
                     self.tracer.add(s, a, r, terminated or truncated)
                     while self.tracer:
-                        if isinstance(self.replay_buffer, coax.experience_replay.PrioritizedReplayBuffer):
-                            transition = self.tracer.pop()
-                            self.replay_buffer.add(transition, self.qlearning.td_error(transition))
-                        else:
-                            self.replay_buffer.add(self.tracer.pop())
+                        transition = self.tracer.pop()
+                        transition_metrics = self.get_transition_metrics(transition)
+                        self.replay_buffer.add(transition, transition_metrics)
 
                     # update
                     if len(self.replay_buffer) >= self._batch_size:
-                        self.update_agent(steps)
+
+                        for k in self.meta_modules.keys():
+                            self.meta_modules[k].pre_step(metrics)
+
+                        # TODO: log metrics
+                        metrics = self.update_agent(self.steps)
+                        metrics = {k:np.array(v) for k,v in metrics.items()}
+                        if self.writer is not None:
+                            self.writer.add_scalars("training_metrics", metrics, global_step=self.steps)
+
+                        for k in self.meta_modules.keys():
+                            self.meta_modules[k].pre_step(metrics)
 
                     self.last_state = s
                     s = s_next
@@ -232,6 +278,8 @@ class MightyAgent(object):
                     instance = None
                 self.logger.next_episode(instance)
                 episodes += 1
+                for k in self.meta_modules.keys():
+                    self.meta_modules[k].post_episode(metrics)                
 
                 if steps_since_eval >= eval_every_n_steps:
                     steps_since_eval = 0
@@ -244,7 +292,7 @@ class MightyAgent(object):
 
                 if episodes % human_log_every_n_episodes == 0:
                     print(
-                        f"Steps: {steps}, Reward: {sum(log_reward_buffer) / len(log_reward_buffer)}"
+                        f"Steps: {self.steps}, Reward: {sum(log_reward_buffer) / len(log_reward_buffer)}"
                     )
                     log_reward_buffer = []
 
@@ -253,6 +301,8 @@ class MightyAgent(object):
 
         # At the end make sure logger writes buffer to file
         self.logger.write()
+        self.writer.flush()
+        self.writer.close()
 
     def get_state(self):
         """Return internal state for checkpointing."""
@@ -292,6 +342,7 @@ class MightyAgent(object):
         :return:
         """
         self.logger.set_eval(True)
+        rewards = []
         for _ in range(episodes):
             terminated, truncated = False, False
             #TODO: this doesn't work for CARL, can we change that?
@@ -299,10 +350,12 @@ class MightyAgent(object):
                 state, _ = self.eval_env.reset(options={"instance_id":instance_id})
             else:
                 state, _ = self.eval_env.reset()
+            r = 0
             while not (terminated or truncated):
-                action = self.policy(state)
+                action = self.policy(state, eval=True)
                 state, _, terminated, truncated, _ = self.eval_env.step(action)
                 self.logger.next_step()
+            rewards.append(r)
 
             if isinstance(self.eval_env, DACENV):
                 instance = self.eval_env.instance
@@ -314,3 +367,12 @@ class MightyAgent(object):
 
         self.logger.write()
         self.logger.set_eval(False)
+
+        eval_metrics = {'step': self.steps, 'eval_episodes': np.array(rewards), 'mean_eval_reward': np.mean(rewards)}
+        if instance_id is not None:
+            eval_metrics['instance_id'] = instance_id
+        if self.writer is not None:
+            self.writer.add_scalars("eval", eval_metrics)
+
+        if self.log_wandb:
+            wandb.log(eval_metrics)

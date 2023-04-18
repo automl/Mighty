@@ -11,10 +11,11 @@ from numpy import prod
 
 from omegaconf import DictConfig
 
-from mighty.agent.base_agent import MightyAgent
+from mighty.agent.base_agent import MightyAgent, retrieve_class
 from mighty.env.env_handling import MIGHTYENV
 from mighty.utils.logger import Logger
 from mighty.utils.types import TypeKwargs
+from mighty.mighty_exploration import MightyExplorationPolicy
 
 
 class MightyPPOAgent(MightyAgent):
@@ -37,12 +38,18 @@ class MightyPPOAgent(MightyAgent):
         batch_size: int = 64,
         render_progress: bool = True,
         log_tensorboard: bool = False,
+        log_wandb: bool = False,
+        wandb_kwargs: dict = {},
         replay_buffer_class: Optional[
             Union[str, DictConfig, Type[BaseReplayBuffer]]
         ] = None,
         replay_buffer_kwargs: Optional[TypeKwargs] = None,
         tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
         tracer_kwargs: Optional[TypeKwargs] = None,
+        policy_class: Optional[
+            Union[str, DictConfig, Type[MightyExplorationPolicy]]
+        ] = None,
+        policy_kwargs: Optional[TypeKwargs] = None,
         # PPO Specific Args
         n_policy_units: int = 8,
         n_critic_units: int = 8,
@@ -83,6 +90,11 @@ class MightyPPOAgent(MightyAgent):
         self.td_update: Optional[coax.td_learning.SimpleTD] = None
         self.ppo_clip: Optional[coax.policy_objectives.PPOClip] = None
 
+        self.policy_class = retrieve_class(cls=policy_class, default_cls=MightyExplorationPolicy)
+        if policy_kwargs is None:
+            policy_kwargs = {'func': self.policy_function, 'env': env}
+        self.policy_kwargs = policy_kwargs
+
         super().__init__(
             env=env,
             logger=logger,
@@ -92,6 +104,8 @@ class MightyPPOAgent(MightyAgent):
             batch_size=batch_size,
             render_progress=render_progress,
             log_tensorboard=log_tensorboard,
+            log_wandb=log_wandb,
+            wandb_kwargs=wandb_kwargs,
             replay_buffer_class=replay_buffer_class,
             replay_buffer_kwargs=replay_buffer_kwargs,
             tracer_class=tracer_class,
@@ -147,7 +161,7 @@ class MightyPPOAgent(MightyAgent):
     def _initialize_agent(self):
         """Initialize PPO specific components"""
 
-        self.policy = coax.Policy(self.policy_function, self.env)
+        self.policy = self.policy_class('ppo', **self.policy_kwargs)
         self.v = coax.V(self.value_function, self.env)
 
         # targets
@@ -171,12 +185,21 @@ class MightyPPOAgent(MightyAgent):
         :return:
         """
         transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
-        _, td_error = self.td_update.update(transition_batch, return_td_error=True)
-        self.ppo_clip.update(transition_batch, td_error)
-
+        td_metrics, td_error = self.td_update.update(transition_batch, return_td_error=True)
+        td_metrics = {f"ValueUpdate/{k.split('/')[-1]}": td_metrics[k] for k in td_metrics.keys()}
+        pg_metrics = self.ppo_clip.update(transition_batch, td_error)
+        pg_metrics = {f"PolicyUpdate/{k.split('/')[-1]}": pg_metrics[k] for k in pg_metrics.keys()}
+        td_metrics.update(pg_metrics)
+        
         # sync target networks
         self.v_targ.soft_update(self.v, tau=self.soft_update_weight)
         self.pi_old.soft_update(self.policy, tau=self.soft_update_weight)
+        return td_metrics
+
+    def get_transition_metrics(self, transition):
+        metrics = {}
+        metrics['td_error'] = self.td_update.td_error(transition)
+        return metrics
 
     def get_state(self):
         """
