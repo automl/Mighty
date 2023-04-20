@@ -4,6 +4,7 @@ import jax
 from coax.reward_tracing import TransitionBatch
 from mighty.mighty_replay import MightyReplay
 
+
 class HER(MightyReplay):
     """
 
@@ -32,7 +33,16 @@ class HER(MightyReplay):
         To get reproducible results.
 
     """
-    def __init__(self, capacity, gamma, random_seed=None, n_sampled_goal: int = 4, goal_selection_strategy: str = "future", reward_function=None):
+
+    def __init__(
+        self,
+        capacity,
+        gamma,
+        random_seed=None,
+        n_sampled_goal: int = 4,
+        goal_selection_strategy: str = "future",
+        reward_function=None,
+    ):
         if not (isinstance(capacity, int) and capacity > 0):
             raise TypeError(f"capacity must be a positive int, got: {capacity}")
 
@@ -71,7 +81,8 @@ class HER(MightyReplay):
         # Store Transition
         if not isinstance(transition_batch, TransitionBatch):
             raise TypeError(
-                f"transition_batch must be a TransitionBatch, got: {type(transition_batch)}")
+                f"transition_batch must be a TransitionBatch, got: {type(transition_batch)}"
+            )
 
         transition_batch.idx = self._index + onp.arange(transition_batch.batch_size)
         idx = transition_batch.idx % self.capacity  # wrap around
@@ -79,7 +90,6 @@ class HER(MightyReplay):
         self._index += transition_batch.batch_size
         if self.gamma in transition_batch.In:
             self.contains_finished_episode = True
-
 
     def sample(self, batch_size=32):
         r"""
@@ -105,7 +115,7 @@ class HER(MightyReplay):
             )
 
         idx = self._sumtree.sample(n=batch_size)
-        
+
         nb_virtual = int(self.her_ratio * batch_size)
         virtual_batch_indices, real_batch_indices = onp.split(idx, [nb_virtual])
 
@@ -115,14 +125,13 @@ class HER(MightyReplay):
 
         transition_batch = _concatenate_leaves([real_data, virtual_data])
         return transition_batch
-    
-    
+
     def _get_virtual_samples(self, batch_indices):
-        virtual_batch =[]
+        virtual_batch = []
         for i in batch_indices:
             done_index = None
             idx = i
-            #Find last state in same episode
+            # Find last state in same episode
             # If there is none, just return transition without altering
             while done_index is None and idx < self.capacity:
                 if self._storage[idx].done:
@@ -130,25 +139,52 @@ class HER(MightyReplay):
                 idx += 1
 
             if done_index is None:
-                virtual_batch.append(self._storage[i]) 
+                virtual_batch.append(self._storage[i])
             else:
-                (state, action, logp, done, gamma, s_next, a_next, logp_next, w, idx, info) = self._storage[i]
-                #If goal was reached: do nothing
+                (
+                    state,
+                    action,
+                    logp,
+                    done,
+                    gamma,
+                    s_next,
+                    a_next,
+                    logp_next,
+                    w,
+                    idx,
+                    info,
+                ) = self._storage[i]
+                # If goal was reached: do nothing
                 if not info[self.goal_keyword]:
-                    #else set goal reached in info to true
+                    # else set goal reached in info to true
                     info[self.goal_keyword] = True
-                    #adapt reward
+                    # adapt reward
                     reward = self.reward_func(state, action, info)
-                virtual_batch.append(TransitionBatch.from_single(state, action, logp, reward, done, gamma, s_next, a_next, logp_next,w, idx, info))
+                virtual_batch.append(
+                    TransitionBatch.from_single(
+                        state,
+                        action,
+                        logp,
+                        reward,
+                        done,
+                        gamma,
+                        s_next,
+                        a_next,
+                        logp_next,
+                        w,
+                        idx,
+                        info,
+                    )
+                )
         return _concatenate_leaves(virtual_batch)
 
-
     def clear(self):
-        r""" Clear the experience replay buffer. """
-        self._storage = onp.full(shape=(self.capacity,), fill_value=None, dtype='object')
+        r"""Clear the experience replay buffer."""
+        self._storage = onp.full(
+            shape=(self.capacity,), fill_value=None, dtype="object"
+        )
         self._sumtree = SumTree(capacity=self.capacity, random_seed=self._random_seed)
         self._index = 0
-
 
     def __len__(self):
         return min(self.capacity, self._index)
@@ -157,7 +193,8 @@ class HER(MightyReplay):
         return bool(len(self))
 
     def __iter__(self):
-        return iter(self._storage[:len(self)])
+        return iter(self._storage[: len(self)])
+
 
 def _concatenate_leaves(pytrees):
     return jax.tree_map(lambda *leaves: onp.concatenate(leaves, axis=0), *pytrees)

@@ -43,7 +43,7 @@ class MightyAgent(object):
         learning_rate: float = 0.01,
         epsilon: float = 0.1,
         batch_size: int = 64,
-        render_progress: bool = True, #FIXME: Does this actually do anything or can we take it out?
+        render_progress: bool = True,  # FIXME: Does this actually do anything or can we take it out?
         log_tensorboard: bool = False,
         log_wandb: bool = False,
         wandb_kwargs: dict = {},
@@ -112,7 +112,9 @@ class MightyAgent(object):
         self.meta_modules = {}
         for i, m in enumerate(meta_methods):
             meta_class = retrieve_class(cls=m, default_cls=None)
-            assert meta_class is not None, f"Class {m} not found, did you specify the correct loading path?"
+            assert (
+                meta_class is not None
+            ), f"Class {m} not found, did you specify the correct loading path?"
             kwargs = {}
             if len(meta_kwargs) > i:
                 kwargs = meta_kwargs[i]
@@ -141,6 +143,7 @@ class MightyAgent(object):
         self.writer = None
         if log_tensorboard and output_dir is not None:
             from torch.utils.tensorboard import SummaryWriter
+
             self.writer = SummaryWriter(output_dir)
             self.writer.add_scalar("hyperparameter/learning_rate", self.learning_rate)
             self.writer.add_scalar("hyperparameter/batch_size", self._batch_size)
@@ -210,7 +213,12 @@ class MightyAgent(object):
             self.steps = 0
             steps_since_eval = 0
             log_reward_buffer = []
-            metrics = {"env": self.env, "vf": self.vf, "policy": self.policy, "step": self.steps}
+            metrics = {
+                "env": self.env,
+                "vf": self.vf,
+                "policy": self.policy,
+                "step": self.steps,
+            }
             while self.steps < n_steps:
                 # Remove rollout data from last episode
                 for k in list(metrics.keys()):
@@ -232,14 +240,20 @@ class MightyAgent(object):
                     a = self.policy(s, metrics=metrics)
                     s_next, r, terminated, truncated, _ = self.env.step(a)
                     episode_reward += r
-                    
+
                     self.logger.log("reward", r)
                     self.logger.log("action", a)
                     self.logger.log("next_state", s_next)
                     self.logger.log("state", s)
                     self.logger.log("terminated", terminated)
                     self.logger.log("truncated", truncated)
-                    t = {"step": self.steps, "reward": r, "action": a, "terminated": terminated, "truncated": truncated}
+                    t = {
+                        "step": self.steps,
+                        "reward": r,
+                        "action": a,
+                        "terminated": terminated,
+                        "truncated": truncated,
+                    }
                     metrics["episode_reward"] = episode_reward
 
                     if self.writer is not None:
@@ -260,22 +274,25 @@ class MightyAgent(object):
                     self.tracer.add(s, a, r, terminated or truncated)
                     while self.tracer:
                         transition = self.tracer.pop()
-                        transition_metrics = self.get_transition_metrics(transition, metrics)
+                        transition_metrics = self.get_transition_metrics(
+                            transition, metrics
+                        )
                         metrics.update(transition_metrics)
                         self.replay_buffer.add(transition, transition_metrics)
 
                     # update
                     if len(self.replay_buffer) >= self._batch_size:
-
                         for k in self.meta_modules.keys():
                             self.meta_modules[k].pre_step(metrics)
 
                         metrics.update(self.update_agent(self.steps))
-                        metrics = {k:np.array(v) for k,v in metrics.items()}
+                        metrics = {k: np.array(v) for k, v in metrics.items()}
                         metrics["step"] = self.steps
 
                         if self.writer is not None:
-                            self.writer.add_scalars("training_metrics", metrics, global_step=self.steps)
+                            self.writer.add_scalars(
+                                "training_metrics", metrics, global_step=self.steps
+                            )
 
                         if self.log_wandb:
                             wandb.log(metrics)
@@ -292,10 +309,12 @@ class MightyAgent(object):
 
                     if steps_since_eval >= eval_every_n_steps:
                         steps_since_eval = 0
-                        #TODO: make it work with CARL
+                        # TODO: make it work with CARL
                         if isinstance(self.eval_env, DACENV):
                             eval_instance_ids = self.eval_env.instance_id_list
-                            vmap(self.eval, in_axes=(None, 0), out_axes=0)(n_episodes_eval,jnp.array(eval_instance_ids))
+                            vmap(self.eval, in_axes=(None, 0), out_axes=0)(
+                                n_episodes_eval, jnp.array(eval_instance_ids)
+                            )
                         else:
                             self.eval(n_episodes_eval)
 
@@ -317,7 +336,7 @@ class MightyAgent(object):
                 self.logger.next_episode(instance)
                 episodes += 1
                 for k in self.meta_modules.keys():
-                    self.meta_modules[k].post_episode(metrics)                
+                    self.meta_modules[k].post_episode(metrics)
 
         # At the end make sure logger writes buffer to file
         self.logger.write()
@@ -365,9 +384,9 @@ class MightyAgent(object):
         rewards = []
         for _ in range(episodes):
             terminated, truncated = False, False
-            #TODO: this doesn't work for CARL, can we change that?
+            # TODO: this doesn't work for CARL, can we change that?
             if instance_id is not None:
-                state, _ = self.eval_env.reset(options={"instance_id":instance_id})
+                state, _ = self.eval_env.reset(options={"instance_id": instance_id})
             else:
                 state, _ = self.eval_env.reset()
             r = 0
@@ -389,9 +408,13 @@ class MightyAgent(object):
         self.logger.write()
         self.logger.set_eval(False)
 
-        eval_metrics = {'step': self.steps, 'eval_episodes': np.array(rewards), 'mean_eval_reward': np.mean(rewards)}
+        eval_metrics = {
+            "step": self.steps,
+            "eval_episodes": np.array(rewards),
+            "mean_eval_reward": np.mean(rewards),
+        }
         if instance_id is not None:
-            eval_metrics['instance_id'] = instance_id
+            eval_metrics["instance_id"] = instance_id
         if self.writer is not None:
             self.writer.add_scalars("eval", eval_metrics)
 

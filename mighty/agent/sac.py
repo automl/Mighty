@@ -30,6 +30,7 @@ class MightySACAgent(MightyAgent):
     Policy and Q-function architectures can be altered by overwriting the policy_function and q_function with a suitable
     haiku/coax architecture.
     """
+
     def __init__(
         self,
         # MightyAgent Args
@@ -118,9 +119,11 @@ class MightySACAgent(MightyAgent):
             td_update_kwargs = {"q_targ": None, "optimizer": optax.adam(learning_rate)}
         self.td_update_kwargs = td_update_kwargs
 
-        self.policy_class = retrieve_class(cls=policy_class, default_cls=MightyExplorationPolicy)
+        self.policy_class = retrieve_class(
+            cls=policy_class, default_cls=MightyExplorationPolicy
+        )
         if policy_kwargs is None:
-            policy_kwargs = {'func': self.policy_function, 'env': env}
+            policy_kwargs = {"func": self.policy_function, "env": env}
         self.policy_kwargs = policy_kwargs
 
         tracer_kwargs["gamma"] = 0.9
@@ -141,14 +144,12 @@ class MightySACAgent(MightyAgent):
             tracer_class=tracer_class,
             tracer_kwargs=tracer_kwargs,
             meta_methods=meta_methods,
-            meta_kwargs=meta_kwargs
+            meta_kwargs=meta_kwargs,
         )
 
     @property
     def vf(self):
-        q = (
-            self.q1 if jax.random.bernoulli(self.q1.rng) else self.q2
-        )
+        q = self.q1 if jax.random.bernoulli(self.q1.rng) else self.q2
         return q
 
     def policy_function(self, S, is_training):
@@ -189,7 +190,7 @@ class MightySACAgent(MightyAgent):
     def _initialize_agent(self):
         """Initialize algorithm components like policy and critic"""
         # main function approximators
-        self.policy = self.policy_class('ppo', **self.policy_kwargs)
+        self.policy = self.policy_class("ppo", **self.policy_kwargs)
         self.q1 = coax.Q(
             self.q_function,
             self.env,
@@ -256,31 +257,38 @@ class MightySACAgent(MightyAgent):
             self.qlearning1 if jax.random.bernoulli(self.q1.rng) else self.qlearning2
         )
         q_metrics = qlearning.update(transition_batch)
-        q_metrics = {f"Q-Update/{k.split('/')[-1]}": q_metrics[k] for k in q_metrics.keys()}
+        q_metrics = {
+            f"Q-Update/{k.split('/')[-1]}": q_metrics[k] for k in q_metrics.keys()
+        }
         pg_metrics = self.soft_pg.update(transition_batch)
-        pg_metrics = {f"PolicyUpdate/{k.split('/')[-1]}": pg_metrics[k] for k in pg_metrics.keys()}
+        pg_metrics = {
+            f"PolicyUpdate/{k.split('/')[-1]}": pg_metrics[k] for k in pg_metrics.keys()
+        }
         q_metrics.update(pg_metrics)
 
         # sync target networks
         self.q1_target.soft_update(self.q1, tau=self.soft_update_weight)
         self.q2_target.soft_update(self.q2, tau=self.soft_update_weight)
         return q_metrics
-    
-    def get_transition_metrics(self, transition, metrics):
-        qf = (1 if jax.random.bernoulli(self.q1.rng) else 2)
-        qlearning = (
-            self.qlearning1 if qf==1 else self.qlearning2
-        )
-        if 'rollout_errors' not in metrics.keys():
-            metrics['rollout_errors'] = np.empty(0)
-            metrics['rollout_values'] = np.empty(0)
-            metrics['rollout_logits'] = np.empty(0)
 
-        metrics['td_error'] = self.td_update.td_error(transition)
-        metrics['rollout_errors'] = np.append(metrics['rollout_errors'], qlearning.td_error(transition))
-        metrics['rollout_values'] = np.append(metrics['rollout_values'], self.vf(transition.S))
+    def get_transition_metrics(self, transition, metrics):
+        qf = 1 if jax.random.bernoulli(self.q1.rng) else 2
+        qlearning = self.qlearning1 if qf == 1 else self.qlearning2
+
+        if "rollout_errors" not in metrics.keys():
+            metrics["rollout_errors"] = np.empty(0)
+            metrics["rollout_values"] = np.empty(0)
+            metrics["rollout_logits"] = np.empty(0)
+
+        metrics["td_error"] = self.td_update.td_error(transition)
+        metrics["rollout_errors"] = np.append(
+            metrics["rollout_errors"], qlearning.td_error(transition)
+        )
+        metrics["rollout_values"] = np.append(
+            metrics["rollout_values"], self.vf(transition.S)
+        )
         _, logprobs = self.policy(transition.S, return_logp=True)
-        metrics['rollout_logits'] = np.append(metrics['rollout_logits'], logprobs)
+        metrics["rollout_logits"] = np.append(metrics["rollout_logits"], logprobs)
         metrics["qf_id"] = qf
         return metrics
 

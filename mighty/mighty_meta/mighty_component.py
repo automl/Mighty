@@ -1,5 +1,6 @@
 class MightyMetaComponent:
     BASE_KEYS = ["env", "vf", "step", "policy"]
+
     def __init__(self) -> None:
         self.pre_step_methods = []
         self.post_step_methods = []

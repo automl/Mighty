@@ -24,9 +24,9 @@ from tensorboard_logger import configure, log_value
 
 
 def get_standard_logger(
-        identifier: str,
-        level: int = logging.INFO,
-        stream_format: str = "%(asctime)s|%(levelname)s|%(name)s|%(message)s",
+    identifier: str,
+    level: int = logging.INFO,
+    stream_format: str = "%(asctime)s|%(levelname)s|%(name)s|%(message)s",
 ):
     logger = logging.getLogger(identifier)
     logger.setLevel(logging.DEBUG)
@@ -63,19 +63,19 @@ def load_logs(log_file: Path) -> List[Dict]:
 
 
 def split(predicate: Callable, iterable: Iterable) -> Tuple[List, List]:
-     """
-     Splits the iterable into two list depending on the result of predicate.
+    """
+    Splits the iterable into two list depending on the result of predicate.
 
-     :param predicate: A function taking an element of the iterable and return Ture or False
-     :param iterable: Iterable
-     :return: (positives, negatives)
-     """
-     positives, negatives = [], []
+    :param predicate: A function taking an element of the iterable and return Ture or False
+    :param iterable: Iterable
+    :return: (positives, negatives)
+    """
+    positives, negatives = [], []
 
-     for item in iterable:
-         (positives if predicate(item) else negatives).append(item)
+    for item in iterable:
+        (positives if predicate(item) else negatives).append(item)
 
-     return positives, negatives
+    return positives, negatives
 
 
 def flatten_log_entry(log_entry: Dict) -> List[Dict]:
@@ -121,7 +121,7 @@ def list_to_tuple(list_: List) -> Tuple:
 
 
 def log2dataframe(
-        logs: List[dict], wide: bool = False, drop_columns: List[str] = ["time"]
+    logs: List[dict], wide: bool = False, drop_columns: List[str] = ["time"]
 ) -> pd.DataFrame:
     """
     Converts a list of log entries to a pandas dataframe.
@@ -181,11 +181,11 @@ class AbstractLogger(metaclass=ABCMeta):
     }
 
     def __init__(
-            self,
-            experiment_name: str,
-            output_path: str,
-            step_write_frequency: int = None,
-            episode_write_frequency: int = 1,
+        self,
+        experiment_name: str,
+        output_path: str,
+        step_write_frequency: int = None,
+        episode_write_frequency: int = 1,
     ):
         """
         :param experiment_name: Name of the folder to store the result in
@@ -195,7 +195,9 @@ class AbstractLogger(metaclass=ABCMeta):
         """
         self.experiment_name = experiment_name
         self.output_path = output_path
-        self.log_dir = self._init_logging_dir(Path(self.output_path) / self.experiment_name)
+        self.log_dir = self._init_logging_dir(
+            Path(self.output_path) / self.experiment_name
+        )
         self.step_write_frequency = step_write_frequency
         self.episode_write_frequency = episode_write_frequency
         self.additional_info = {"instance": None}
@@ -307,15 +309,15 @@ class Logger(AbstractLogger, logging.Logger):
     """
 
     def __init__(
-            self,
-            experiment_name: str,
-            output_path: str,
-            step_write_frequency: int = None,
-            episode_write_frequency: int = 1,
-            log_to_wandb: str = None,
-            log_to_tensorboad: str = None,
-            hydra_config=None,
-            cli_log_lvl=logging.NOTSET
+        self,
+        experiment_name: str,
+        output_path: str,
+        step_write_frequency: int = None,
+        episode_write_frequency: int = 1,
+        log_to_wandb: str = None,
+        log_to_tensorboad: str = None,
+        hydra_config=None,
+        cli_log_lvl=logging.NOTSET,
     ) -> None:
         """
         :param experiment_name: Name of the folder to store the result in
@@ -324,10 +326,14 @@ class Logger(AbstractLogger, logging.Logger):
         :param episode_write_frequency: see step_write_frequency
         :return:
         """
-        logging.Logger.__init__(self, name='MightyLogger')
+        logging.Logger.__init__(self, name="MightyLogger")
         self.addHandler(RichHandler(level=cli_log_lvl))
-        AbstractLogger.__init__(self,
-            experiment_name, output_path, step_write_frequency, episode_write_frequency
+        AbstractLogger.__init__(
+            self,
+            experiment_name,
+            output_path,
+            step_write_frequency,
+            episode_write_frequency,
         )
         self.log_to_wandb = log_to_wandb
         if log_to_wandb:
@@ -412,8 +418,8 @@ class Logger(AbstractLogger, logging.Logger):
         """
         self.__end_step()
         if (
-                self.step_write_frequency is not None
-                and self.total_steps % self.step_write_frequency == 0
+            self.step_write_frequency is not None
+            and self.total_steps % self.step_write_frequency == 0
         ):
             self.write()
 
@@ -431,15 +437,15 @@ class Logger(AbstractLogger, logging.Logger):
         self.step = 0
         self.instance = instance
         if (
-                self.episode_write_frequency is not None
-                and self.episode % self.episode_write_frequency == 0
+            self.episode_write_frequency is not None
+            and self.episode % self.episode_write_frequency == 0
         ):
             self.write()
         if not self.eval:
             self.episode += 1
 
         if self.log_to_wandb:
-            self.run.log({'instance': instance}, step=self.total_steps)
+            self.run.log({"instance": instance}, step=self.total_steps)
 
     def __buffer_to_file(self):
         if len(self.buffer) > 0:
@@ -455,7 +461,7 @@ class Logger(AbstractLogger, logging.Logger):
         self.step = 0
 
         if self.log_to_wandb is not None:
-            self.run.log({'instance': instance}, step=self.total_step)
+            self.run.log({"instance": instance}, step=self.total_step)
 
     def write(self):
         """
@@ -475,7 +481,7 @@ class Logger(AbstractLogger, logging.Logger):
         self.current_step[key] = value
 
     def log(
-            self, key: str, value: Union[Dict, List, Tuple, str, int, float, bool]
+        self, key: str, value: Union[Dict, List, Tuple, str, int, float, bool]
     ) -> None:
         """
         Writes value to list of values and save the current time for key

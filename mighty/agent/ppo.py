@@ -28,6 +28,7 @@ class MightyPPOAgent(MightyAgent):
     Policy and value architectures can be altered by overwriting the policy_function and value_function with a suitable
     haiku/coax architecture.
     """
+
     def __init__(
         self,
         # MightyAgent Args
@@ -93,9 +94,11 @@ class MightyPPOAgent(MightyAgent):
         self.td_update: Optional[coax.td_learning.SimpleTD] = None
         self.ppo_clip: Optional[coax.policy_objectives.PPOClip] = None
 
-        self.policy_class = retrieve_class(cls=policy_class, default_cls=MightyExplorationPolicy)
+        self.policy_class = retrieve_class(
+            cls=policy_class, default_cls=MightyExplorationPolicy
+        )
         if policy_kwargs is None:
-            policy_kwargs = {'func': self.policy_function, 'env': env}
+            policy_kwargs = {"func": self.policy_function, "env": env}
         self.policy_kwargs = policy_kwargs
 
         super().__init__(
@@ -114,9 +117,9 @@ class MightyPPOAgent(MightyAgent):
             tracer_class=tracer_class,
             tracer_kwargs=tracer_kwargs,
             meta_methods=meta_methods,
-            meta_kwargs=meta_kwargs
+            meta_kwargs=meta_kwargs,
         )
-    
+
     @property
     def vf(self):
         return self.v
@@ -170,7 +173,7 @@ class MightyPPOAgent(MightyAgent):
     def _initialize_agent(self):
         """Initialize PPO specific components"""
 
-        self.policy = self.policy_class('ppo', **self.policy_kwargs)
+        self.policy = self.policy_class("ppo", **self.policy_kwargs)
         self.v = coax.V(self.value_function, self.env)
 
         # targets
@@ -194,28 +197,38 @@ class MightyPPOAgent(MightyAgent):
         :return:
         """
         transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
-        td_metrics, td_error = self.td_update.update(transition_batch, return_td_error=True)
-        td_metrics = {f"ValueUpdate/{k.split('/')[-1]}": td_metrics[k] for k in td_metrics.keys()}
+        td_metrics, td_error = self.td_update.update(
+            transition_batch, return_td_error=True
+        )
+        td_metrics = {
+            f"ValueUpdate/{k.split('/')[-1]}": td_metrics[k] for k in td_metrics.keys()
+        }
         pg_metrics = self.ppo_clip.update(transition_batch, td_error)
-        pg_metrics = {f"PolicyUpdate/{k.split('/')[-1]}": pg_metrics[k] for k in pg_metrics.keys()}
+        pg_metrics = {
+            f"PolicyUpdate/{k.split('/')[-1]}": pg_metrics[k] for k in pg_metrics.keys()
+        }
         td_metrics.update(pg_metrics)
-        
+
         # sync target networks
         self.v_targ.soft_update(self.v, tau=self.soft_update_weight)
         self.pi_old.soft_update(self.policy, tau=self.soft_update_weight)
         return td_metrics
 
     def get_transition_metrics(self, transition, metrics):
-        if 'rollout_errors' not in metrics.keys():
-            metrics['rollout_errors'] = np.empty(0)
-            metrics['rollout_values'] = np.empty(0)
-            metrics['rollout_logits'] = np.empty(0)
+        if "rollout_errors" not in metrics.keys():
+            metrics["rollout_errors"] = np.empty(0)
+            metrics["rollout_values"] = np.empty(0)
+            metrics["rollout_logits"] = np.empty(0)
 
-        metrics['td_error'] = self.td_update.td_error(transition)
-        metrics['rollout_errors'] = np.append(metrics['rollout_errors'], self.td_update.td_error(transition))
-        metrics['rollout_values'] = np.append(metrics['rollout_values'], self.vf(transition.S))
+        metrics["td_error"] = self.td_update.td_error(transition)
+        metrics["rollout_errors"] = np.append(
+            metrics["rollout_errors"], self.td_update.td_error(transition)
+        )
+        metrics["rollout_values"] = np.append(
+            metrics["rollout_values"], self.vf(transition.S)
+        )
         _, logprobs = self.policy(transition.S, return_logp=True)
-        metrics['rollout_logits'] = np.append(metrics['rollout_logits'], logprobs)
+        metrics["rollout_logits"] = np.append(metrics["rollout_logits"], logprobs)
         return metrics
 
     def get_state(self):

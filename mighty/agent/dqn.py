@@ -17,6 +17,7 @@ from mighty.utils.logger import Logger
 from mighty.utils.types import TypeKwargs
 from mighty.mighty_exploration import MightyExplorationPolicy, EpsilonGreedy
 
+
 class MightyDQNAgent(MightyAgent):
     """
     Mighty DQN agent
@@ -27,6 +28,7 @@ class MightyDQNAgent(MightyAgent):
     Like all Mighty agents, it's supposed to be called via the train method.
     The Q-function architecture can be altered by overwriting the q_function with a suitable haiku/coax architecture.
     """
+
     def __init__(
         self,
         # MightyAgent Args
@@ -130,7 +132,7 @@ class MightyDQNAgent(MightyAgent):
             tracer_class=tracer_class,
             tracer_kwargs=tracer_kwargs,
             meta_methods=meta_methods,
-            meta_kwargs=meta_kwargs
+            meta_kwargs=meta_kwargs,
         )
 
     @property
@@ -158,7 +160,7 @@ class MightyDQNAgent(MightyAgent):
         """Initialize DQN specific things like q-function"""
 
         self.q = coax.Q(self.q_function, self.env)
-        self.policy = self.policy_class(algo='q', func=self.q, **self.policy_kwargs)
+        self.policy = self.policy_class(algo="q", func=self.q, **self.policy_kwargs)
 
         # target network
         self.q_target = self.q.copy()
@@ -176,7 +178,9 @@ class MightyDQNAgent(MightyAgent):
         """
         transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
         metrics_q = self.qlearning.update(transition_batch)
-        metrics_q = {f"Q-Update/{k.split('/')[-1]}": metrics_q[k] for k in metrics_q.keys()}
+        metrics_q = {
+            f"Q-Update/{k.split('/')[-1]}": metrics_q[k] for k in metrics_q.keys()
+        }
 
         # periodically sync target models
         if step % 10 == 0:
@@ -184,13 +188,17 @@ class MightyDQNAgent(MightyAgent):
         return metrics_q
 
     def get_transition_metrics(self, transition, metrics):
-        if 'rollout_errors' not in metrics.keys():
-            metrics['rollout_errors'] = np.empty(0)
-            metrics['rollout_values'] = np.empty(0)
+        if "rollout_errors" not in metrics.keys():
+            metrics["rollout_errors"] = np.empty(0)
+            metrics["rollout_values"] = np.empty(0)
 
-        metrics['td_error'] = self.qlearning.td_error(transition)
-        metrics['rollout_errors'] = np.append(metrics['rollout_errors'], self.qlearning.td_error(transition))
-        metrics['rollout_values'] = np.append(metrics['rollout_values'], self.vf(transition.S))
+        metrics["td_error"] = self.qlearning.td_error(transition)
+        metrics["rollout_errors"] = np.append(
+            metrics["rollout_errors"], self.qlearning.td_error(transition)
+        )
+        metrics["rollout_values"] = np.append(
+            metrics["rollout_values"], self.vf(transition.S)
+        )
         return metrics
 
     def get_state(self):
