@@ -12,15 +12,15 @@ hyperparameters:
     default_value: 0.05
   algorithm_kwargs.batch_size:
     type: categorical
-    choices: {32, 64, 128, 256}
+    choices: [32, 64, 128, 256]
     default_value: 64
   algorithm_kwargs.n_policy_units:
     type: categorical
-    choices: {32, 64, 128}
+    choices: [32, 64, 128]
     default_value: 64
   algorithm_kwargs.n_critic_units:
     type: categorical
-    choices: {16, 32, 64, 128}
+    choices: [16, 32, 64, 128]
     default_value: 32
   algorithm_kwargs.soft_update_weight:
     type: uniform_float

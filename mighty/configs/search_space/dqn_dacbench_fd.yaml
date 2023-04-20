@@ -12,11 +12,11 @@ hyperparameters:
     default_value: 0.1
   algorithm_kwargs.batch_size:
     type: categorical
-    choices: {32, 64, 128, 256}
+    choices: [32, 64, 128, 256]
     default_value: 64
   algorithm_kwargs.n_units:
     type: categorical
-    choices: {25, 50, 75, 150, 200}
+    choices: [5, 50, 75, 150, 200]
     default_value: 75
   algorithm_kwargs.soft_update_weight:
     type: uniform_float
@@ -26,6 +26,6 @@ hyperparameters:
     default_value: 1e-2
   algorithm_kwargs.td_update_class:
     type: categorical
-    choices: {q, double, soft, clipped, softclipped} # no idea if that is the right way to set these
+    choices: [q, double, soft, clipped, softclipped]
     defualt_value: double
 
