@@ -58,8 +58,8 @@ def main(cfg: DictConfig):
     else:
         import gymnasium as gym
 
-        env = gym.make(cfg.env)
-        eval_env = gym.make(cfg.env)
+        env = gym.make(cfg.env, **cfg.env_kwargs)
+        eval_env = gym.make(cfg.env, **cfg.env_kwargs)
         eval_default = 1
 
     for w in cfg.env_wrappers:
