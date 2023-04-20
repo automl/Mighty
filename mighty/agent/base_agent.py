@@ -358,7 +358,8 @@ class MightyAgent(object):
             r = 0
             while not (terminated or truncated):
                 action = self.policy(state, eval=True)
-                state, _, terminated, truncated, _ = self.eval_env.step(action)
+                state, reward, terminated, truncated, _ = self.eval_env.step(action)
+                r += reward
                 self.logger.next_step()
             rewards.append(r)
 

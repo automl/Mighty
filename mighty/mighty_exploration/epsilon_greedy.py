@@ -5,7 +5,6 @@ import haiku as hk
 from mighty.mighty_exploration.mighty_exploration_policy import MightyExplorationPolicy
 
 class EpsilonGreedy(MightyExplorationPolicy):
-    METRICS = {'q': []}
     def __init__(self, algo, func, epsilon=0.1, env=None, observation_preprocessor=None, proba_dist=None, random_seed=None):
         super().__init__(algo, func, env=None)
         self.epsilon = epsilon

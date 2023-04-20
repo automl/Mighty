@@ -3,10 +3,8 @@ from coax._core.value_based_policy import BaseValueBasedPolicy
 from coax.utils import batch_to_single
 
 class MightyExplorationPolicy(Policy, BaseValueBasedPolicy):
-    METRICS = {'ppo': [], 'sac': [], 'q': []}
     def __init__(self, algo, func, env=None, observation_preprocessor=None, proba_dist=None, random_seed=None) -> None:
         self.algo = algo
-        self.metrics = self.METRICS[algo]
         if algo == 'q':
             BaseValueBasedPolicy.__init__(self, func)
         else:
@@ -26,13 +24,12 @@ class MightyExplorationPolicy(Policy, BaseValueBasedPolicy):
         return (x, batch_to_single(logP)) 
 
     def __call__(self, s, return_logp=False, metrics= {}, eval=False):
-        args = {k:metrics[k] for k in self.metrics}
         if eval:
             action, logprobs = self.sample_action(s)
             return (action, logprobs) if return_logp else action
         else:
-            return self.explore(s, return_logp, **args)
+            return self.explore(s, return_logp, metrics)
     
-    def explore(self, s, return_logp):
+    def explore(self, s, return_logp, _):
         action, logprobs = self.sample_action(s)
         return (action, logprobs) if return_logp else action

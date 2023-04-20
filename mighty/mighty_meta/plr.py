@@ -3,7 +3,6 @@ from mighty.mighty_meta.mighty_component import MightyMetaComponent
 
 
 class PrioritizedLevelReplay(MightyMetaComponent):
-    METRICS = {'q': ["instance_id", "episode_reward", "rollout_values"], 'ppo': ["instance_id", "episode_reward", "rollout_logits", "rollout_values"], 'sac': ["instance_id", "episode_reward", "rollout_logits", "rollout_values"]}
     def __init__(self, algo, env, alpha, rho, nu, staleness_coeff, sample_strategy, replay_schedule='proportional') -> None:
         super().__init__(algo)
         self.alpha = alpha
@@ -20,7 +19,7 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         self.pre_episode_methods = [self.get_instance]
         self.post_episode_methods = [self.add_rollout]
 
-    def get_instance(self):
+    def get_instance(self, metrics=None):
         if self.sample_strategy == 'random':
             instance = np.random.choice(self.all_instances)
             return instance
@@ -95,7 +94,12 @@ class PrioritizedLevelReplay(MightyMetaComponent):
             self.staleness = {k:v+1 for k,v in self.staleness.items()}
             self.staleness[selected_id] = 0
 
-    def add_rollout(self, instance_id, episode_reward, rollout_values, rollout_logits=None):
+    def add_rollout(self, metrics):
+        instance_id = metrics["instance_id"] 
+        episode_reward = metrics["episode_reward"]  
+        rollout_values = metrics["rollout_values"]  
+        rollout_logits = metrics["rollout_logits"] 
+        
         score = self.score_function(episode_reward, rollout_values, rollout_logits)
         if instance_id not in self.instance_scores.keys():
             old_score = 0

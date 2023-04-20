@@ -1,6 +1,7 @@
 import jax
 from jax import jit
 import jax.numpy as jnp
+import numpy as np
 import haiku as hk
 from mighty.mighty_exploration.mighty_exploration_policy import MightyExplorationPolicy
 
@@ -18,7 +19,6 @@ class EZGreedy(MightyExplorationPolicy):
     skip : int
         Number of steps to repeat the sampled action
     """
-    METRICS = {'q': []}
     def __init__(self, algo, func, epsilon=0.1, skip=100, env=None, observation_preprocessor=None, proba_dist=None, random_seed=None):
         self.epsilon = epsilon
         self.skip = skip
@@ -45,6 +45,7 @@ class EZGreedy(MightyExplorationPolicy):
     def __call__(self, s, return_logp=False, metrics=None):
         if self.skipped >= self.skip or self.current_params is None:
             self.action, self.logprobs = self.sample_action(s)
+            self.skip = np.random.default_rng().zipf(2)
             self.skipped = 0
         else:
             self.skipped += 1

@@ -2,7 +2,6 @@ import numpy as np
 from mighty.mighty_meta.mighty_component import MightyMetaComponent
 
 class SPaCE(MightyMetaComponent):
-    METRICS = {'q': ["env", "vf", "rollout_values"], 'ppo': ["env", "vf", "rollout_values"], 'sac': ["env", "vf", "rollout_values"]}
     def __init__(self, algo, criterion='relative_improvement', threshold=0.1, k=1) -> None:
         super().__init__(algo)
         self.criterion = criterion
@@ -14,7 +13,13 @@ class SPaCE(MightyMetaComponent):
 
         self.pre_episode_methods = [self.get_instances]
 
-    def get_instances(self, env,  vf, rollout_values=None):
+    def get_instances(self, metrics):
+        env = metrics["env"]
+        vf = metrics["vf"]
+        rollout_values = None
+        if "rollout_values" in metrics.keys():
+            rollout_values = metrics["rollout_values"]
+            
         if self.last_evals is None and rollout_values is None:
             self.all_instances = np.arange(env.instance_set)
             self.instance_set = self.all_instances[np.random.choice(np.arange(len(self.all_instances)), size=self.k)]

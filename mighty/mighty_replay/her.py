@@ -32,7 +32,7 @@ class HER(MightyReplay):
         To get reproducible results.
 
     """
-    def __init__(self, capacity, gamma, random_seed=None, n_sampled_goal: int = 4, goal_selection_strategy: str = "future"):
+    def __init__(self, capacity, gamma, random_seed=None, n_sampled_goal: int = 4, goal_selection_strategy: str = "future", reward_function=None):
         if not (isinstance(capacity, int) and capacity > 0):
             raise TypeError(f"capacity must be a positive int, got: {capacity}")
 
@@ -45,6 +45,7 @@ class HER(MightyReplay):
         self.clear()  # sets: self._deque, self._index
         self.contains_finished_episode = False
         self.gamma = gamma
+        self.reward_func = reward_function
 
     @property
     def capacity(self):
@@ -74,14 +75,12 @@ class HER(MightyReplay):
 
         transition_batch.idx = self._index + onp.arange(transition_batch.batch_size)
         idx = transition_batch.idx % self.capacity  # wrap around
-        chex.assert_equal_shape([idx, Adv])
         self._storage[idx] = list(transition_batch.to_singles())
         self._index += transition_batch.batch_size
         if self.gamma in transition_batch.In:
             self.contains_finished_episode = True
 
 
-    #TODO: implement goal sampling
     def sample(self, batch_size=32):
         r"""
 
@@ -111,13 +110,37 @@ class HER(MightyReplay):
         virtual_batch_indices, real_batch_indices = onp.split(idx, [nb_virtual])
 
         # Create virtual transitions by sampling new desired goals and computing new reward
-        #TODO: implement goal smapling
-        virtual_data = self._get_virtual_samples(virtual_batch_indices, virtual_env_indices, env)
-
+        virtual_data = self._get_virtual_samples(virtual_batch_indices)
         real_data = _concatenate_leaves(self._storage[real_batch_indices])
-        #TODO: concat real and vistual data
-        transition_batch = TODO
+
+        transition_batch = _concatenate_leaves([real_data, virtual_data])
         return transition_batch
+    
+    
+    def _get_virtual_samples(self, batch_indices):
+        virtual_batch =[]
+        for i in batch_indices:
+            done_index = None
+            idx = i
+            #Find last state in same episode
+            # If there is none, just return transition without altering
+            while done_index is None and idx < self.capacity:
+                if self._storage[idx].done:
+                    done_index = idx
+                idx += 1
+
+            if done_index is None:
+                virtual_batch.append(self._storage[i]) 
+            else:
+                (state, action, logp, done, gamma, s_next, a_next, logp_next, w, idx, info) = self._storage[i]
+                #If goal was reached: do nothing
+                if not info[self.goal_keyword]:
+                    #else set goal reached in info to true
+                    info[self.goal_keyword] = True
+                    #adapt reward
+                    reward = self.reward_func(state, action, info)
+                virtual_batch.append(TransitionBatch.from_single(state, action, logp, reward, done, gamma, s_next, a_next, logp_next,w, idx, info))
+        return _concatenate_leaves(virtual_batch)
 
 
     def clear(self):
