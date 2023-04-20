@@ -14,7 +14,6 @@ python run_mighty.sh --config smac -m env=MountainCarContinuous-v0 search_space=
 python run_mighty.sh --config smac -m env=Pendulum-v1 search_space=ppo_gym_classic algorithm=ppo
 
 #DQN on DACBench
-#TODO: setup env_kwarg parsing for DACBench
-python run_mighty.sh --config smac -m env=SigmoidBenchmark env_wrappers=[dacbench.wrappers.MultiDiscreteWrapper] search_space=dqn_dacbench_toy algorithm=dqn 
-python run_mighty.sh --config smac -m env=SigmoidBenchmark env_wrappers=[dacbench.wrappers.MultiDiscreteWrapper] search_space=dqn_dacbench_toy algorithm=dqn 
+python run_mighty.sh --config smac -m env=SigmoidBenchmark env_wrappers=[dacbench.wrappers.MultiDiscreteWrapper] search_space=dqn_dacbench_toy algorithm=dqn env_kwargs={"benchmark": True, "dimension": 1}
+python run_mighty.sh --config smac -m env=SigmoidBenchmark env_wrappers=[dacbench.wrappers.MultiDiscreteWrapper] search_space=dqn_dacbench_toy algorithm=dqn env_kwargs={"benchmark": True, "dimension": 5}
 python run_mighty.sh --config smac -m env=FastDownwardBenchmark search_space=dqn_dacbench_fd algorithm=dqn
