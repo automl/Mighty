@@ -1,9 +1,10 @@
-from typing import Optional, Union, Type
+from typing import Optional, Union, Type, List
 
 import jax
 import coax
 import optax
 import haiku as hk
+import numpy as np
 import jax.numpy as jnp
 from coax.experience_replay._simple import BaseReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
@@ -52,6 +53,8 @@ class MightySACAgent(MightyAgent):
             Union[str, DictConfig, Type[MightyExplorationPolicy]]
         ] = None,
         policy_kwargs: Optional[TypeKwargs] = None,
+        meta_methods: Optional[List[Union[str, Type]]] = [],
+        meta_kwargs: Optional[list[TypeKwargs]] = [],
         # SAC Specific Args
         n_policy_units: int = 8,
         n_critic_units: int = 8,
@@ -137,6 +140,8 @@ class MightySACAgent(MightyAgent):
             replay_buffer_kwargs=replay_buffer_kwargs,
             tracer_class=tracer_class,
             tracer_kwargs=tracer_kwargs,
+            meta_methods=meta_methods,
+            meta_kwargs=meta_kwargs
         )
 
     @property
@@ -262,19 +267,21 @@ class MightySACAgent(MightyAgent):
         return q_metrics
     
     def get_transition_metrics(self, transition, metrics):
+        qf = (1 if jax.random.bernoulli(self.q1.rng) else 2)
         qlearning = (
-            self.qlearning1 if jax.random.bernoulli(self.q1.rng) else self.qlearning2
+            self.qlearning1 if qf==1 else self.qlearning2
         )
-        if 'td_error' not in metrics.keys():
-            metrics['rollout_errors'] = []
-            metrics['rollout_values'] = []
-            metrics['rollout_logits'] = []
+        if 'rollout_errors' not in metrics.keys():
+            metrics['rollout_errors'] = np.empty(0)
+            metrics['rollout_values'] = np.empty(0)
+            metrics['rollout_logits'] = np.empty(0)
 
-        metrics["td_error"] = qlearning.td_error(transition)
-        metrics['rollout_errors'].append(qlearning.td_error(transition))
-        metrics['rollout_values'].append(self.vf(transition.S))
+        metrics['td_error'] = self.td_update.td_error(transition)
+        metrics['rollout_errors'] = np.append(metrics['rollout_errors'], qlearning.td_error(transition))
+        metrics['rollout_values'] = np.append(metrics['rollout_values'], self.vf(transition.S))
         _, logprobs = self.policy(transition.S, return_logp=True)
-        metrics['rollout_logits'].append(logprobs)
+        metrics['rollout_logits'] = np.append(metrics['rollout_logits'], logprobs)
+        metrics["qf_id"] = qf
         return metrics
 
     def get_state(self):

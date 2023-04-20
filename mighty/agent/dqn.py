@@ -1,8 +1,9 @@
-from typing import Optional, Union, Type
+from typing import Optional, Union, Type, List
 
 import jax
 import coax
 import optax
+import numpy as np
 import haiku as hk
 import jax.numpy as jnp
 from coax.experience_replay._simple import BaseReplayBuffer
@@ -45,6 +46,8 @@ class MightyDQNAgent(MightyAgent):
         replay_buffer_kwargs: Optional[TypeKwargs] = None,
         tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
         tracer_kwargs: Optional[TypeKwargs] = None,
+        meta_methods: Optional[List[Union[str, Type]]] = [],
+        meta_kwargs: Optional[list[TypeKwargs]] = [],
         # DDQN Specific Args
         n_units: int = 8,
         soft_update_weight: float = 1.0,  # TODO which default value?
@@ -126,6 +129,8 @@ class MightyDQNAgent(MightyAgent):
             replay_buffer_kwargs=replay_buffer_kwargs,
             tracer_class=tracer_class,
             tracer_kwargs=tracer_kwargs,
+            meta_methods=meta_methods,
+            meta_kwargs=meta_kwargs
         )
 
     @property
@@ -179,13 +184,13 @@ class MightyDQNAgent(MightyAgent):
         return metrics_q
 
     def get_transition_metrics(self, transition, metrics):
-        if 'td_error' not in metrics.keys():
-            metrics['rollout_errors'] = []
-            metrics['rollout_values'] = []
+        if 'rollout_errors' not in metrics.keys():
+            metrics['rollout_errors'] = np.empty(0)
+            metrics['rollout_values'] = np.empty(0)
 
         metrics['td_error'] = self.qlearning.td_error(transition)
-        metrics['rollout_errors'].append(self.qlearning.td_error(transition))
-        metrics['rollout_values'].append(self.vf(transition.S))
+        metrics['rollout_errors'] = np.append(metrics['rollout_errors'], self.qlearning.td_error(transition))
+        metrics['rollout_values'] = np.append(metrics['rollout_values'], self.vf(transition.S))
         return metrics
 
     def get_state(self):

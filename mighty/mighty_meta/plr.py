@@ -3,8 +3,8 @@ from mighty.mighty_meta.mighty_component import MightyMetaComponent
 
 
 class PrioritizedLevelReplay(MightyMetaComponent):
-    def __init__(self, algo, env, alpha, rho, nu, staleness_coeff, sample_strategy, replay_schedule='proportional') -> None:
-        super().__init__(algo)
+    def __init__(self, env, alpha, rho, nu, staleness_coeff, sample_strategy, replay_schedule='proportional') -> None:
+        super().__init__()
         self.alpha = alpha
         self.rho = rho
         self.nu = nu
@@ -61,7 +61,13 @@ class PrioritizedLevelReplay(MightyMetaComponent):
     def sample_weights(self):
         weights = self._score_transform(self.score_transform, self.temperature, self.instance_scores)
         weights = weights * (1-self.unseen_seed_weights) # zero out unseen levels
-        weights = [w for w in weights if i not in self.instance_scores.keys() else 0]
+        ww = []
+        for i,w in enumerate(weights):
+            if i not in self.instance_scores.keys():
+                ww.append(0)
+            else:
+                ww.append(w)
+        weights = ww
 
         z = np.sum(weights)
         if z > 0:
@@ -70,8 +76,13 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         staleness_weights = 0
         if self.staleness_coef > 0:
             staleness_weights = self._score_transform(self.staleness_transform, self.staleness_temperature, self.staleness)
-
-            staleness_weights = [w for w in staleness_weights if i not in self.instance_scores.keys() else 0]
+            ws = []
+            for i,w in enumerate(staleness_weights):
+                if i not in self.instance_scores.keys():
+                    ws.append(0)
+                else:
+                    ws.append(w)
+            staleness_weights = ws
             z = np.sum(staleness_weights)
             if z > 0: 
                 staleness_weights /= z
@@ -83,7 +94,13 @@ class PrioritizedLevelReplay(MightyMetaComponent):
     def _sample_unseen_level(self):
         sample_weights = np.zeros(len(self.all_instances))
         num_unseen = len(self.all_instances)-len(list(self.instance_scores.keys()))
-        sample_weights = [1/num_unseen for i in self.all_instances if i not in self.instance_scores.keys() else 0]
+        ww = []
+        for i,w in enumerate(sample_weights):
+            if i not in self.instance_scores.keys():
+                ww.append(w)
+            else:
+                ww.append(0)
+        sample_weights = ww
         idx = np.random.choice(np.arange(len(self.all_instances)), 1, p=sample_weights)[0]
         instance = self.all_instances[idx]
         self._update_staleness(idx)

@@ -54,7 +54,7 @@ class MightyAgent(object):
         tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
         tracer_kwargs: Optional[TypeKwargs] = None,
         meta_methods: Optional[List[Union[str, Type]]] = [],
-        meta_kwargs: Optional[list[TypeKwargs]] = None,
+        meta_kwargs: Optional[list[TypeKwargs]] = [],
     ):
         """
         Base agent initialization
@@ -111,10 +111,12 @@ class MightyAgent(object):
         # Create meta modules
         self.meta_modules = {}
         for i, m in enumerate(meta_methods):
-            meta_class = retrieve_class(cls=m)
+            meta_class = retrieve_class(cls=m, default_cls=None)
+            assert meta_class is not None, f"Class {m} not found, did you specify the correct loading path?"
+            kwargs = {}
             if len(meta_kwargs) > i:
                 kwargs = meta_kwargs[i]
-            self.meta_modules[meta_class.__name__] = meta_class(algo=self.__class__.__name__, **kwargs)
+            self.meta_modules[meta_class.__name__] = meta_class(**kwargs)
 
         if logger is not None:
             output_dir = logger.log_dir
@@ -176,8 +178,8 @@ class MightyAgent(object):
         n_steps: int,
         n_episodes_eval: int,
         eval_every_n_steps: int = 1_000,
-        human_log_every_n_episodes: int = 100,
-        save_model_every_n_episodes: int = 100,
+        human_log_every_n_steps: int = 5000,
+        save_model_every_n_steps: int = 5000,
     ):
         """
         Trains the agent for n steps.
@@ -210,8 +212,14 @@ class MightyAgent(object):
             log_reward_buffer = []
             metrics = {"env": self.env, "vf": self.vf, "policy": self.policy, "step": self.steps}
             while self.steps < n_steps:
+                # Remove rollout data from last episode
+                for k in list(metrics.keys()):
+                    if "rollout" in k:
+                        del metrics[k]
+
                 for k in self.meta_modules.keys():
                     self.meta_modules[k].pre_episode(metrics)
+
                 progress.update(steps_task, visible=True)
                 s, _ = self.env.reset()
                 terminated, truncated = False, False
@@ -221,7 +229,7 @@ class MightyAgent(object):
                     for k in self.meta_modules.keys():
                         self.meta_modules[k].pre_step(metrics)
 
-                    a = self.policy(s, metrics = metrics)
+                    a = self.policy(s, metrics=metrics)
                     s_next, r, terminated, truncated, _ = self.env.step(a)
                     episode_reward += r
                     
@@ -253,6 +261,7 @@ class MightyAgent(object):
                     while self.tracer:
                         transition = self.tracer.pop()
                         transition_metrics = self.get_transition_metrics(transition, metrics)
+                        metrics.update(transition_metrics)
                         self.replay_buffer.add(transition, transition_metrics)
 
                     # update
@@ -268,12 +277,36 @@ class MightyAgent(object):
                         if self.writer is not None:
                             self.writer.add_scalars("training_metrics", metrics, global_step=self.steps)
 
+                        if self.log_wandb:
+                            wandb.log(metrics)
+
+                        metrics["env"] = self.env
+                        metrics["vf"] = self.vf
+                        metrics["policy"] = self.policy
                         for k in self.meta_modules.keys():
                             self.meta_modules[k].pre_step(metrics)
 
                     self.last_state = s
                     s = s_next
                     self.logger.next_step()
+
+                    if steps_since_eval >= eval_every_n_steps:
+                        steps_since_eval = 0
+                        #TODO: make it work with CARL
+                        if isinstance(self.eval_env, DACENV):
+                            eval_instance_ids = self.eval_env.instance_id_list
+                            vmap(self.eval, in_axes=(None, 0), out_axes=0)(n_episodes_eval,jnp.array(eval_instance_ids))
+                        else:
+                            self.eval(n_episodes_eval)
+
+                    if self.steps % human_log_every_n_steps == 0:
+                        print(
+                            f"Steps: {self.steps}, Reward: {sum(log_reward_buffer) / len(log_reward_buffer)}"
+                        )
+                        log_reward_buffer = []
+
+                    if self.steps % save_model_every_n_steps == 0:
+                        self.save(self.steps)
 
                 if isinstance(self.env, DACENV):
                     instance = self.env.instance
@@ -285,24 +318,6 @@ class MightyAgent(object):
                 episodes += 1
                 for k in self.meta_modules.keys():
                     self.meta_modules[k].post_episode(metrics)                
-
-                if steps_since_eval >= eval_every_n_steps:
-                    steps_since_eval = 0
-                    #TODO: make it work with CARL
-                    if isinstance(self.eval_env, DACENV):
-                        eval_instance_ids = self.eval_env.instance_id_list
-                        vmap(self.eval, in_axes=(None, 0), out_axes=0)(n_episodes_eval,jnp.array(eval_instance_ids))
-                    else:
-                        self.eval(n_episodes_eval)
-
-                if episodes % human_log_every_n_episodes == 0:
-                    print(
-                        f"Steps: {self.steps}, Reward: {sum(log_reward_buffer) / len(log_reward_buffer)}"
-                    )
-                    log_reward_buffer = []
-
-                if episodes % save_model_every_n_episodes == 0:
-                    self.save(episodes)
 
         # At the end make sure logger writes buffer to file
         self.logger.write()
