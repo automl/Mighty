@@ -48,7 +48,7 @@ We recommend following the instructions in the [DACBench repo](https://github.co
 
 Afterwards, select the benchmark you want to run, for example the SigmoidBenchmark, and providing it as the "env" keyword: 
 ```bash
-python mighty/run_mighty.py 'algorithm=dqn' 'env=SigmoidBenchmark'
+python mighty/run_mighty.py 'algorithm=dqn' 'env=SigmoidBenchmark' 'env_wrappers=[dacbench.wrappers.MultiDiscreteWrapper]'
 ```
 
 ## Train your Agent on a CARL Environment
