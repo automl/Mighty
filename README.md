@@ -38,7 +38,7 @@ python mighty/run_mighty.py --help
 
 An example for running the PPO agent on the Pendulum gym environment for 1000 steps looks like this:
 ```bash
-python mihgty/run_mighty.py 'num_steps=1000' 'algorithm=ppo' 'env=Pendulum-v1'
+python mighty/run_mighty.py 'num_steps=1000' 'algorithm=ppo' 'env=Pendulum-v1'
 ```
 
 ## Learning a Configuration Policy via DAC
