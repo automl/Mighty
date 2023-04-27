@@ -229,7 +229,7 @@ class MightyAgent(object):
                     self.meta_modules[k].pre_episode(metrics)
 
                 progress.update(steps_task, visible=True)
-                s, _ = self.env.reset()
+                s, info = self.env.reset()
                 terminated, truncated = False, False
                 episode_reward = 0
                 metrics["episode_reward"] = episode_reward
@@ -238,7 +238,7 @@ class MightyAgent(object):
                         self.meta_modules[k].pre_step(metrics)
 
                     a = self.policy(s, metrics=metrics)
-                    s_next, r, terminated, truncated, _ = self.env.step(a)
+                    s_next, r, terminated, truncated, info = self.env.step(a)
                     episode_reward += r
 
                     self.logger.log("reward", r)
@@ -253,6 +253,7 @@ class MightyAgent(object):
                         "action": a,
                         "terminated": terminated,
                         "truncated": truncated,
+                        "info": info
                     }
                     metrics["episode_reward"] = episode_reward
 
@@ -278,13 +279,14 @@ class MightyAgent(object):
                             transition, metrics
                         )
                         metrics.update(transition_metrics)
+                        transition.extra_info = info
                         self.replay_buffer.add(transition, transition_metrics)
 
                     # update
                     if len(self.replay_buffer) >= self._batch_size:
                         for k in self.meta_modules.keys():
                             self.meta_modules[k].pre_step(metrics)
-
+                            
                         metrics.update(self.update_agent(self.steps))
                         metrics = {k: np.array(v) for k, v in metrics.items()}
                         metrics["step"] = self.steps

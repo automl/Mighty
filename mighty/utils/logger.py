@@ -236,7 +236,7 @@ class AbstractLogger(metaclass=ABCMeta):
             return True
 
         elif any(isinstance(value, type) for type in self.valid_types["recursive"]):
-            value = value.vlaues() if isinstance(value, dict) else value
+            value = value.values() if isinstance(value, dict) else value
             return all(self.is_of_valid_type(sub_value) for sub_value in value)
 
         else:

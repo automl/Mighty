@@ -67,8 +67,12 @@ def main(cfg: DictConfig):
     for w in cfg.env_wrappers:
         class_name = w.split(".")[-1]
         import_from = importlib.import_module(".".join(w.split(".")[:-1]))
-        env = getattr(import_from, class_name)(env)
-        eval_env = getattr(import_from, class_name)(eval_env)
+        if "wrapper_kwargs" in cfg.keys():
+            wkwargs = cfg.wrapper_kwargs
+        else:
+            wkwargs = {}
+        env = getattr(import_from, class_name)(env, **wkwargs)
+        eval_env = getattr(import_from, class_name)(eval_env, **wkwargs)
 
     # Setup agent
     agent_class = get_agent_class(cfg.algorithm)
