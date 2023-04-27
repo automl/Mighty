@@ -21,20 +21,32 @@ class MightyReplay(SimpleReplayBuffer):
 
     def add(self, transition_batch, metrics):
         if self.keep_infos:
-            transition_batch.extra_info = onp.array([list(flatten_infos(transition_batch.extra_info))])
+            transition_batch.extra_info = onp.array(
+                [list(flatten_infos(transition_batch.extra_info))]
+            )
         else:
             transition_batch.extra_info = []
         super().add(transition_batch)
 
 
 class PrioritizedReplay(PrioritizedReplayBuffer):
-    def __init__(self, capacity, alpha=1.0, beta=1.0, epsilon=1e-4, random_seed=None, keep_infos=False):
+    def __init__(
+        self,
+        capacity,
+        alpha=1.0,
+        beta=1.0,
+        epsilon=1e-4,
+        random_seed=None,
+        keep_infos=False,
+    ):
         super().__init__(capacity, alpha, beta, epsilon, random_seed)
         self.keep_infos = keep_infos
 
     def add(self, transition_batch, metrics):
         if self.keep_infos:
-            transition_batch.extra_info = onp.array([list(flatten_infos(transition_batch.extra_info))])
+            transition_batch.extra_info = onp.array(
+                [list(flatten_infos(transition_batch.extra_info))]
+            )
         else:
             transition_batch.extra_info = []
         advantage = metrics["td_error"]

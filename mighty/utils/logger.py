@@ -1,11 +1,7 @@
 import json
-import os
 from abc import ABCMeta, abstractmethod
-from collections import defaultdict, ChainMap
-from datetime import datetime
 from functools import reduce
 from itertools import chain
-from numbers import Number
 from pathlib import Path
 from typing import Union, Dict, Any, Tuple, List
 import logging
@@ -17,7 +13,6 @@ import numpy as np
 import pandas as pd
 
 from typing import Callable, Iterable
-from mighty.env.env_handling import MIGHTYENV
 
 import wandb
 from tensorboard_logger import configure, log_value
@@ -345,8 +340,8 @@ class Logger(AbstractLogger, logging.Logger):
 
         self.instance = None
 
-        self.reward_log_file = open(self.log_dir / f"rewards.jsonl", "w")
-        self.eval_log_file = open(self.log_dir / f"eval.jsonl", "w")
+        self.reward_log_file = open(self.log_dir / "rewards.jsonl", "w")
+        self.eval_log_file = open(self.log_dir / "eval.jsonl", "w")
         self.log_file = self.reward_log_file
         self.eval = False
 

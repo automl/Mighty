@@ -9,13 +9,13 @@ class TestBaseAgent(unittest.TestCase):
     def setUp(self) -> None:
         env = MockEnvDiscreteActions()
         logger = Logger(
-            experiment_name=f"test",
-            output_path='.',
+            experiment_name="test",
+            output_path=".",
             step_write_frequency=10,
             episode_write_frequency=None,
             log_to_wandb=False,
             log_to_tensorboad=False,
-            hydra_config=None
+            hydra_config=None,
         )
         self.log_file_path = logger.log_dir
 
@@ -41,8 +41,9 @@ class TestBaseAgent(unittest.TestCase):
 
     def tearDown(self) -> None:
         import os
-        os.remove(os.path.join(self.log_file_path, 'eval.jsonl'))
-        os.remove(os.path.join(self.log_file_path, 'rewards.jsonl'))
+
+        os.remove(os.path.join(self.log_file_path, "eval.jsonl"))
+        os.remove(os.path.join(self.log_file_path, "rewards.jsonl"))
 
     def testEvalSwitch(self):
         self.assertFalse(self.agent.logger.eval)

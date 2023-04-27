@@ -11,7 +11,6 @@ from jax import vmap
 import coax
 from coax.experience_replay._simple import BaseReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
-from typing import Optional
 from rich.progress import Progress, TimeRemainingColumn, TimeElapsedColumn, BarColumn
 
 from mighty.env.env_handling import MIGHTYENV, DACENV, CARLENV
@@ -197,7 +196,6 @@ class MightyAgent(object):
         :param save_mode_every_n_episodes: Intervall for model checkpointing
         :return:
         """
-        step_progress = 1 / n_steps
         episodes = 0
         with Progress(
             "[progress.description]{task.description}",
@@ -255,7 +253,7 @@ class MightyAgent(object):
                         "action": a,
                         "terminated": terminated,
                         "truncated": truncated,
-                        "info": info
+                        "info": info,
                     }
                     metrics["episode_reward"] = episode_reward
 
@@ -285,7 +283,10 @@ class MightyAgent(object):
                         self.replay_buffer.add(transition, transition_metrics)
 
                     # update
-                    if len(self.replay_buffer) >= self._batch_size and self.steps >= self._learning_starts:
+                    if (
+                        len(self.replay_buffer) >= self._batch_size
+                        and self.steps >= self._learning_starts
+                    ):
                         for k in self.meta_modules.keys():
                             self.meta_modules[k].pre_step(metrics)
 

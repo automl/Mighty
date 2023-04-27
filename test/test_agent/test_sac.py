@@ -3,7 +3,6 @@ from unittest.mock import MagicMock
 
 import numpy as np
 from mighty.agent.sac import MightySACAgent
-from .mock_environment import MockEnvDiscreteActions
 
 from copy import deepcopy
 import gym

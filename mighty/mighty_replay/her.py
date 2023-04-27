@@ -16,16 +16,16 @@ class HERGoalWrapper(gym.Wrapper):
 
     def reset(self):
         state, info = self.env.reset()
-        info['g'] = self.goal
-        info['ag'] = False
+        info["g"] = self.goal
+        info["ag"] = False
         return state, info
 
     def step(self, action):
         state, reward, terminated, truncated, info = self.env.step(action)
-        info['g'] = self.goal
-        info['ag'] = self.check_goal_achieved(self.env, state, info, self.goal)
+        info["g"] = self.goal
+        info["ag"] = self.check_goal_achieved(self.env, state, info, self.goal)
         return state, reward, terminated, truncated, info
-    
+
 
 class HER(MightyReplay):
     """
@@ -40,15 +40,15 @@ class HER(MightyReplay):
 
     alpha : positive float, optional
 
-        The sampling temperature :math:`\alpha>0`.
+        The sampling temperature alpha>0.
 
     beta : positive float, optional
 
-        The importance-weight exponent :math:`\beta>0`.
+        The importance-weight exponent \beta>0.
 
     epsilon : positive float, optional
 
-        The small regulator :math:`\epsilon>0`.
+        The small regulator epsilon>0.
 
     random_seed : int, optional
 
@@ -64,7 +64,7 @@ class HER(MightyReplay):
         n_sampled_goal: int = 4,
         goal_selection_strategy: str = "future",
         reward_function=None,
-        alternate_goal_function=None
+        alternate_goal_function=None,
     ):
         if not (isinstance(capacity, int) and capacity > 0):
             raise TypeError(f"capacity must be a positive int, got: {capacity}")
@@ -80,17 +80,25 @@ class HER(MightyReplay):
         self.gamma = gamma
         self.reward_func = reward_function
         if self.reward_func is None:
+
             def func(state, action, info):
-                return int(info['ag'])
+                return int(info["ag"])
+
             self.reward_func = func
         else:
             f_name = self.reward_func.split(".")[-1]
-            import_from = importlib.import_module(".".join(self.reward_func.split(".")[:-1]))
+            import_from = importlib.import_module(
+                ".".join(self.reward_func.split(".")[:-1])
+            )
             self.reward_func = getattr(import_from, f_name)
         self.get_alternate_goal = alternate_goal_function
-        assert self.get_alternate_goal is not None, "Function string to get an alternate goal has to be provided."
+        assert (
+            self.get_alternate_goal is not None
+        ), "Function string to get an alternate goal has to be provided."
         f_name = self.get_alternate_goal.split(".")[-1]
-        import_from = importlib.import_module(".".join(self.get_alternate_goal.split(".")[:-1]))
+        import_from = importlib.import_module(
+            ".".join(self.get_alternate_goal.split(".")[:-1])
+        )
         self.get_alternate_goal = getattr(import_from, f_name)
 
     @property
@@ -166,10 +174,12 @@ class HER(MightyReplay):
         for i in batch_indices:
             transition = self._storage[i].copy()
             # We need to transform this because jax can't handle dicts in the updates
-            transition.extra_info = onp.array([list(flatten_infos(transition.extra_info))])
+            transition.extra_info = onp.array(
+                [list(flatten_infos(transition.extra_info))]
+            )
             real_batch.append(transition)
         return _concatenate_leaves(onp.array(real_batch))
-    
+
     def _get_virtual_samples(self, batch_indices):
         virtual_batch = []
         for i in batch_indices:
@@ -177,7 +187,11 @@ class HER(MightyReplay):
             idx = i
             # Find last state in same episode
             # If there is none, just return transition without altering
-            while done_index is None and idx < self.capacity and self._storage[idx] is not None:
+            while (
+                done_index is None
+                and idx < self.capacity
+                and self._storage[idx] is not None
+            ):
                 if self._storage[idx].In == 0:
                     done_index = idx
                 idx += 1
@@ -185,17 +199,23 @@ class HER(MightyReplay):
             if done_index is None:
                 transition = self._storage[i].copy()
                 # We need to transform this because jax can't handle dicts in the updates
-                transition.extra_info = onp.array([list(flatten_infos(transition.extra_info))])
+                transition.extra_info = onp.array(
+                    [list(flatten_infos(transition.extra_info))]
+                )
                 virtual_batch.append(transition)
             else:
                 transition = self._storage[i].copy()
                 # If goal was reached: do nothing
-                if not transition.extra_info['ag']:
+                if not transition.extra_info["ag"]:
                     # else set goal reached in info to true
-                    transition.extra_info['ag'] = True
-                    transition.extra_info['g'] = self.get_alternate_goal(transition.S, transition.extra_info, transition.extra_info['g'])
+                    transition.extra_info["ag"] = True
+                    transition.extra_info["g"] = self.get_alternate_goal(
+                        transition.S, transition.extra_info, transition.extra_info["g"]
+                    )
                     # adapt reward
-                    reward = self.reward_func(transition.S, transition.A, transition.extra_info)
+                    reward = self.reward_func(
+                        transition.S, transition.A, transition.extra_info
+                    )
                 else:
                     reward = transition.Rn[0]
                 virtual_batch.append(
@@ -204,7 +224,7 @@ class HER(MightyReplay):
                         transition.A[0],
                         transition.logP[0],
                         reward,
-                        bool((transition.In==0)[0]),
+                        bool((transition.In == 0)[0]),
                         self.gamma,
                         transition.S_next[0],
                         transition.A_next[0],
@@ -219,7 +239,8 @@ class HER(MightyReplay):
     def clear(self):
         r"""Clear the experience replay buffer."""
         self._storage = onp.full(
-            shape=(self.capacity,), fill_value=None, dtype="object")
+            shape=(self.capacity,), fill_value=None, dtype="object"
+        )
         self._index = 0
 
     def __len__(self):

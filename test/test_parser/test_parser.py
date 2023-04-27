@@ -1,6 +1,5 @@
 import unittest
 import os
-import numpy as np
 
 from mighty.utils.scenario_config_parser import ScenarioConfigParser
 from mighty.utils.base_config_parser import BaseConfigParser
