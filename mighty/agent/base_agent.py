@@ -43,6 +43,7 @@ class MightyAgent(object):
         learning_rate: float = 0.01,
         epsilon: float = 0.1,
         batch_size: int = 64,
+        learning_starts: int = 1,
         render_progress: bool = True,  # FIXME: Does this actually do anything or can we take it out?
         log_tensorboard: bool = False,
         log_wandb: bool = False,
@@ -79,6 +80,7 @@ class MightyAgent(object):
         self.learning_rate = learning_rate
         self._epsilon = epsilon
         self._batch_size = batch_size
+        self._learning_starts = learning_starts
 
         self.replay_buffer: Optional[BaseReplayBuffer] = None
         self.tracer: Optional[BaseRewardTracer] = None
@@ -283,10 +285,10 @@ class MightyAgent(object):
                         self.replay_buffer.add(transition, transition_metrics)
 
                     # update
-                    if len(self.replay_buffer) >= self._batch_size:
+                    if len(self.replay_buffer) >= self._batch_size and self.steps >= self._learning_starts:
                         for k in self.meta_modules.keys():
                             self.meta_modules[k].pre_step(metrics)
-                            
+
                         metrics.update(self.update_agent(self.steps))
                         metrics = {k: np.array(v) for k, v in metrics.items()}
                         metrics["step"] = self.steps

@@ -124,7 +124,7 @@ class HER(MightyReplay):
         idx = transition_batch.idx % self.capacity  # wrap around
         self._storage[idx] = list(transition_batch.to_singles())
         self._index += transition_batch.batch_size
-        if self.gamma in transition_batch.In:
+        if 0 in transition_batch.In and not self.contains_finished_episode:
             self.contains_finished_episode = True
 
     def sample(self, batch_size=32):

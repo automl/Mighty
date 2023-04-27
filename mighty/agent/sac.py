@@ -40,6 +40,7 @@ class MightySACAgent(MightyAgent):
         learning_rate: float = 0.01,
         epsilon: float = 0.1,
         batch_size: int = 64,
+        learning_starts: int = 100,
         render_progress: bool = True,
         log_tensorboard: bool = False,
         log_wandb: bool = False,
@@ -135,6 +136,7 @@ class MightySACAgent(MightyAgent):
             learning_rate=learning_rate,
             epsilon=epsilon,
             batch_size=batch_size,
+            learning_starts=learning_starts,
             render_progress=render_progress,
             log_tensorboard=log_tensorboard,
             log_wandb=log_wandb,
@@ -190,7 +192,7 @@ class MightySACAgent(MightyAgent):
     def _initialize_agent(self):
         """Initialize algorithm components like policy and critic"""
         # main function approximators
-        self.policy = self.policy_class("ppo", **self.policy_kwargs)
+        self.policy = self.policy_class("sac", **self.policy_kwargs)
         self.q1 = coax.Q(
             self.q_function,
             self.env,
@@ -280,12 +282,12 @@ class MightySACAgent(MightyAgent):
             metrics["rollout_values"] = np.empty(0)
             metrics["rollout_logits"] = np.empty(0)
 
-        metrics["td_error"] = self.td_update.td_error(transition)
+        metrics["td_error"] = qlearning.td_error(transition)
         metrics["rollout_errors"] = np.append(
             metrics["rollout_errors"], qlearning.td_error(transition)
         )
         metrics["rollout_values"] = np.append(
-            metrics["rollout_values"], self.vf(transition.S)
+            metrics["rollout_values"], self.vf(transition.S, transition.A)
         )
         _, logprobs = self.policy(transition.S, return_logp=True)
         metrics["rollout_logits"] = np.append(metrics["rollout_logits"], logprobs)

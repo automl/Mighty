@@ -65,7 +65,7 @@ class EZGreedy(MightyExplorationPolicy):
 
         self._function = jit(func, static_argnums=(4,))
 
-    def __call__(self, s, return_logp=False, metrics=None):
+    def __call__(self, s, return_logp=False, metrics=None, eval=False):
         if self.skipped >= self.skip or self.current_params is None:
             self.action, self.logprobs = self.sample_action(s)
             self.skip = np.random.default_rng().zipf(2)

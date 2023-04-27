@@ -1,0 +1,1 @@
+python ../mighty/run_mighty.py algorithm=dqn env=SigmoidBenchmark env_wrappers=[dacbench.wrappers.MultiDiscreteActionWrapper] +algorithm_kwargs.meta_methods=[mighty.mighty_meta.SPaCE]
