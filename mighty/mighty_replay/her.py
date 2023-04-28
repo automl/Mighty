@@ -7,7 +7,18 @@ from mighty.mighty_replay.mighty_replay_buffer import MightyReplay, flatten_info
 
 
 class HERGoalWrapper(gym.Wrapper):
+    """Goal Visibility Wrapper for HER."""
+
     def __init__(self, env, goal, check_achieved):
+        """
+        Initialize Wrapper.
+
+        :param env: environment
+        :param goal: goal
+        :param check_achieved: function name for checking if goal is achieved
+        :return:
+        """
+
         super().__init__(env)
         self.goal = goal
         f_name = check_achieved.split(".")[-1]
@@ -15,12 +26,25 @@ class HERGoalWrapper(gym.Wrapper):
         self.check_goal_achieved = getattr(import_from, f_name)
 
     def reset(self):
+        """
+        Reset environment.
+
+        :return: state, info
+        """
+
         state, info = self.env.reset()
         info["g"] = self.goal
         info["ag"] = False
         return state, info
 
     def step(self, action):
+        """
+        Environment Step.
+
+        :param action: action
+        :return: state, reward, terminated, truncated, info
+        """
+
         state, reward, terminated, truncated, info = self.env.step(action)
         info["g"] = self.goal
         info["ag"] = self.check_goal_achieved(self.env, state, info, self.goal)
@@ -28,51 +52,34 @@ class HERGoalWrapper(gym.Wrapper):
 
 
 class HER(MightyReplay):
-    """
-
-    Hindsight Experience Replay Buffer
-
-    Parameters
-    ----------
-    capacity : positive int
-
-        The capacity of the experience replay buffer.
-
-    alpha : positive float, optional
-
-        The sampling temperature alpha>0.
-
-    beta : positive float, optional
-
-        The importance-weight exponent \beta>0.
-
-    epsilon : positive float, optional
-
-        The small regulator epsilon>0.
-
-    random_seed : int, optional
-
-        To get reproducible results.
-
-    """
+    """Hindsight Experience Replay Buffer."""
 
     def __init__(
         self,
         capacity,
         gamma,
         random_seed=None,
-        n_sampled_goal: int = 4,
-        goal_selection_strategy: str = "future",
+        her_ratio: int = 4,
         reward_function=None,
         alternate_goal_function=None,
     ):
+        """
+        Init HER.
+
+        :param capacity: buffer size
+        :param gamma: discount factor
+        :param random_seed: seed for sampling
+        :param her_ratio: ratio of sampled to real goals
+        :param reward_function: string name of reward function
+        :param alternate_goal_function: function for computing alternate goals
+        :return:
+        """
+
         if not (isinstance(capacity, int) and capacity > 0):
             raise TypeError(f"capacity must be a positive int, got: {capacity}")
 
         self._capacity = int(capacity)
-        self.goal_selection_strategy = goal_selection_strategy
-        self.n_goals = n_sampled_goal
-        self.her_ratio = 1 - (1.0 / (n_sampled_goal + 1))
+        self.her_ratio = her_ratio
         self._random_seed = random_seed
         self._rnd = onp.random.RandomState(random_seed)
         self.clear()  # sets: self._deque, self._index
@@ -103,23 +110,16 @@ class HER(MightyReplay):
 
     @property
     def capacity(self):
+        """Maximum size."""
         return self._capacity
 
     def add(self, transition_batch, metrics):
-        r"""
+        """
+        Add transition(s).
 
-        Add a transition to the experience replay buffer.
-
-        Parameters
-        ----------
-        transition_batch : TransitionBatch
-
-            A :class:`TransitionBatch <coax.reward_tracing.TransitionBatch>` object.
-
-        Adv : ndarray
-
-            A batch of advantages, used to construct the priorities :math:`p_i`.
-
+        :param transition_batch: Transition(s) to add
+        :param metrics: Current metrics dict
+        :return:
         """
 
         # Store Transition
@@ -136,23 +136,13 @@ class HER(MightyReplay):
             self.contains_finished_episode = True
 
     def sample(self, batch_size=32):
-        r"""
-
-        Get a batch of transitions to be used for bootstrapped updates.
-
-        Parameters
-        ----------
-        batch_size : positive int, optional
-
-            The desired batch size of the sample.
-
-        Returns
-        -------
-        transitions : TransitionBatch
-
-            A :class:`TransitionBatch <coax.reward_tracing.TransitionBatch>` object.
-
         """
+        Sample batch.
+
+        :param batch_size: batch size
+        :return: batch
+        """
+
         if not onp.any(self.contains_finished_episode):
             raise RuntimeError(
                 "No episode has finished at this point. Please consider using a smaller number of episode steps or a larger value for learning starts."
@@ -170,6 +160,13 @@ class HER(MightyReplay):
         return transition_batch
 
     def get_real_batch(self, batch_indices):
+        """
+        Get actual transitions.
+
+        :param batch_indices: indices to get
+        :return: batch
+        """
+
         real_batch = []
         for i in batch_indices:
             transition = self._storage[i].copy()
@@ -181,6 +178,12 @@ class HER(MightyReplay):
         return _concatenate_leaves(onp.array(real_batch))
 
     def _get_virtual_samples(self, batch_indices):
+        """
+        Get virtual batch.
+
+        :param batch_indices: indices to get
+        :return: virtual batch
+        """
         virtual_batch = []
         for i in batch_indices:
             done_index = None
@@ -237,19 +240,22 @@ class HER(MightyReplay):
         return _concatenate_leaves(onp.array(virtual_batch))
 
     def clear(self):
-        r"""Clear the experience replay buffer."""
+        """Clear buffer."""
         self._storage = onp.full(
             shape=(self.capacity,), fill_value=None, dtype="object"
         )
         self._index = 0
 
     def __len__(self):
+        """Return current size."""
         return min(self.capacity, self._index)
 
     def __bool__(self):
+        """Return not empty."""
         return bool(len(self))
 
     def __iter__(self):
+        """Get iterator."""
         return iter(self._storage[: len(self)])
 
 

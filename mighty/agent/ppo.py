@@ -61,7 +61,8 @@ class MightyPPOAgent(MightyAgent):
         soft_update_weight: float = 1.0,  # TODO which default value?
     ):
         """
-        PPO initialization
+        PPO initialization.
+
         Creates all relevant class variables and calls agent-specific init function
 
         :param env: Train environment
@@ -81,6 +82,7 @@ class MightyPPOAgent(MightyAgent):
         :param soft_update_weight: Size of soft updates for target network
         :return:
         """
+
         self.n_policy_units = n_policy_units
         self.n_critic_units = n_critic_units
 
@@ -124,10 +126,12 @@ class MightyPPOAgent(MightyAgent):
 
     @property
     def vf(self):
+        """Value function."""
         return self.v
 
     def policy_function(self, S, is_training):
-        """Policy base"""
+        """Policy base."""
+
         shared = hk.Sequential(
             (
                 hk.Linear(self.n_policy_units),
@@ -157,7 +161,8 @@ class MightyPPOAgent(MightyAgent):
         return {"mu": mu(S), "logvar": logvar(S)}
 
     def value_function(self, S, is_training):
-        """value base"""
+        """value base."""
+
         seq = hk.Sequential(
             (
                 hk.Linear(self.n_critic_units),
@@ -173,7 +178,7 @@ class MightyPPOAgent(MightyAgent):
         return seq(S)
 
     def _initialize_agent(self):
-        """Initialize PPO specific components"""
+        """Initialize PPO specific components."""
 
         self.policy = self.policy_class("ppo", **self.policy_kwargs)
         self.v = coax.V(self.value_function, self.env)
@@ -194,10 +199,12 @@ class MightyPPOAgent(MightyAgent):
 
     def update_agent(self, step):
         """
-        Compute and apply PPO update
+        Compute and apply PPO update.
+
         :param step: Current training step
         :return:
         """
+
         transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
         td_metrics, td_error = self.td_update.update(
             transition_batch, return_td_error=True
@@ -217,6 +224,14 @@ class MightyPPOAgent(MightyAgent):
         return td_metrics
 
     def get_transition_metrics(self, transition, metrics):
+        """
+        Get metrics per transition.
+
+        :param transition: Current transition
+        :param metrics: Current metrics dict
+        :return:
+        """
+
         if "rollout_errors" not in metrics.keys():
             metrics["rollout_errors"] = np.empty(0)
             metrics["rollout_values"] = np.empty(0)
@@ -236,6 +251,7 @@ class MightyPPOAgent(MightyAgent):
     def get_state(self):
         """
         Return current agent state, e.g. for saving.
+
         For PPO, this consists of:
         - the value network parameters
         - the value network function state
@@ -247,6 +263,7 @@ class MightyPPOAgent(MightyAgent):
         - the policy target function state
         :return: Agent state
         """
+
         return (
             self.v.params,
             self.v.function_state,
@@ -259,7 +276,8 @@ class MightyPPOAgent(MightyAgent):
         )
 
     def set_state(self, state):
-        """Set the internal state of the agent, e.g. after loading"""
+        """Set the internal state of the agent, e.g. after loading."""
+
         (
             self.v.params,
             self.v.function_state,

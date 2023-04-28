@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 from mighty.agent.base_agent import MightyAgent
 from mighty.agent.dqn import MightyDQNAgent
-from .mock_environment import MockEnvDiscreteActions
+from ..mock_environment import MockEnvDiscreteActions
 
 
 class TestBaseAgent(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestBaseAgent(unittest.TestCase):
         )
 
     def testEval(self):
-        self.agent.eval(MockEnvDiscreteActions(), 10)
+        self.agent.eval(10)
 
     def testTrain(self):
         self.agent.train(n_steps=2, n_episodes_eval=10)

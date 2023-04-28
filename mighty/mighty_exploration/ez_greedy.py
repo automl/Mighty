@@ -7,35 +7,35 @@ from mighty.mighty_exploration.mighty_exploration_policy import MightyExploratio
 
 
 class EZGreedy(MightyExplorationPolicy):
-    r"""
-    Create an :math:`\epsilon`z-greedy policy, given a q-function.
-    Works like a normal epsilon-greedy function but repeats the sampled action.
-
-    Parameters
-    ----------
-    q : Q
-        A state-action value function.
-    epsilon : float between 0 and 1, optional
-        The probability of sampling an action uniformly at random (as opposed to sampling greedily).
-    skip : int
-        Number of steps to repeat the sampled action
-    """
+    """EZGreedy exploration."""
 
     def __init__(
         self,
         algo,
         func,
         epsilon=0.1,
-        skip=100,
         env=None,
         observation_preprocessor=None,
         proba_dist=None,
         random_seed=None,
     ):
+        """
+        Initialize EZGreedy.
+
+        :param algo: algorithm name
+        :param func: policy function
+        :param epsilon: exploration epsilon
+        :param env: environment
+        :param observation_preprocessor: preprocessing for observation
+        :param proba_dist: probability distribution
+        :param random_seed: seed for sampling
+        :return:
+        """
+
         self.epsilon = epsilon
-        self.skip = skip
+        self.skip = max(1, np.random.default_rng().zipf(2))
         self.skipped = 0
-        self.current_params = None
+        self.action = None
 
         super().__init__(
             algo,
@@ -47,28 +47,37 @@ class EZGreedy(MightyExplorationPolicy):
         )
 
         def func(params, state, rng, S, is_training):
-            self.skipped = 0
             Q_s = self._Q_s(params, state, rng, S)
 
             A_greedy = (Q_s == Q_s.max(axis=1, keepdims=True)).astype(Q_s.dtype)
             A_greedy /= A_greedy.sum(
                 axis=1, keepdims=True
             )  # there may be multiple max's (ties)
-            A_greedy *= 1 - params["epsilon"]  # take away ε from greedy action(s)
-            A_greedy += (
-                params["epsilon"] / self.q.action_space.n
-            )  # spread ε evenly to all actions
+
+            if not is_training:
+                A_greedy *= 1 - params["epsilon"]  # take away ε from greedy action(s)
+                A_greedy += (
+                    params["epsilon"] / self.q.action_space.n
+                )  # spread ε evenly to all actions
 
             dist_params = {"logits": jnp.log(A_greedy + 1e-15)}
-            self.current_params = dist_params
             return dist_params, None  # return dummy function-state
 
         self._function = jit(func, static_argnums=(4,))
 
-    def __call__(self, s, return_logp=False, metrics=None, eval=False):
-        if self.skipped >= self.skip or self.current_params is None:
+    def explore(self, s, return_logp=False, metrics=None):
+        """
+        Explore.
+
+        :param s: state
+        :param return_logp: return logprobs
+        :param metrics: not used
+        :return: action or (action, logprobs)
+        """
+
+        if self.skipped >= self.skip or self.action is None:
             self.action, self.logprobs = self.sample_action(s)
-            self.skip = np.random.default_rng().zipf(2)
+            self.skip = max(1, np.random.default_rng().zipf(2))
             self.skipped = 0
         else:
             self.skipped += 1
@@ -76,12 +85,14 @@ class EZGreedy(MightyExplorationPolicy):
 
     @property
     def params(self):
+        """Get params."""
         return hk.data_structures.to_immutable_dict(
             {"epsilon": self.epsilon, "q": self.q.params, "skip": self.skip}
         )
 
     @params.setter
     def params(self, new_params):
+        """Set params."""
         if jax.tree_util.tree_structure(new_params) != jax.tree_util.tree_structure(
             self.params
         ):
@@ -92,16 +103,20 @@ class EZGreedy(MightyExplorationPolicy):
 
     @property
     def function(self):
+        """Get function."""
         return self._function
 
     @property
     def function_state(self):
+        """Get function state."""
         return self.q.function_state
 
     @property
     def rng(self):
+        """Get RNG."""
         return self.q.rng
 
     @function_state.setter
     def function_state(self, new_function_state):
+        """Set function state."""
         self.q.function_state = new_function_state

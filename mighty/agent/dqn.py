@@ -70,7 +70,8 @@ class MightyDQNAgent(MightyAgent):
         td_update_kwargs: Optional[TypeKwargs] = None,
     ):
         """
-        DQN initialization
+        DQN initialization.
+
         Creates all relevant class variables and calls agent-specific init function
 
         :param env: Train environment
@@ -93,6 +94,7 @@ class MightyDQNAgent(MightyAgent):
         :param td_update_kwargs: Arguments for the TD update
         :return:
         """
+
         self.n_units = n_units
         assert 0.0 <= soft_update_weight <= 1.0
         self.soft_update_weight = soft_update_weight
@@ -139,10 +141,13 @@ class MightyDQNAgent(MightyAgent):
 
     @property
     def vf(self):
+        """Q-function."""
+
         return self.q
 
     def q_function(self, S, is_training):
         """Q-function base"""
+
         seq = hk.Sequential(
             (
                 hk.Linear(self.n_units),
@@ -174,10 +179,12 @@ class MightyDQNAgent(MightyAgent):
 
     def update_agent(self, step):
         """
-        Compute and apply TD update
+        Compute and apply TD update.
+
         :param step: Current training step
         :return:
         """
+
         transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
         metrics_q = self.qlearning.update(transition_batch)
         metrics_q = {
@@ -190,6 +197,14 @@ class MightyDQNAgent(MightyAgent):
         return metrics_q
 
     def get_transition_metrics(self, transition, metrics):
+        """
+        Get metrics per transition.
+
+        :param transition: Current transition
+        :param metrics: Current metrics dict
+        :return:
+        """
+
         if "rollout_errors" not in metrics.keys():
             metrics["rollout_errors"] = np.empty(0)
             metrics["rollout_values"] = np.empty(0)
@@ -206,13 +221,16 @@ class MightyDQNAgent(MightyAgent):
     def get_state(self):
         """
         Return current agent state, e.g. for saving.
+
         For DQN, this consists of:
         - the Q network parameters
         - the Q network function state
         - the target network parameters
         - the target network function state
+
         :return: Agent state
         """
+
         return (
             self.q.params,
             self.q.function_state,
@@ -221,7 +239,8 @@ class MightyDQNAgent(MightyAgent):
         )
 
     def set_state(self, state):
-        """Set the internal state of the agent, e.g. after loading"""
+        """Set the internal state of the agent, e.g. after loading."""
+
         (
             self.q.params,
             self.q.function_state,

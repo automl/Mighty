@@ -20,6 +20,7 @@ from mighty.mighty_replay import MightyReplay
 
 
 def retrieve_class(cls: Union[str, DictConfig, Type], default_cls: Type) -> Type:
+    """Get coax or mighty class."""
     if cls is None:
         cls = default_cls
     elif type(cls) == DictConfig:
@@ -30,9 +31,7 @@ def retrieve_class(cls: Union[str, DictConfig, Type], default_cls: Type) -> Type
 
 
 class MightyAgent(object):
-    """
-    Base agent for Coax RL implementations
-    """
+    """Base agent for Coax RL implementations."""
 
     def __init__(
         self,
@@ -57,7 +56,8 @@ class MightyAgent(object):
         meta_kwargs: Optional[list[TypeKwargs]] = [],
     ):
         """
-        Base agent initialization
+        Base agent initialization.
+
         Creates all relevant class variables and calls agent-specific init function
 
         :param env: Train environment
@@ -76,6 +76,7 @@ class MightyAgent(object):
         :param meta_kwargs: List of kwargs for the meta learning modules
         :return:
         """
+
         self.learning_rate = learning_rate
         self._epsilon = epsilon
         self._batch_size = batch_size
@@ -158,11 +159,13 @@ class MightyAgent(object):
 
     def _initialize_agent(self):
         """Agent/algorithm specific initializations."""
+
         raise NotImplementedError
 
     def initialize_agent(self):
         """
         General initialization of tracer and buffer for all agents.
+
         Algorithm specific initialization like policies etc. are done in _initialize_agent
         """
 
@@ -176,8 +179,9 @@ class MightyAgent(object):
     def update_agent(self, step):
         """Policy/value function update"""
         raise NotImplementedError
-    
+
     def adapt_hps(self, metrics):
+        """Set hyperparameters."""
         self.learning_rate = metrics["hp/lr"]
         self._epsilon = metrics["hp/pi_epsilon"]
 
@@ -191,6 +195,7 @@ class MightyAgent(object):
     ):
         """
         Trains the agent for n steps.
+
         Evaluation is done for the given number of episodes each evaluation interval.
 
         :param n_steps: The number of training steps
@@ -200,6 +205,7 @@ class MightyAgent(object):
         :param save_mode_every_n_episodes: Intervall for model checkpointing
         :return:
         """
+
         episodes = 0
         with Progress(
             "[progress.description]{task.description}",
@@ -223,7 +229,7 @@ class MightyAgent(object):
                 "policy": self.policy,
                 "step": self.steps,
                 "hp/lr": self.learning_rate,
-                "hp/pi_epsilon": self._epsilon
+                "hp/pi_epsilon": self._epsilon,
             }
             while self.steps < n_steps:
                 # Remove rollout data from last episode
@@ -239,11 +245,11 @@ class MightyAgent(object):
                 terminated, truncated = False, False
                 episode_reward = 0
                 metrics["episode_reward"] = episode_reward
-                while not (terminated or truncated):
+                while not (terminated or truncated) and self.steps < n_steps:
                     for k in self.meta_modules.keys():
                         self.meta_modules[k].pre_step(metrics)
                     self.adapt_hps(metrics)
-                    print(self.learning_rate)
+
                     a = self.policy(s, metrics=metrics)
                     s_next, r, terminated, truncated, info = self.env.step(a)
                     episode_reward += r
@@ -286,7 +292,7 @@ class MightyAgent(object):
                             transition, metrics
                         )
                         metrics.update(transition_metrics)
-                        if isinstance(transition.extra_info, dict): 
+                        if isinstance(transition.extra_info, dict):
                             transition.extra_info.update(info)
                         else:
                             transition.extra_info = info
@@ -355,8 +361,9 @@ class MightyAgent(object):
 
         # At the end make sure logger writes buffer to file
         self.logger.write()
-        self.writer.flush()
-        self.writer.close()
+        if self.writer is not None:
+            self.writer.flush()
+            self.writer.close()
 
     def get_state(self):
         """Return internal state for checkpointing."""
@@ -369,6 +376,7 @@ class MightyAgent(object):
     def load(self, path):
         """
         Load checkpointed model.
+
         :param path: Model path
         :return:
         """
@@ -378,6 +386,7 @@ class MightyAgent(object):
     def save(self, T):
         """
         Checkpoint model.
+
         :param T: Current timestep
         :return:
         """
@@ -391,6 +400,7 @@ class MightyAgent(object):
     def eval(self, episodes: int, instance_id=None):
         """
         Eval agent on an environment. (Full rollouts)
+
         :param env: The environment to evaluate on
         :param episodes: The number of episodes to evaluate
         :return:
@@ -422,6 +432,9 @@ class MightyAgent(object):
 
         self.logger.write()
         self.logger.set_eval(False)
+
+        if not hasattr(self, "steps"):
+            self.steps = 0
 
         eval_metrics = {
             "step": self.steps,

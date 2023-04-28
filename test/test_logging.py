@@ -2,7 +2,7 @@ import unittest
 
 from mighty.agent.dqn import MightyDQNAgent
 from mighty.utils.logger import Logger
-from .test_agent.mock_environment import MockEnvDiscreteActions
+from .mock_environment import MockEnvDiscreteActions
 
 
 class TestBaseAgent(unittest.TestCase):

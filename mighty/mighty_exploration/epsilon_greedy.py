@@ -6,6 +6,8 @@ from mighty.mighty_exploration.mighty_exploration_policy import MightyExploratio
 
 
 class EpsilonGreedy(MightyExplorationPolicy):
+    """Epsilon Greedy Exploration."""
+
     def __init__(
         self,
         algo,
@@ -16,6 +18,19 @@ class EpsilonGreedy(MightyExplorationPolicy):
         proba_dist=None,
         random_seed=None,
     ):
+        """
+        Initialize Epsilon Greedy.
+
+        :param algo: algorithm name
+        :param func: policy function
+        :param epsilon: exploration epsilon
+        :param env: environment
+        :param observation_preprocessor: preprocessing for observation
+        :param proba_dist: probability distribution
+        :param random_seed: seed for sampling
+        :return:
+        """
+
         super().__init__(algo, func, env=None)
         self.epsilon = epsilon
 
@@ -26,10 +41,12 @@ class EpsilonGreedy(MightyExplorationPolicy):
             A_greedy /= A_greedy.sum(
                 axis=1, keepdims=True
             )  # there may be multiple max's (ties)
-            A_greedy *= 1 - params["epsilon"]  # take away ε from greedy action(s)
-            A_greedy += (
-                params["epsilon"] / self.q.action_space.n
-            )  # spread ε evenly to all actions
+
+            if not is_training:
+                A_greedy *= 1 - params["epsilon"]  # take away ε from greedy action(s)
+                A_greedy += (
+                    params["epsilon"] / self.q.action_space.n
+                )  # spread ε evenly to all actions
 
             dist_params = {"logits": jnp.log(A_greedy + 1e-15)}
             return dist_params, None  # return dummy function-state
@@ -38,12 +55,14 @@ class EpsilonGreedy(MightyExplorationPolicy):
 
     @property
     def params(self):
+        """Get params."""
         return hk.data_structures.to_immutable_dict(
             {"epsilon": self.epsilon, "q": self.q.params}
         )
 
     @params.setter
     def params(self, new_params):
+        """Set params."""
         if jax.tree_util.tree_structure(new_params) != jax.tree_util.tree_structure(
             self.params
         ):
@@ -53,16 +72,20 @@ class EpsilonGreedy(MightyExplorationPolicy):
 
     @property
     def function(self):
+        """Get function."""
         return self._function
 
     @property
     def function_state(self):
+        """Get function state."""
         return self.q.function_state
 
     @property
     def rng(self):
+        """Get RNG."""
         return self.q.rng
 
     @function_state.setter
     def function_state(self, new_function_state):
+        """Set function state."""
         self.q.function_state = new_function_state

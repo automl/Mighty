@@ -22,7 +22,7 @@ from mighty.mighty_exploration import MightyExplorationPolicy
 
 class MightySACAgent(MightyAgent):
     """
-    Mighty SAC agent
+    Mighty SAC agent.
 
     This agent implements the SAC algorithm from Haarnoja et al.'s "Soft Actor-Critic: Off-Policy
     Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor" Paper at ICML 2018.
@@ -73,7 +73,8 @@ class MightySACAgent(MightyAgent):
         td_update_kwargs: Optional[TypeKwargs] = None,
     ):
         """
-        SAC initialization
+        SAC initialization.
+
         Creates all relevant class variables and calls agent-specific init function
 
         :param env: Train environment
@@ -151,11 +152,13 @@ class MightySACAgent(MightyAgent):
 
     @property
     def vf(self):
+        """Q-function."""
         q = self.q1 if jax.random.bernoulli(self.q1.rng) else self.q2
         return q
 
     def policy_function(self, S, is_training):
-        """Policy base function"""
+        """Policy base function."""
+
         seq = hk.Sequential(
             (
                 hk.Linear(self.n_policy_units),
@@ -173,7 +176,8 @@ class MightySACAgent(MightyAgent):
         return {"mu": mu, "logvar": logvar}
 
     def q_function(self, S, A, is_training):
-        """Q-function base for critic"""
+        """Q-function base for critic."""
+
         seq = hk.Sequential(
             (
                 hk.Linear(self.n_critic_units),
@@ -190,7 +194,8 @@ class MightySACAgent(MightyAgent):
         return seq(X)
 
     def _initialize_agent(self):
-        """Initialize algorithm components like policy and critic"""
+        """Initialize algorithm components like policy and critic."""
+
         # main function approximators
         self.policy = self.policy_class("sac", **self.policy_kwargs)
         self.q1 = coax.Q(
@@ -249,10 +254,12 @@ class MightySACAgent(MightyAgent):
 
     def update_agent(self, step):
         """
-        Compute and apply SAC update
+        Compute and apply SAC update.
+
         :param step: Current training step
         :return:
         """
+
         transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
         # flip a coin to decide which of the q-functions to update
         qlearning = (
@@ -274,6 +281,14 @@ class MightySACAgent(MightyAgent):
         return q_metrics
 
     def get_transition_metrics(self, transition, metrics):
+        """
+        Get metrics per transition.
+
+        :param transition: Current transition
+        :param metrics: Current metrics dict
+        :return:
+        """
+
         qf = 1 if jax.random.bernoulli(self.q1.rng) else 2
         qlearning = self.qlearning1 if qf == 1 else self.qlearning2
 
@@ -297,6 +312,7 @@ class MightySACAgent(MightyAgent):
     def get_state(self):
         """
         Return current agent state, e.g. for saving.
+
         For SAC, this consists of:
         - the policy action probability distribution
         - the policy function state
@@ -310,6 +326,7 @@ class MightySACAgent(MightyAgent):
         - the second target network's function state
         :return: Agent state
         """
+
         return (
             self.policy.proba_dist,
             self.policy.function_state,
@@ -325,6 +342,7 @@ class MightySACAgent(MightyAgent):
 
     def set_state(self, state):
         """Set the internal state of the agent, e.g. after loading"""
+
         (
             self.policy.proba_dist,
             self.policy.function_state,

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import numpy as np
 from mighty.agent.ppo import MightyPPOAgent
 from copy import deepcopy
-import gym
+import gymnasium as gym
 
 
 class TestPPO(unittest.TestCase):
@@ -79,7 +79,7 @@ class TestPPO(unittest.TestCase):
         policy_target_previous = deepcopy(self.ppo.pi_old.params)
 
         # self.ppo.update_agent(1)
-        self.ppo.train(10, 1)
+        self.ppo.train(50, 1)
 
         # Check that policy and v have been updated
         self.assertFalse(
