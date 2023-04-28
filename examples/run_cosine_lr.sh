@@ -1,0 +1,1 @@
+python ../mighty/run_mighty.py algorithm=sac env=Pendulum-v1 +algorithm_kwargs.meta_methods=[mighty.mighty_meta.CosineLRSchedule] '+algorithm_kwargs.meta_kwargs=[{initial_lr: 0.01, num_decay_steps: 500000, min_lr: 0.0001}]'

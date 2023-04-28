@@ -176,6 +176,10 @@ class MightyAgent(object):
     def update_agent(self, step):
         """Policy/value function update"""
         raise NotImplementedError
+    
+    def adapt_hps(self, metrics):
+        self.learning_rate = metrics["hp/lr"]
+        self._epsilon = metrics["hp/pi_epsilon"]
 
     def train(
         self,
@@ -218,6 +222,8 @@ class MightyAgent(object):
                 "vf": self.vf,
                 "policy": self.policy,
                 "step": self.steps,
+                "hp/lr": self.learning_rate,
+                "hp/pi_epsilon": self._epsilon
             }
             while self.steps < n_steps:
                 # Remove rollout data from last episode
@@ -236,7 +242,8 @@ class MightyAgent(object):
                 while not (terminated or truncated):
                     for k in self.meta_modules.keys():
                         self.meta_modules[k].pre_step(metrics)
-
+                    self.adapt_hps(metrics)
+                    print(self.learning_rate)
                     a = self.policy(s, metrics=metrics)
                     s_next, r, terminated, truncated, info = self.env.step(a)
                     episode_reward += r
@@ -279,7 +286,10 @@ class MightyAgent(object):
                             transition, metrics
                         )
                         metrics.update(transition_metrics)
-                        transition.extra_info = info
+                        if isinstance(transition.extra_info, dict): 
+                            transition.extra_info.update(info)
+                        else:
+                            transition.extra_info = info
                         self.replay_buffer.add(transition, transition_metrics)
 
                     # update

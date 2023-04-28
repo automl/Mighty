@@ -11,6 +11,7 @@ algorithm_kwargs:
   replay_buffer_kwargs:
     capacity: 1000000  # Maximum size of replay buffer.
     random_seed: ${seed}
+    keep_infos: True
 
   tracer_class:
     _target_: coax.reward_tracing.NStep
