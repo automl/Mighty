@@ -141,7 +141,7 @@ class MightyAgent(object):
                 kwargs = meta_kwargs[i]
             self.meta_modules[meta_class.__name__] = meta_class(**kwargs)
 
-        self.logger.log(f"Meta modules", self.meta_methods)
+        self.logger.log(f"Meta modules", meta_methods)
 
         self.last_state = None
         self.total_steps = 0
@@ -455,5 +455,6 @@ class MightyAgent(object):
             wandb.log(eval_metrics)
 
     def __del__(self):
+        print(dir(self))
         if self.log_wandb:
             wandb.finish()

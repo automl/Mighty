@@ -12,6 +12,7 @@ from mighty.utils.logger import Logger
 
 from omegaconf import DictConfig
 import hydra
+from hydra.utils import get_class
 
 
 @hydra.main("./configs", "base", version_base=None)
@@ -65,14 +66,13 @@ def main(cfg: DictConfig):
         eval_default = 1
 
     for w in cfg.env_wrappers:
-        class_name = w.split(".")[-1]
-        import_from = importlib.import_module(".".join(w.split(".")[:-1]))
         if "wrapper_kwargs" in cfg.keys():
             wkwargs = cfg.wrapper_kwargs
         else:
             wkwargs = {}
-        env = getattr(import_from, class_name)(env, **wkwargs)
-        eval_env = getattr(import_from, class_name)(eval_env, **wkwargs)
+        cls = get_class(w)
+        env = cls(env, **wkwargs)
+        eval_env = cls(eval_env, **wkwargs)
 
     # Setup agent
     agent_class = get_agent_class(cfg.algorithm)
