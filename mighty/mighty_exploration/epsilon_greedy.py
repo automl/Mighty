@@ -35,6 +35,7 @@ class EpsilonGreedy(MightyExplorationPolicy):
         self.epsilon = epsilon
 
         def func(params, state, rng, S, is_training):
+            """Note: is_training actually means 'is_eval' here due to coax."""
             Q_s = self._Q_s(params, state, rng, S)
 
             A_greedy = (Q_s == Q_s.max(axis=1, keepdims=True)).astype(Q_s.dtype)
