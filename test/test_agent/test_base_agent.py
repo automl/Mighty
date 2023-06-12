@@ -30,9 +30,11 @@ class TestBaseAgent(unittest.TestCase):
         )
 
     def testEval(self):
+        """Checks if anything breaks in evaluation."""
         self.agent.eval(10)
 
     def testTrain(self):
+        """Checks if anything breaks in training."""
         self.agent.train(n_steps=2, n_episodes_eval=10)
         self.assertTrue(len(self.agent.replay_buffer) > 0)
 

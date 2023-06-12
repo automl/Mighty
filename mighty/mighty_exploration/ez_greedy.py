@@ -14,6 +14,7 @@ class EZGreedy(MightyExplorationPolicy):
         algo,
         func,
         epsilon=0.1,
+        zipf_param=2,
         env=None,
         observation_preprocessor=None,
         proba_dist=None,
@@ -25,6 +26,7 @@ class EZGreedy(MightyExplorationPolicy):
         :param algo: algorithm name
         :param func: policy function
         :param epsilon: exploration epsilon
+        :param zipf_param: parameter for zipf action length distribution 
         :param env: environment
         :param observation_preprocessor: preprocessing for observation
         :param proba_dist: probability distribution
@@ -33,6 +35,8 @@ class EZGreedy(MightyExplorationPolicy):
         """
 
         self.epsilon = epsilon
+        self.zipf_param = zipf_param
+        self.skip = max(1, np.random.default_rng().zipf(self.zipf_param))
         self.skip = max(1, np.random.default_rng().zipf(2))
         self.skipped = 0
         self.action = None

@@ -27,6 +27,7 @@ class MightyDQNAgent(MightyAgent):
     DDQN was proposed by van Hasselt et al. in 2016's "Deep Reinforcement Learning with Double Q-learning".
     Like all Mighty agents, it's supposed to be called via the train method.
     The Q-function architecture can be altered by overwriting the q_function with a suitable haiku/coax architecture.
+    By default, this agent uses an epsilon-greedy policy.
     """
 
     def __init__(

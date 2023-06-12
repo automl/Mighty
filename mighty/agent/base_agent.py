@@ -68,6 +68,8 @@ class MightyAgent(object):
         :param batch_size: Batch size for training
         :param render_progress: Render progress
         :param log_tensorboard: Log to tensorboard as well as to file
+        :param log_wandb: Whether to log to wandb
+        :param wandb_kwargs: Kwargs for wandb.init, e.g. including the project name
         :param replay_buffer_class: Replay buffer class from coax replay buffers
         :param replay_buffer_kwargs: Arguments for the replay buffer
         :param tracer_class: Reward tracing class from coax tracers
@@ -110,18 +112,6 @@ class MightyAgent(object):
         self.tracer_class = tracer_class
         self.tracer_kwargs = tracer_kwargs
 
-        # Create meta modules
-        self.meta_modules = {}
-        for i, m in enumerate(meta_methods):
-            meta_class = retrieve_class(cls=m, default_cls=None)
-            assert (
-                meta_class is not None
-            ), f"Class {m} not found, did you specify the correct loading path?"
-            kwargs = {}
-            if len(meta_kwargs) > i:
-                kwargs = meta_kwargs[i]
-            self.meta_modules[meta_class.__name__] = meta_class(**kwargs)
-
         if logger is not None:
             output_dir = logger.log_dir
         else:
@@ -138,6 +128,20 @@ class MightyAgent(object):
         self.output_dir = output_dir
         if self.output_dir is not None:
             self.model_dir = os.path.join(self.output_dir, "models")
+
+        # Create meta modules
+        self.meta_modules = {}
+        for i, m in enumerate(meta_methods):
+            meta_class = retrieve_class(cls=m, default_cls=None)
+            assert (
+                meta_class is not None
+            ), f"Class {m} not found, did you specify the correct loading path?"
+            kwargs = {}
+            if len(meta_kwargs) > i:
+                kwargs = meta_kwargs[i]
+            self.meta_modules[meta_class.__name__] = meta_class(**kwargs)
+
+        self.logger.log(f"Meta modules", self.meta_methods)
 
         self.last_state = None
         self.total_steps = 0
@@ -306,7 +310,8 @@ class MightyAgent(object):
                         for k in self.meta_modules.keys():
                             self.meta_modules[k].pre_step(metrics)
 
-                        metrics.update(self.update_agent(self.steps))
+                        agent_update_metrics = self.update_agent(self.steps)
+                        metrics.update(agent_update_metrics)
                         metrics = {k: np.array(v) for k, v in metrics.items()}
                         metrics["step"] = self.steps
 
@@ -448,3 +453,7 @@ class MightyAgent(object):
 
         if self.log_wandb:
             wandb.log(eval_metrics)
+
+    def __del__(self):
+        if self.log_wandb:
+            wandb.finish()

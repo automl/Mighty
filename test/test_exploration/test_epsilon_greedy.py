@@ -25,6 +25,7 @@ class TestBaseAgent(unittest.TestCase):
         self.assertFalse(self.dqn.qlearning is None)
 
     def test_eval(self) -> None:
+        """Test that epsilon is 0 in eval mode."""
         state, _ = self.env.reset()
 
         def get_zero(arg, arg2, another_arg, more_arg, last_arg):
@@ -35,6 +36,7 @@ class TestBaseAgent(unittest.TestCase):
         assert all(x == actions[0] for x in actions)
 
     def test_sampling(self) -> None:
+        """Make sure that actions are changed when using positive epsilon."""
         state, _ = self.env.reset()
 
         def get_zero(arg, arg2, another_arg, more_arg, last_arg):

@@ -23,6 +23,7 @@ class MockEnvDiscreteActions:
 
 
 class MockEnvContinuousActions:
+    #FIXME: what do I do?
     def __init__(self):
         self.action_space = Box(low=np.array([-1, -1]), high=np.array([1, 1]))
         self.observation_space = Box(

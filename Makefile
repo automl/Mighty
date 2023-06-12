@@ -1,7 +1,7 @@
 
 # NOTE: Used on linux, limited support outside of Linux
 #
-# A simple makefile to help with small tasks related to development of CARL
+# A simple makefile to help with small tasks related to development of Mighty
 # These have been configured to only really run short tasks. Longer form tasks
 # are usually completed in github actions.
 

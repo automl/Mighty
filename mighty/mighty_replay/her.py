@@ -70,7 +70,7 @@ class HER(MightyReplay):
         :param gamma: discount factor
         :param random_seed: seed for sampling
         :param her_ratio: ratio of sampled to real goals
-        :param reward_function: string name of reward function
+        :param reward_function: string name (package.module.func_name) of reward function
         :param alternate_goal_function: function for computing alternate goals
         :return:
         """
