@@ -141,7 +141,7 @@ class MightyDQNAgent(MightyAgent):
         )
 
     @property
-    def vf(self):
+    def value_function(self):
         """Q-function."""
 
         return self.q
@@ -215,7 +215,7 @@ class MightyDQNAgent(MightyAgent):
             metrics["rollout_errors"], self.qlearning.td_error(transition)
         )
         metrics["rollout_values"] = np.append(
-            metrics["rollout_values"], self.vf(transition.S)
+            metrics["rollout_values"], self.value_function(transition.S)
         )
         return metrics
 

@@ -125,7 +125,7 @@ class MightyPPOAgent(MightyAgent):
         )
 
     @property
-    def vf(self):
+    def value_function(self):
         """Value function."""
         return self.v
 
@@ -160,7 +160,7 @@ class MightyPPOAgent(MightyAgent):
         )
         return {"mu": mu(S), "logvar": logvar(S)}
 
-    def value_function(self, S, is_training):
+    def vf(self, S, is_training):
         """value base."""
 
         seq = hk.Sequential(
@@ -181,7 +181,7 @@ class MightyPPOAgent(MightyAgent):
         """Initialize PPO specific components."""
 
         self.policy = self.policy_class("ppo", **self.policy_kwargs)
-        self.v = coax.V(self.value_function, self.env)
+        self.v = coax.V(self.vf, self.env)
 
         # targets
         self.pi_old = self.policy.copy()
@@ -242,7 +242,7 @@ class MightyPPOAgent(MightyAgent):
             metrics["rollout_errors"], self.td_update.td_error(transition)
         )
         metrics["rollout_values"] = np.append(
-            metrics["rollout_values"], self.vf(transition.S)
+            metrics["rollout_values"], self.value_function(transition.S)
         )
         _, logprobs = self.policy(transition.S, return_logp=True)
         metrics["rollout_logits"] = np.append(metrics["rollout_logits"], logprobs)

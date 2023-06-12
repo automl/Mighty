@@ -151,7 +151,7 @@ class MightySACAgent(MightyAgent):
         )
 
     @property
-    def vf(self):
+    def value_function(self):
         """Q-function."""
         q = self.q1 if jax.random.bernoulli(self.q1.rng) else self.q2
         return q
@@ -302,7 +302,7 @@ class MightySACAgent(MightyAgent):
             metrics["rollout_errors"], qlearning.td_error(transition)
         )
         metrics["rollout_values"] = np.append(
-            metrics["rollout_values"], self.vf(transition.S, transition.A)
+            metrics["rollout_values"], self.value_function(transition.S, transition.A)
         )
         _, logprobs = self.policy(transition.S, return_logp=True)
         metrics["rollout_logits"] = np.append(metrics["rollout_logits"], logprobs)

@@ -229,7 +229,7 @@ class MightyAgent(object):
             log_reward_buffer = []
             metrics = {
                 "env": self.env,
-                "vf": self.vf,
+                "vf": self.value_function,
                 "policy": self.policy,
                 "step": self.steps,
                 "hp/lr": self.learning_rate,
@@ -324,7 +324,7 @@ class MightyAgent(object):
                             wandb.log(metrics)
 
                         metrics["env"] = self.env
-                        metrics["vf"] = self.vf
+                        metrics["vf"] = self.value_function
                         metrics["policy"] = self.policy
                         for k in self.meta_modules.keys():
                             self.meta_modules[k].pre_step(metrics)
