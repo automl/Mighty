@@ -39,8 +39,20 @@ def main(cfg: DictConfig):
         from dacbench import benchmarks
 
         bench = getattr(benchmarks, cfg.env)()
-        env = bench.get_environment()
-        eval_env = bench.get_environment()
+        
+        use_benchmark = False
+        if "benchmark" in cfg.env_kwargs.keys():
+            use_benchmark = cfg.env_kwargs["benchmark"] 
+            
+        if use_benchmark:
+            del cfg.env_kwargs["benchmark"]
+            env = bench.get_benchmark(**cfg.env_kwargs)
+            eval_env = bench.get_benchmark(**cfg.env_kwargs)
+        else:
+            for k in cfg.env_kwargs.keys():
+                bench.config[k] = cfg.env_kwargs[k]
+            env = bench.get_environment()
+            eval_env = bench.get_environment()
         eval_default = len(eval_env.instance_set.keys())
     elif cfg.env.startswith("CARL"):
         import carl
@@ -61,8 +73,8 @@ def main(cfg: DictConfig):
     else:
         import gymnasium as gym
 
-        env = gym.make(cfg.env)
-        eval_env = gym.make(cfg.env)
+        env = gym.make(cfg.env, **cfg.env_kwargs)
+        eval_env = gym.make(cfg.env, **cfg.env_kwargs)
         eval_default = 1
 
     for w in cfg.env_wrappers:

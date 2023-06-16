@@ -15,23 +15,11 @@ The code has been tested with python 3.9.
 First create a clean python environment:
 
 ```bash
-conda create --name mighty python=3.9
+conda create --name mighty python=3.10
 conda activate mighty
 ```
 
-<details>
-<summary> :warning: Additional steps for mac users to get all dependencies running :warning:</summary>
-
-You should first install jaxlib and jax via (as suggested in [this thread](https://github.com/google/jax/issues/5501#issuecomment-1032891169))
-```bash
-conda install -c conda-forge jaxlib
-conda install -c conda-forge jax
-```
-To install box2d-py you also need swig installed, which you can do via
-```bash
-conda install swig
-```
-</details>
+:warning: **Due to the dependency on jaxlib/jax, MacOS is currently not supported.** :warning:
 
 
 
@@ -50,7 +38,7 @@ python mighty/run_mighty.py --help
 
 An example for running the PPO agent on the Pendulum gym environment for 1000 steps looks like this:
 ```bash
-python mihgty/run_mighty.py 'num_steps=1000' 'algorithm=ppo' 'env=Pendulum-v1'
+python mighty/run_mighty.py 'num_steps=1000' 'algorithm=ppo' 'env=Pendulum-v1'
 ```
 
 ## Learning a Configuration Policy via DAC
@@ -60,7 +48,7 @@ We recommend following the instructions in the [DACBench repo](https://github.co
 
 Afterwards, select the benchmark you want to run, for example the SigmoidBenchmark, and providing it as the "env" keyword: 
 ```bash
-python mighty/run_mighty.py 'algorithm=dqn' 'env=SigmoidBenchmark'
+python mighty/run_mighty.py 'algorithm=dqn' 'env=SigmoidBenchmark' 'env_wrappers=[dacbench.wrappers.MultiDiscreteActionWrapper]'
 ```
 
 ## Train your Agent on a CARL Environment

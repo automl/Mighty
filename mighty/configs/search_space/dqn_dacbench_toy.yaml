@@ -2,9 +2,9 @@ hyperparameters:
   algorithm_kwargs.learning_rate:
     type: uniform_float
     lower: 1e-6
-    upper: 1e-3
+    upper: 1e-2
     log: true
-    default_value: 1e-4
+    default_value: 1e-2
   algorithm_kwargs.epsilon:
     type: uniform_float
     lower: 0.01
@@ -13,25 +13,19 @@ hyperparameters:
   algorithm_kwargs.batch_size:
     type: categorical
     choices: [32, 64, 128, 256]
-    default_value: 128
-  algorithm_kwargs.n_policy_units:
-    type: categorical
-    choices: [10, 25, 50]
-    default_value: 25
-  algorithm_kwargs.n_critic_units:
+    default_value: 32
+  algorithm_kwargs.n_units:
     type: categorical
     choices: [10, 25, 50, 75]
     default_value: 25
   algorithm_kwargs.soft_update_weight:
     type: uniform_float
-    lower: 0.01
+    lower: 0.0001
     upper: 1.0
-    log: false
-    default_value: .25
-  algorithm_kwargs.clip:
-    type: uniform_float
-    lower: 0.2
-    upper: 0.4
-    log: false
-    default_value: 0.2
+    log: true
+    default_value: 1e-3
+  algorithm_kwargs.td_update_class:
+    type: categorical
+    choices: [q, double, soft, clipped, softclipped]
+    defualt_value: double
 

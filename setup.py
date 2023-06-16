@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 with open("requirements.txt") as fh:
@@ -10,6 +9,7 @@ setup(
     python_requires=">=3.9",
     install_requires=requirements,
     package_data={"mighty": ["requirements.txt"]},
+    packages=find_packages(exclude=['tests', 'examples', 'docs', 'checkpointing_test']),
     author="TODO",
     version="0.0.1",
     test_suite="nose.collector",
