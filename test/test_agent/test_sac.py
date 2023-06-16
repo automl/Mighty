@@ -3,15 +3,15 @@ from unittest.mock import MagicMock
 
 import numpy as np
 from mighty.agent.sac import MightySACAgent
-from .mock_environment import MockEnvDiscreteActions
 
 from copy import deepcopy
-import gym
+import gymnasium as gym
 
 
 class TestSAC(unittest.TestCase):
     def setUp(self) -> None:
         env = gym.make("Pendulum-v1")
+        buffer_kwargs = {"capacity": 1000000, "random_seed": 0, "keep_infos": True}
         self.sac = MightySACAgent(
             env=env,
             eval_env=env,
@@ -19,6 +19,7 @@ class TestSAC(unittest.TestCase):
             batch_size=4,
             logger=MagicMock(),
             log_tensorboard=False,
+            replay_buffer_kwargs=buffer_kwargs,
         )
         self.assertFalse(self.sac.q1 is None)
         self.assertFalse(self.sac.q1_target is None)
@@ -92,7 +93,7 @@ class TestSAC(unittest.TestCase):
         target2_previous = deepcopy(self.sac.q2_target.params)
         policy_previous = deepcopy(self.sac.policy.params)
 
-        self.sac.train(10, 1)
+        self.sac.train(100, 1)
 
         # Check that policy and v have been updated
         self.assertFalse(

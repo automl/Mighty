@@ -1,32 +1,29 @@
 import jax
 from jax import jit
 import jax.numpy as jnp
-import numpy as np
 import haiku as hk
 from mighty.mighty_exploration.mighty_exploration_policy import MightyExplorationPolicy
 
 
-class EZGreedy(MightyExplorationPolicy):
-    """EZGreedy exploration."""
+class EpsilonGreedy(MightyExplorationPolicy):
+    """Epsilon Greedy Exploration."""
 
     def __init__(
         self,
         algo,
         func,
         epsilon=0.1,
-        zipf_param=2,
         env=None,
         observation_preprocessor=None,
         proba_dist=None,
         random_seed=None,
     ):
         """
-        Initialize EZGreedy.
+        Initialize Epsilon Greedy.
 
         :param algo: algorithm name
         :param func: policy function
         :param epsilon: exploration epsilon
-        :param zipf_param: parameter for zipf action length distribution 
         :param env: environment
         :param observation_preprocessor: preprocessing for observation
         :param proba_dist: probability distribution
@@ -34,21 +31,8 @@ class EZGreedy(MightyExplorationPolicy):
         :return:
         """
 
+        super().__init__(algo, func, env=None)
         self.epsilon = epsilon
-        self.zipf_param = zipf_param
-        self.skip = max(1, np.random.default_rng().zipf(self.zipf_param))
-        self.skip = max(1, np.random.default_rng().zipf(2))
-        self.skipped = 0
-        self.action = None
-
-        super().__init__(
-            algo,
-            func,
-            env=env,
-            observation_preprocessor=observation_preprocessor,
-            proba_dist=proba_dist,
-            random_seed=random_seed,
-        )
 
         def func(params, state, rng, S, is_training):
             """Note: is_training actually means 'is_eval' here due to coax."""
@@ -70,29 +54,11 @@ class EZGreedy(MightyExplorationPolicy):
 
         self._function = jit(func, static_argnums=(4,))
 
-    def explore(self, s, return_logp=False, metrics=None):
-        """
-        Explore.
-
-        :param s: state
-        :param return_logp: return logprobs
-        :param metrics: not used
-        :return: action or (action, logprobs)
-        """
-
-        if self.skipped >= self.skip or self.action is None:
-            self.action, self.logprobs = self.sample_action(s)
-            self.skip = max(1, np.random.default_rng().zipf(2))
-            self.skipped = 0
-        else:
-            self.skipped += 1
-        return (self.action, self.logprobs) if return_logp else self.action
-
     @property
     def params(self):
         """Get params."""
         return hk.data_structures.to_immutable_dict(
-            {"epsilon": self.epsilon, "q": self.q.params, "skip": self.skip}
+            {"epsilon": self.epsilon, "q": self.q.params}
         )
 
     @params.setter
@@ -103,7 +69,6 @@ class EZGreedy(MightyExplorationPolicy):
         ):
             raise TypeError("new params must have the same structure as old params")
         self.epsilon = new_params["epsilon"]
-        self.skip = new_params["skip"]
         self.q.params = new_params["q"]
 
     @property

@@ -1,11 +1,7 @@
 import json
-import os
 from abc import ABCMeta, abstractmethod
-from collections import defaultdict, ChainMap
-from datetime import datetime
 from functools import reduce
 from itertools import chain
-from numbers import Number
 from pathlib import Path
 from typing import Union, Dict, Any, Tuple, List
 import logging
@@ -17,17 +13,25 @@ import numpy as np
 import pandas as pd
 
 from typing import Callable, Iterable
-from mighty.env.env_handling import MIGHTYENV
 
 import wandb
 from tensorboard_logger import configure, log_value
 
 
 def get_standard_logger(
-        identifier: str,
-        level: int = logging.INFO,
-        stream_format: str = "%(asctime)s|%(levelname)s|%(name)s|%(message)s",
+    identifier: str,
+    level: int = logging.INFO,
+    stream_format: str = "%(asctime)s|%(levelname)s|%(name)s|%(message)s",
 ):
+    """
+    Get logger.
+
+    :param identifier: logger name
+    :param level: logger level
+    :param stream_format: save file naming format
+    :return: logger
+    """
+
     logger = logging.getLogger(identifier)
     logger.setLevel(logging.DEBUG)
 
@@ -48,14 +52,12 @@ def get_standard_logger(
 
 def load_logs(log_file: Path) -> List[Dict]:
     """
-    Loads the logs from a jsonl written by any logger.
-    The result is the list of dicts in the format:
-    {'instance': 0, 'episode': 0, 'step': 1, 'total_step': 1,
-    'example_log_val':  {'values': [val1, val2, ... valn],'times: [time1, time2, ..., timen],},...}
+    Load logs.
 
-    :param log_file: The path to the log file as pathlib.Path
-    :return: [Dict, ...]
+    :param log_file: file to load
+    :return: logs
     """
+
     with open(log_file, "r") as log_file:
         logs = list(map(json.loads, log_file))
 
@@ -63,24 +65,25 @@ def load_logs(log_file: Path) -> List[Dict]:
 
 
 def split(predicate: Callable, iterable: Iterable) -> Tuple[List, List]:
-     """
-     Splits the iterable into two list depending on the result of predicate.
+    """
+    Splits the iterable into two list depending on the result of predicate.
 
-     :param predicate: A function taking an element of the iterable and return Ture or False
-     :param iterable: Iterable
-     :return: (positives, negatives)
-     """
-     positives, negatives = [], []
+    :param predicate: A function taking an element of the iterable and return Ture or False
+    :param iterable: Iterable
+    :return: (positives, negatives)
+    """
+    positives, negatives = [], []
 
-     for item in iterable:
-         (positives if predicate(item) else negatives).append(item)
+    for item in iterable:
+        (positives if predicate(item) else negatives).append(item)
 
-     return positives, negatives
+    return positives, negatives
 
 
 def flatten_log_entry(log_entry: Dict) -> List[Dict]:
     """
-    Transforms a log entry of format like
+    Transforms a log entry of format like:
+
     {'step': 0, 'episode': 2,
     'some_value': {'values' : [34, 45], 'times':['28-12-20 16:20:53', '28-12-20 16:21:30'],}}
     into
@@ -121,10 +124,11 @@ def list_to_tuple(list_: List) -> Tuple:
 
 
 def log2dataframe(
-        logs: List[dict], wide: bool = False, drop_columns: List[str] = ["time"]
+    logs: List[dict], wide: bool = False, drop_columns: List[str] = ["time"]
 ) -> pd.DataFrame:
     """
     Converts a list of log entries to a pandas dataframe.
+
     Usually used in combination with load_dataframe.
 
     :param logs: List of log entries
@@ -170,6 +174,7 @@ def log2dataframe(
 class AbstractLogger(metaclass=ABCMeta):
     """
     Logger interface.
+
     The logger classes provide a way of writing structured logs as jsonl files and also help to track information like
     current episode, step, time ...
     In the jsonl log file each row corresponds to a step.
@@ -181,13 +186,15 @@ class AbstractLogger(metaclass=ABCMeta):
     }
 
     def __init__(
-            self,
-            experiment_name: str,
-            output_path: str,
-            step_write_frequency: int = None,
-            episode_write_frequency: int = 1,
+        self,
+        experiment_name: str,
+        output_path: str,
+        step_write_frequency: int = None,
+        episode_write_frequency: int = 1,
     ):
         """
+        Initialize.
+
         :param experiment_name: Name of the folder to store the result in
         :param output_path: Path under which the experiment folder is created is pathlib.Path
         :param step_write_frequency: number of steps after which the loggers writes to file. If None only the data is only written to file if  write is called, if triggered by episode_write_frequency or on close
@@ -195,16 +202,17 @@ class AbstractLogger(metaclass=ABCMeta):
         """
         self.experiment_name = experiment_name
         self.output_path = output_path
-        self.log_dir = self._init_logging_dir(Path(self.output_path) / self.experiment_name)
+        self.log_dir = self._init_logging_dir(
+            Path(self.output_path) / self.experiment_name
+        )
         self.step_write_frequency = step_write_frequency
         self.episode_write_frequency = episode_write_frequency
         self.additional_info = {"instance": None}
 
     @staticmethod
     def _pretty_valid_types() -> str:
-        """
-        Returns a string pretty string representation of the types that can be logged as values
-        """
+        """Returns a string pretty string representation of the types that can be logged as values."""
+
         valid_types = chain(
             AbstractLogger.valid_types["recursive"],
             AbstractLogger.valid_types["primitive"],
@@ -214,11 +222,12 @@ class AbstractLogger(metaclass=ABCMeta):
     @staticmethod
     def _init_logging_dir(log_dir: Path) -> Path:
         """
-         Prepares the logging directory
+        Prepares the logging directory.
 
         :param log_dir: Parameters
         :return:
         """
+
         log_dir.mkdir(parents=True, exist_ok=True)
         return log_dir
 
@@ -234,7 +243,7 @@ class AbstractLogger(metaclass=ABCMeta):
             return True
 
         elif any(isinstance(value, type) for type in self.valid_types["recursive"]):
-            value = value.vlaues() if isinstance(value, dict) else value
+            value = value.values() if isinstance(value, dict) else value
             return all(self.is_of_valid_type(sub_value) for sub_value in value)
 
         else:
@@ -244,35 +253,44 @@ class AbstractLogger(metaclass=ABCMeta):
     def close(self) -> None:
         """
         Makes sure, that all remaining entries in the are written to file and the file is closed.
+
         :return:
         """
+
         pass
 
     @abstractmethod
     def next_step(self) -> None:
         """
         Call at the end of the step.
+
         Updates the internal state and dumps the information of the last step into a json
+
         :return:
         """
+
         pass
 
     @abstractmethod
     def next_episode(self) -> None:
         """
-        Call at the end of episode.
-        See next_step
+        Call at the end of episode. See next_step.
+
         :return:
         """
+
         pass
 
     @abstractmethod
     def write(self) -> None:
         """
         Writes buffered logs to file.
+
         Invoke manually if you want to load logs during a run.
+
         :return:
         """
+
         pass
 
     @abstractmethod
@@ -284,6 +302,7 @@ class AbstractLogger(metaclass=ABCMeta):
         :param value: the value must of of a type that is json serializable. Currently only AbstractLogger._pretty_valid_types() and recursive types of those are supported.
         :return:
         """
+
         pass
 
     @abstractmethod
@@ -294,12 +313,14 @@ class AbstractLogger(metaclass=ABCMeta):
         :param data: a dict with key-value so that each value is a valid value for log
         :return:
         """
+
         pass
 
 
 class Logger(AbstractLogger, logging.Logger):
     """
     A logger that manages the creation of the module loggers.
+
     To get a ModuleLogger for you module (e.g. wrapper) call module_logger = Logger(...).add_module("my_wrapper").
     From now on  module_logger.log(...) or logger.log(..., module="my_wrapper") can be used to log.
     The logger module takes care of updating information like episode and step in the subloggers. To indicate to the loggers
@@ -307,27 +328,33 @@ class Logger(AbstractLogger, logging.Logger):
     """
 
     def __init__(
-            self,
-            experiment_name: str,
-            output_path: str,
-            step_write_frequency: int = None,
-            episode_write_frequency: int = 1,
-            log_to_wandb: str = None,
-            log_to_tensorboad: str = None,
-            hydra_config=None,
-            cli_log_lvl=logging.NOTSET
+        self,
+        experiment_name: str,
+        output_path: str,
+        step_write_frequency: int = None,
+        episode_write_frequency: int = 1,
+        log_to_wandb: str = None,
+        log_to_tensorboad: str = None,
+        hydra_config=None,
+        cli_log_lvl=logging.NOTSET,
     ) -> None:
         """
+        Init Logger.
+
         :param experiment_name: Name of the folder to store the result in
         :param output_path: Path under which the experiment folder is created as pathlib.Path
         :param step_write_frequency: number of steps after which the loggers writes to file. If None only the data is only written to file if  write is called, if triggered by episode_write_frequency or on close
         :param episode_write_frequency: see step_write_frequency
         :return:
         """
-        logging.Logger.__init__(self, name='MightyLogger')
+        logging.Logger.__init__(self, name="MightyLogger")
         self.addHandler(RichHandler(level=cli_log_lvl))
-        AbstractLogger.__init__(self,
-            experiment_name, output_path, step_write_frequency, episode_write_frequency
+        AbstractLogger.__init__(
+            self,
+            experiment_name,
+            output_path,
+            step_write_frequency,
+            episode_write_frequency,
         )
         self.log_to_wandb = log_to_wandb
         if log_to_wandb:
@@ -339,8 +366,8 @@ class Logger(AbstractLogger, logging.Logger):
 
         self.instance = None
 
-        self.reward_log_file = open(self.log_dir / f"rewards.jsonl", "w")
-        self.eval_log_file = open(self.log_dir / f"eval.jsonl", "w")
+        self.reward_log_file = open(self.log_dir / "rewards.jsonl", "w")
+        self.eval_log_file = open(self.log_dir / "eval.jsonl", "w")
         self.log_file = self.reward_log_file
         self.eval = False
 
@@ -351,6 +378,8 @@ class Logger(AbstractLogger, logging.Logger):
         self.current_step = {}
 
     def set_eval(self, eval):
+        """Switch to eval mode."""
+
         if eval:
             self.log_file = self.eval_log_file
             self.eval = True
@@ -360,9 +389,12 @@ class Logger(AbstractLogger, logging.Logger):
 
     def get_logfile(self) -> Path:
         """
+        Return logfile.
+
         :param Path: the path to the log file of this logger (as pathlib.Path)
         :return:
         """
+
         return Path(self.log_file.name)
 
     @staticmethod
@@ -373,6 +405,7 @@ class Logger(AbstractLogger, logging.Logger):
         :param object:
         :return:
         """
+
         if isinstance(object, np.ndarray):
             return object.tolist()
         elif isinstance(object, np.number):
@@ -383,17 +416,23 @@ class Logger(AbstractLogger, logging.Logger):
     def close(self):
         """
         Makes sure, that all remaining entries (from all sublogger) are written to files and the files are closed.
+
         :return:
         """
+
         for log_file in [self.reward_log_file, self.eval_log_file]:
             if not log_file.closed:
                 self.write()
                 log_file.close()
 
     def __del__(self):
+        """Delete."""
+
         self.close()
 
     def __end_step(self):
+        """Cleanup after step."""
+
         if self.current_step:
             self.current_step["step"] = self.step
             self.current_step["episode"] = self.episode
@@ -407,13 +446,16 @@ class Logger(AbstractLogger, logging.Logger):
     def next_step(self):
         """
         Call at the end of the step.
-        Updates the internal state of all subloggers and dumps the information of the last step into a json
+
+        Updates the internal state of all subloggers and dumps the information of the last step into a json.
+
         :return:
         """
+
         self.__end_step()
         if (
-                self.step_write_frequency is not None
-                and self.total_steps % self.step_write_frequency == 0
+            self.step_write_frequency is not None
+            and self.total_steps % self.step_write_frequency == 0
         ):
             self.write()
 
@@ -423,25 +465,32 @@ class Logger(AbstractLogger, logging.Logger):
 
     def next_episode(self, instance):
         """
-        Call at the end of episode.
-        See next_step
+        Call at the end of episode. See next_step.
+
         :return:
         """
+
         self.__end_step()
         self.step = 0
         self.instance = instance
         if (
-                self.episode_write_frequency is not None
-                and self.episode % self.episode_write_frequency == 0
+            self.episode_write_frequency is not None
+            and self.episode % self.episode_write_frequency == 0
         ):
             self.write()
         if not self.eval:
             self.episode += 1
 
         if self.log_to_wandb:
-            self.run.log({'instance': instance}, step=self.total_steps)
+            self.run.log({"instance": instance}, step=self.total_steps)
 
     def __buffer_to_file(self):
+        """
+        Write buffer to file.
+
+        :return:
+        """
+
         if len(self.buffer) > 0:
             self.log_file.write("\n".join(self.buffer))
             self.log_file.write("\n")
@@ -449,20 +498,28 @@ class Logger(AbstractLogger, logging.Logger):
             self.log_file.flush()
 
     def reset_episode(self, instance):
+        """
+        Reset.
+
+        :param instance: next instance
+        :return:
+        """
+
         self.instance = instance
         self.__end_step()
         self.episode = 0
         self.step = 0
 
         if self.log_to_wandb is not None:
-            self.run.log({'instance': instance}, step=self.total_step)
+            self.run.log({"instance": instance}, step=self.total_step)
 
     def write(self):
         """
-        Writes buffered logs to file.
-        Invoke manually if you want to load logs during a run.
+        Writes buffered logs to file. Invoke manually if you want to load logs during a run.
+
         :return:
         """
+
         self.__end_step()
         self.__buffer_to_file()
 
@@ -475,7 +532,7 @@ class Logger(AbstractLogger, logging.Logger):
         self.current_step[key] = value
 
     def log(
-            self, key: str, value: Union[Dict, List, Tuple, str, int, float, bool]
+        self, key: str, value: Union[Dict, List, Tuple, str, int, float, bool]
     ) -> None:
         """
         Writes value to list of values and save the current time for key
@@ -484,6 +541,7 @@ class Logger(AbstractLogger, logging.Logger):
         :param value: the value must of of a type that is json serializable. Currently only AbstractLogger._pretty_valid_types() and recursive types of those are supported.
         :return:
         """
+
         self.__log(key, value)
         if self.log_to_wandb:
             self.run.log({key: value}, step=self.total_steps)
@@ -502,6 +560,7 @@ class Logger(AbstractLogger, logging.Logger):
         :param data: a dict with key-value so that each value is a valid value for log
         :return:
         """
+
         for key, value in data.items():
             self.__log(key, value)
 

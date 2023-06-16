@@ -1,5 +1,5 @@
 import numpy as np
-from gym.spaces import Discrete, Box
+from gymnasium.spaces import Discrete, Box
 
 
 class MockEnvDiscreteActions:
@@ -15,14 +15,15 @@ class MockEnvDiscreteActions:
 
     def step(self, action):
         self.__count += 1
-        return np.array([self.__count, 0]), 1, self.__count >= 10, None
+        return np.array([self.__count, 0]), 1, False, self.__count >= 10, {}
 
     def reset(self):
         self.__count = 0
-        return np.array([self.__count, 0])
+        return np.array([self.__count, 0]), {}
 
 
 class MockEnvContinuousActions:
+    #FIXME: what do I do?
     def __init__(self):
         self.action_space = Box(low=np.array([-1, -1]), high=np.array([1, 1]))
         self.observation_space = Box(
@@ -35,8 +36,8 @@ class MockEnvContinuousActions:
 
     def step(self, action):
         self.__count += 1
-        return np.array([self.__count, 0]), 1, self.__count >= 10, None
+        return np.array([self.__count, 0]), 1, False, self.__count >= 10, {}
 
     def reset(self):
         self.__count = 0
-        return np.array([self.__count, 0])
+        return np.array([self.__count, 0]), {}

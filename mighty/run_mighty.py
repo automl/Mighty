@@ -1,4 +1,5 @@
 import warnings
+
 warnings.filterwarnings("ignore")
 # warnings.filterwarnings("ignore", category=DeprecationWarning)
 # warnings.filterwarnings("ignore", category=FutureWarning)
@@ -11,6 +12,7 @@ from mighty.utils.logger import Logger
 
 from omegaconf import DictConfig
 import hydra
+from hydra.utils import get_class
 
 
 @hydra.main("./configs", "base", version_base=None)
@@ -18,7 +20,7 @@ def main(cfg: DictConfig):
     """Parse config and run Mighty agent"""
     seed = cfg.seed
 
-    #Initialize Logger
+    # Initialize Logger
     logger = Logger(
         experiment_name=f"{cfg.experiment_name}_{seed}",
         output_path=cfg.output_dir,
@@ -27,14 +29,15 @@ def main(cfg: DictConfig):
         log_to_wandb=cfg.wandb_project,
         log_to_tensorboad=cfg.tensorboard_file,
         hydra_config=cfg,
-        cli_log_lvl=logging.INFO
+        cli_log_lvl=logging.INFO,
     )
-    logger.info(f'Output will be written to {logger.log_dir}')
+    logger.info(f"Output will be written to {logger.log_dir}")
 
     # Check whether env is from DACBench, CARL or gym
     # Make train and eval env
     if cfg.env.endswith("Benchmark"):
         from dacbench import benchmarks
+
         bench = getattr(benchmarks, cfg.env)()
         
         use_benchmark = False
@@ -75,10 +78,13 @@ def main(cfg: DictConfig):
         eval_default = 1
 
     for w in cfg.env_wrappers:
-        class_name = w.split('.')[-1]
-        import_from = importlib.import_module('.'.join(w.split('.')[:-1]))
-        env = getattr(import_from, class_name)(env)
-        eval_env = getattr(import_from, class_name)(eval_env)
+        if "wrapper_kwargs" in cfg.keys():
+            wkwargs = cfg.wrapper_kwargs
+        else:
+            wkwargs = {}
+        cls = get_class(w)
+        env = cls(env, **wkwargs)
+        eval_env = cls(eval_env, **wkwargs)
 
     # Setup agent
     agent_class = get_agent_class(cfg.algorithm)
