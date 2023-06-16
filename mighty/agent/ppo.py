@@ -35,7 +35,7 @@ class MightyPPOAgent(MightyAgent):
         env: MIGHTYENV,
         logger: Logger,
         eval_env: MIGHTYENV = None,
-        learning_rate: float = 0.01,
+        learning_rate: float = 0.01,  # TODO the default learning rate is pretty high, intended?
         epsilon: float = 0.1,
         batch_size: int = 64,
         learning_starts: int = 1,

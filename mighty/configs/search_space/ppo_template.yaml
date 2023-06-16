@@ -1,0 +1,10 @@
+# @package hydra.sweeper.search_space
+hyperparameters:
+  algorithm_kwargs.n_policy_units:
+    type: ordinal
+    sequence: [4,8,16,32,64,128,256,512]
+  algorithm_kwargs.n_critic_units:
+    type: ordinal
+    sequence: [4,8,16,32,64,128,256,512]
+
+
