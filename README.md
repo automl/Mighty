@@ -73,5 +73,16 @@ and information about the context distribution as keywords:
 python mighty/run_mighty.py 'algorithm=dqn' 'env=CARLCartPoleEnv' '+env_kwargs.num_contexts=10' '+env_kwargs.context_feature_args=[gravity]'
 ```
 
+## Optimize Hyperparameters
+You could optimize the hyperparameters of your algorithm with the [hydra-smac-sweeper](https://github.com/automl/hydra-smac-sweeper) based on [SMAC3](https://github.com/automl/SMAC3).
+After installing, you can use the hydra-smac-sweeper as follows:
+1. Define the search space. For examples you can look at `mighty/configs/search_space/mighty_template.yaml`. It is important that you add `# @package hydra.sweeper.search_space` at the top of your search space config file such that it is inserted at the correct place.
+2. Adjust your cluster in `mighty/configs/sweeper/smac.yaml`. If you want to use local SMAC you can specify `dask_client: null`.
+3. Adjust the exact HPO method. Check the number of trials/function evaluations you want (`n_trials`). As default, we use a Gaussian Process with Expected Improvement via the BlackBoxFacade. You can have a look at the other [presets](https://automl.github.io/SMAC3/v2.0.1/3_getting_started.html#facade), i.e. for multi-fidelity, algorithm configuration and more.
+4. Run HPO by adding `+sweeper=smac +search_space=mighty_template` to the commandline.
+
+# In order to use this sweeper, add on the commandline:
+# +sweeper=smac +search_space=mighty_template
+
 ## Further Examples
 We provide further examples, such as how to plot the logged evaluation data, in the [examples](examples) folder.
