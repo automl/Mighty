@@ -10,7 +10,7 @@ We recommend to use the package manager like [anaconda or minconda](https://docs
 
 If you have conda installed you can follow these steps to setup a clean python environment in which you can install the
 needed packages. If you need to install conda [follow these steps](https://docs.anaconda.com/anaconda/install/).
-The code has been tested with python 3.9.
+The code has been tested with python 3.10.
 
 First create a clean python environment:
 

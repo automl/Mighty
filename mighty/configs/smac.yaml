@@ -1,19 +1,47 @@
+# In order to use this sweeper, add on the commandline:
+# +sweeper=smac +search_space=mighty_template
+
 defaults:
-  - slurm
   - _self_
   - algorithm: dqn
-  - search_space: ppo_sigmoid
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
   - override hydra/help: mighty_help
-  - override hydra/sweeper: SMAC #TODO: this as well as the launcher might change with the dask setup
+  - override hydra/sweeper: SMAC
+
+cluster:
+  _target_: dask_jobqueue.SLURMCluster
+  queue: cpu_short  # partition
+  #  account: myaccount
+  cores: 1
+  memory: 10 GB
+  walltime: 01:00:00
+  processes: 1
+  log_directory: tmp/mighty_smac
+
+hydra:
+  run:
+    dir: ${output_dir}/${experiment_name}_${seed}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: ${output_dir}/${experiment_name}_${seed}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweeper:
+    smac_class: smac.facade.blackbox_facade.BlackBoxFacade
+    scenario:
+      seed: 42
+      n_trials: 100
+      deterministic: true
+      n_workers: 2
+    smac_kwargs:
+      dask_client:
+        _target_: dask.distributed.Client
+        address: ${create_cluster:${cluster},${hydra.sweeper.scenario.n_workers}}
 
 debug: false
 seed: 0
 output_dir: /tmp
 wandb_project: null
 tensorboard_file: null
-experiment_name: "mighty_tuning_experiment"
+experiment_name: "mighty_experiment"
 
 algorithm_kwargs: {}
 
@@ -26,10 +54,3 @@ env_wrappers: []
 eval_every_n_steps: 1000  # After how many steps to evaluate.
 n_episodes_eval: null
 checkpoint: null  # Path to load model checkpoint
-
-
-hydra:
-  run:
-    dir: ${output_dir}/${experiment_name}_${seed}/${now:%Y-%m-%d}/${now:%H-%M-%S}
-  sweep:
-    dir: ${output_dir}/${experiment_name}_${seed}/${now:%Y-%m-%d}/${now:%H-%M-%S}
