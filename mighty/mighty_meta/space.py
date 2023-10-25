@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+
 from mighty.mighty_meta.mighty_component import MightyMetaComponent
 
 
@@ -41,11 +42,15 @@ class SPaCE(MightyMetaComponent):
         if self.last_evals is None and rollout_values is None:
             self.all_instances = jnp.array(env.instance_id_list.copy())
             self.instance_set = self.all_instances[
-                jnp.random.choice(self.all_instances, size=self.current_instance_set_size)
+                jnp.random.choice(
+                    self.all_instances, size=self.current_instance_set_size
+                )
             ]
         elif self.last_evals is None:
             self.instance_set = self.all_instances[
-                jnp.random.choice(self.all_instances, size=self.current_instance_set_size)
+                jnp.random.choice(
+                    self.all_instances, size=self.current_instance_set_size
+                )
             ]
             self.last_evals = jnp.nanmean(rollout_values)
         else:

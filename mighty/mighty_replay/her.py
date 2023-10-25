@@ -1,8 +1,10 @@
-import numpy as onp
-import jax
 import importlib
+
 import gymnasium as gym
+import jax
+import numpy as onp
 from coax.reward_tracing import TransitionBatch
+
 from mighty.mighty_replay.mighty_replay_buffer import MightyReplay, flatten_infos
 
 

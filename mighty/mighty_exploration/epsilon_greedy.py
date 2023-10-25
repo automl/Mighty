@@ -1,7 +1,8 @@
-import jax
-from jax import jit
-import jax.numpy as jnp
 import haiku as hk
+import jax
+import jax.numpy as jnp
+from jax import jit
+
 from mighty.mighty_exploration.mighty_exploration_policy import MightyExplorationPolicy
 
 

@@ -1,20 +1,16 @@
 import json
+import logging
+import sys
 from abc import ABCMeta, abstractmethod
 from functools import reduce
 from itertools import chain
 from pathlib import Path
-from typing import Union, Dict, Any, Tuple, List
-import logging
-import sys
-
-from rich.logging import RichHandler
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
-from typing import Callable, Iterable
-
 import wandb
+from rich.logging import RichHandler
 from tensorboard_logger import configure, log_value
 
 

@@ -4,15 +4,14 @@ warnings.filterwarnings("ignore")
 # warnings.filterwarnings("ignore", category=DeprecationWarning)
 # warnings.filterwarnings("ignore", category=FutureWarning)
 import logging
+
+import hydra
+from hydra.utils import get_class
+from omegaconf import DictConfig
 from rich import print
-import importlib
 
 from mighty.agent.factory import get_agent_class
 from mighty.utils.logger import Logger
-
-from omegaconf import DictConfig
-import hydra
-from hydra.utils import get_class
 
 
 @hydra.main("./configs", "base", version_base=None)
@@ -39,11 +38,11 @@ def main(cfg: DictConfig):
         from dacbench import benchmarks
 
         bench = getattr(benchmarks, cfg.env)()
-        
+
         use_benchmark = False
         if "benchmark" in cfg.env_kwargs.keys():
-            use_benchmark = cfg.env_kwargs["benchmark"] 
-            
+            use_benchmark = cfg.env_kwargs["benchmark"]
+
         if use_benchmark:
             del cfg.env_kwargs["benchmark"]
             env = bench.get_benchmark(**cfg.env_kwargs)

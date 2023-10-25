@@ -1,31 +1,31 @@
-from pathlib import Path
 import os
-from typing import Optional, Union, Type, List
+from pathlib import Path
+from typing import List, Optional, Type, Union
+
+import coax
 import hydra
-from omegaconf import DictConfig
+import jax.numpy as jnp
 import numpy as np
 import wandb
-
-import jax.numpy as jnp
-from jax import vmap
-import coax
 from coax.experience_replay._simple import BaseReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
-from rich.progress import Progress, TimeRemainingColumn, TimeElapsedColumn, BarColumn
+from jax import vmap
+from omegaconf import DictConfig
+from rich.progress import BarColumn, Progress, TimeElapsedColumn, TimeRemainingColumn
 
-from mighty.env.env_handling import MIGHTYENV, DACENV, CARLENV
+from mighty.env.env_handling import CARLENV, DACENV, MIGHTYENV
+from mighty.mighty_replay import MightyReplay
 from mighty.utils.logger import Logger
 from mighty.utils.types import TypeKwargs
-from mighty.mighty_replay import MightyReplay
 
 
 def retrieve_class(cls: Union[str, DictConfig, Type], default_cls: Type) -> Type:
     """Get coax or mighty class."""
     if cls is None:
         cls = default_cls
-    elif type(cls) == DictConfig:
+    elif type(cls) is DictConfig:
         cls = hydra.utils.get_class(cls._target_)
-    elif type(cls) == str:
+    elif type(cls) is str:
         cls = hydra.utils.get_class(cls)
     return cls
 
@@ -125,10 +125,14 @@ class MightyAgent(object):
 
         self.evals = []
         if isinstance(self.eval_env, DACENV) or isinstance(self.eval_env, CARLENV):
-            eval_instance_ids = self.eval_env.instance_id_list if isinstance(self.eval_env, DACENV) else list(self.eval_env.contexts.keys())
+            eval_instance_ids = (
+                self.eval_env.instance_id_list
+                if isinstance(self.eval_env, DACENV)
+                else list(self.eval_env.contexts.keys())
+            )
             for i in eval_instance_ids:
                 self.evals.append(make_eval(self.eval_env, i, logger))
-        else:   
+        else:
             self.evals.append(make_eval(self.eval_env, None, logger))
 
         self.logger = logger
@@ -149,7 +153,7 @@ class MightyAgent(object):
                 kwargs = meta_kwargs[i]
             self.meta_modules[meta_class.__name__] = meta_class(**kwargs)
 
-        self.logger.log(f"Meta modules", list(self.meta_modules.keys()))
+        self.logger.log("Meta modules", list(self.meta_modules.keys()))
 
         self.last_state = None
         self.total_steps = 0
@@ -346,7 +350,9 @@ class MightyAgent(object):
                         self.logger.set_eval(True)
                         for e in self.evals:
                             eval_metrics = vmap(e, in_axes=(None, None, 0), out_axes=0)(
-                                self.policy, self.steps, jnp.arange(n_episodes_eval),
+                                self.policy,
+                                self.steps,
+                                jnp.arange(n_episodes_eval),
                             )
 
                         if self.writer is not None:
@@ -416,11 +422,13 @@ class MightyAgent(object):
             print(f"Saved checkpoint to {filepath}")
 
     def __del__(self):
-        print(dir(self))
+        """Close wandb upon deletion."""
         if self.log_wandb:
             wandb.finish()
 
+
 def make_eval(env, instance_id, logger):
+    """Eval constructor function."""
     def eval(policy, steps, _):
         """
         Eval agent on an environment. (Full rollouts)
@@ -429,13 +437,13 @@ def make_eval(env, instance_id, logger):
         :param episodes: The number of episodes to evaluate
         :return:
         """
-        
+
         rewards = []
         terminated, truncated = False, False
         options = {}
         if instance_id is not None:
             options = {"instance_id": instance_id}
-        state, _ = env.reset(options = options)
+        state, _ = env.reset(options=options)
         r = 0
         while not (terminated or truncated):
             action = policy(state, eval=True)
@@ -461,4 +469,5 @@ def make_eval(env, instance_id, logger):
         if instance is not None:
             eval_metrics["instance"] = instance
         return eval_metrics
+
     return eval

@@ -1,6 +1,7 @@
 # This is adapted from: https://github.com/facebookresearch/level-replay/blob/main/level_replay/level_sampler.py
-import numpy as np
 import gymnasium as gym
+import numpy as np
+
 from mighty.mighty_meta.mighty_component import MightyMetaComponent
 
 

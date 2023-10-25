@@ -1,4 +1,5 @@
 import numpy as np
+
 from mighty.mighty_meta.mighty_component import MightyMetaComponent
 
 

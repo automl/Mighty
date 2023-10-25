@@ -1,6 +1,7 @@
-from coax.experience_replay._simple import SimpleReplayBuffer
-from coax.experience_replay._prioritized import PrioritizedReplayBuffer
 from collections.abc import Iterable
+
+from coax.experience_replay._prioritized import PrioritizedReplayBuffer
+from coax.experience_replay._simple import SimpleReplayBuffer
 
 
 def flatten_infos(xs):

@@ -1,22 +1,21 @@
-from typing import Optional, Union, Type, List
+from typing import List, Optional, Type, Union
 
-import jax
 import coax
-import optax
-import numpy as np
 import haiku as hk
+import jax
 import jax.numpy as jnp
+import numpy as np
+import optax
 from coax.experience_replay._simple import BaseReplayBuffer
 from coax.reward_tracing._base import BaseRewardTracer
 from numpy import prod
-
 from omegaconf import DictConfig
 
 from mighty.agent.base_agent import MightyAgent, retrieve_class
 from mighty.env.env_handling import MIGHTYENV
+from mighty.mighty_exploration import MightyExplorationPolicy
 from mighty.utils.logger import Logger
 from mighty.utils.types import TypeKwargs
-from mighty.mighty_exploration import MightyExplorationPolicy
 
 
 class MightyPPOAgent(MightyAgent):

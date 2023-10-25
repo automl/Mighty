@@ -1,7 +1,7 @@
 from mighty.agent.base_agent import MightyAgent
-from mighty.agent.sac import MightySACAgent
 from mighty.agent.dqn import MightyDQNAgent
 from mighty.agent.ppo import MightyPPOAgent
+from mighty.agent.sac import MightySACAgent
 
 
 def get_agent_class(agent_type: str) -> type(MightyAgent):

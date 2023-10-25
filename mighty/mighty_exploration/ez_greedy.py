@@ -1,8 +1,9 @@
+import haiku as hk
 import jax
-from jax import jit
 import jax.numpy as jnp
 import numpy as np
-import haiku as hk
+from jax import jit
+
 from mighty.mighty_exploration.mighty_exploration_policy import MightyExplorationPolicy
 
 
@@ -26,7 +27,7 @@ class EZGreedy(MightyExplorationPolicy):
         :param algo: algorithm name
         :param func: policy function
         :param epsilon: exploration epsilon
-        :param zipf_param: parameter for zipf action length distribution 
+        :param zipf_param: parameter for zipf action length distribution
         :param env: environment
         :param observation_preprocessor: preprocessing for observation
         :param proba_dist: probability distribution
