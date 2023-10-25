@@ -123,6 +123,14 @@ class MightyAgent(object):
         else:
             self.eval_env = eval_env
 
+        self.evals = []
+        if isinstance(self.eval_env, DACENV) or isinstance(self.eval_env, CARLENV):
+            eval_instance_ids = self.eval_env.instance_id_list if isinstance(self.eval_env, DACENV) else list(self.eval_env.contexts.keys())
+            for i in eval_instance_ids:
+                self.evals.append(make_eval(self.eval_env, i, logger))
+        else:   
+            self.evals.append(make_eval(self.eval_env, None, logger))
+
         self.logger = logger
         self.render_progress = render_progress
         self.output_dir = output_dir
@@ -141,7 +149,7 @@ class MightyAgent(object):
                 kwargs = meta_kwargs[i]
             self.meta_modules[meta_class.__name__] = meta_class(**kwargs)
 
-        self.logger.log(f"Meta modules", meta_methods)
+        self.logger.log(f"Meta modules", list(self.meta_modules.keys()))
 
         self.last_state = None
         self.total_steps = 0
@@ -335,14 +343,19 @@ class MightyAgent(object):
 
                     if steps_since_eval >= eval_every_n_steps:
                         steps_since_eval = 0
-                        # TODO: make it work with CARL
-                        if isinstance(self.eval_env, DACENV):
-                            eval_instance_ids = self.eval_env.instance_id_list
-                            vmap(self.eval, in_axes=(None, 0), out_axes=0)(
-                                n_episodes_eval, jnp.array(eval_instance_ids)
+                        self.logger.set_eval(True)
+                        for e in self.evals:
+                            eval_metrics = vmap(e, in_axes=(None, None, 0), out_axes=0)(
+                                self.policy, self.steps, jnp.arange(n_episodes_eval),
                             )
-                        else:
-                            self.eval(n_episodes_eval)
+
+                        if self.writer is not None:
+                            self.writer.add_scalars("eval", eval_metrics)
+
+                        if self.log_wandb:
+                            wandb.log(eval_metrics)
+
+                        self.logger.set_eval(False)
 
                     if self.steps % human_log_every_n_steps == 0:
                         print(
@@ -402,7 +415,13 @@ class MightyAgent(object):
             coax.utils.dump(state, str(filepath))
             print(f"Saved checkpoint to {filepath}")
 
-    def eval(self, episodes: int, instance_id=None):
+    def __del__(self):
+        print(dir(self))
+        if self.log_wandb:
+            wandb.finish()
+
+def make_eval(env, instance_id, logger):
+    def eval(policy, steps, _):
         """
         Eval agent on an environment. (Full rollouts)
 
@@ -410,51 +429,36 @@ class MightyAgent(object):
         :param episodes: The number of episodes to evaluate
         :return:
         """
-        self.logger.set_eval(True)
+        
         rewards = []
-        for _ in range(episodes):
-            terminated, truncated = False, False
-            # TODO: this doesn't work for CARL, can we change that?
-            if instance_id is not None:
-                state, _ = self.eval_env.reset(options={"instance_id": instance_id})
-            else:
-                state, _ = self.eval_env.reset()
-            r = 0
-            while not (terminated or truncated):
-                action = self.policy(state, eval=True)
-                state, reward, terminated, truncated, _ = self.eval_env.step(action)
-                r += reward
-                self.logger.next_step()
-            rewards.append(r)
+        terminated, truncated = False, False
+        options = {}
+        if instance_id is not None:
+            options = {"instance_id": instance_id}
+        state, _ = env.reset(options = options)
+        r = 0
+        while not (terminated or truncated):
+            action = policy(state, eval=True)
+            state, reward, terminated, truncated, _ = env.step(action)
+            r += reward
+            logger.next_step()
+        rewards.append(r)
 
-            if isinstance(self.eval_env, DACENV):
-                instance = self.eval_env.instance
-            elif isinstance(self.eval_env, CARLENV):
-                instance = self.eval_env.context
-            else:
-                instance = None
-            self.logger.next_episode(instance)
-
-        self.logger.write()
-        self.logger.set_eval(False)
-
-        if not hasattr(self, "steps"):
-            self.steps = 0
+        if isinstance(env, DACENV):
+            instance = env.instance
+        elif isinstance(env, CARLENV):
+            instance = env.context
+        else:
+            instance = None
+        logger.next_episode(instance)
+        logger.write()
 
         eval_metrics = {
-            "step": self.steps,
+            "step": steps,
             "eval_episodes": np.array(rewards),
             "mean_eval_reward": np.mean(rewards),
         }
-        if instance_id is not None:
-            eval_metrics["instance_id"] = instance_id
-        if self.writer is not None:
-            self.writer.add_scalars("eval", eval_metrics)
-
-        if self.log_wandb:
-            wandb.log(eval_metrics)
-
-    def __del__(self):
-        print(dir(self))
-        if self.log_wandb:
-            wandb.finish()
+        if instance is not None:
+            eval_metrics["instance"] = instance
+        return eval_metrics
+    return eval

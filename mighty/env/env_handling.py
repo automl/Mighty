@@ -16,11 +16,11 @@ else:
 carl = importlib.util.find_spec("carl")
 carl_found = carl is not None
 if carl_found:
-    import carl
+    from carl.envs.carl_env import CARLEnv
 
     if MIGHTYENV is None:
-        MIGHTYENV = carl.envs.CARLEnv
-    CARLENV = int  # carl.envs.CARLEnv
+        MIGHTYENV = CARLEnv
+    CARLENV = CARLEnv
 else:
     CARLENV = int
 
