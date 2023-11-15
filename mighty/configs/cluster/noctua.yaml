@@ -13,4 +13,11 @@ hydra:
       - micromamba activate /scratch/hpc-prf-intexml/cbenjamins/envs/mighty
 
 cluster:
-  queue: normal  # partition
+  _target_: dask_jobqueue.SLURMCluster
+  queue: normal  # set in cluster config
+  #  account: myaccount
+  cores: 8
+  memory: 32 GB
+  walltime: 01:00:00
+  processes: 1
+  log_directory: tmp/mighty_smac
