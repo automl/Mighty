@@ -27,6 +27,6 @@ hyperparameters:
     default_value: 1.
   algorithm_kwargs.td_update_class:
     type: categorical
-    choices: [q, double, soft, clipped, softclipped]
-    defualt_value: double
+    choices: [coax.td_learning.QLearning, coax.td_learning.DoubleQLearning, coax.td_learning.SoftQLearning, coax.td_learning.ClippedDoubleQLearning, coax.td_learning.SoftClippedDoubleQLearning]
+    default_value: coax.td_learning.DoubleQLearning
 

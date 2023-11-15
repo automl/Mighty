@@ -4,6 +4,7 @@ q_func: ???
 
 algorithm_kwargs:
   # Hyperparameters
+  n_units: 8
   epsilon: 0.2  # Controls epsilon-greedy action selection in policy.
 
   replay_buffer_class:
