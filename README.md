@@ -74,3 +74,46 @@ After installing, you can use the hydra-smac-sweeper as follows:
 
 ## Further Examples
 We provide further examples, such as how to plot the logged evaluation data, in the [examples](examples) folder.
+
+
+## Optimizing on Cluster
+### Noctua
+```bash
+ssh noctua2
+
+# if not cloned
+cd /scratch/hpc-prf-intexml/cbenjamins/repos/
+git clone git@github.com:automl-private/Mighty-DACS.git
+
+# if no env yet + not installed yet
+micromamba create python=3.11 -p /scratch/hpc-prf-intexml/cbenjamins/envs/mighty -c conda-forge  # or conda
+micromamba activate /scratch/hpc-prf-intexml/cbenjamins/envs/mighty
+pip install -e .
+# Install hydra smac sweeper
+
+cd ..
+git clone git@github.com:automl/hydra-smac-sweeper.git
+cd hydra-smac-sweeper
+pip install -e . --config-settings editable_mode=compat
+
+
+# activate env
+micromamba activate /scratch/hpc-prf-intexml/cbenjamins/envs/mighty
+
+# sync runs
+rsync -azv --delete -e 'ssh -J intexml2@fe.noctua2.pc2.uni-paderborn.de' intexml2@n2login5:/scratch/hpc-prf-intexml/cbenjamins/repos/Mighty-DACS/runs runs  # TODO update path
+
+
+
+# create session if not active
+tmux new -s attach
+
+tmux attach
+salloc --time=1:00:00 --nodes=1 --ntasks=8 --mem-per-cpu=4G
+cd /scratch/hpc-prf-intexml/cbenjamins/repos/Mighty-DACS
+
+python mighty/run_mighty.py -m env=CartPole-v1 +search_space=dqn_gym_classic algorithm=dqn 'num_steps=25e4' +cluster=noctua --config-name smac
+
+nano /scratch/hpc-prf-intexml/cbenjamins/envs/mighty/lib/python3.11/site-packages/smac/runner/dask_runner.py
+
+```
