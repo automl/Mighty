@@ -1,5 +1,9 @@
 defaults:
   - override hydra/launcher: submitit_slurm
+
+cluster:
+  queue: cpu_short  # partition
+
 hydra:
   launcher:
     partition: cpu_short  # change this to your partition name

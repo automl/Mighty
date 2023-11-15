@@ -1,5 +1,4 @@
 defaults:
-  - slurm
   - _self_
   - algorithm: dqn
   - override hydra/job_logging: colorlog

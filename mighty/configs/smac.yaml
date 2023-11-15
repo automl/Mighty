@@ -11,7 +11,7 @@ defaults:
 
 cluster:
   _target_: dask_jobqueue.SLURMCluster
-  queue: cpu_short  # partition
+  queue: ???  # set in cluster config
   #  account: myaccount
   cores: 1
   memory: 10 GB

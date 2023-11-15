@@ -11,3 +11,6 @@ hydra:
     mem_gb: 4
     setup:
       - micromamba activate /scratch/hpc-prf-intexml/cbenjamins/envs/mighty
+
+cluster:
+  queue: normal  # partition
