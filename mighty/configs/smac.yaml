@@ -9,15 +9,15 @@ defaults:
   - override hydra/help: mighty_help
   - override hydra/sweeper: SMAC
 
-cluster:
-  _target_: dask_jobqueue.SLURMCluster
-  queue: ???  # set in cluster config
-  #  account: myaccount
-  cores: 1
-  memory: 10 GB
-  walltime: 01:00:00
-  processes: 1
-  log_directory: tmp/mighty_smac
+# cluster:
+#   _target_: dask_jobqueue.SLURMCluster
+#   queue: ???  # set in cluster config
+#   #  account: myaccount
+#   cores: 1
+#   memory: 10 GB
+#   walltime: 01:00:00
+#   processes: 1
+#   log_directory: tmp/mighty_smac
 
 hydra:
   run:
@@ -30,7 +30,7 @@ hydra:
       seed: 42
       n_trials: 100
       deterministic: true
-      n_workers: 2
+      n_workers: 16
     smac_kwargs:
       dask_client:
         _target_: dask.distributed.Client
@@ -43,7 +43,8 @@ wandb_project: null
 tensorboard_file: null
 experiment_name: "mighty_experiment"
 
-algorithm_kwargs: {}
+algorithm_kwargs:
+  render_progress: False
 
 num_steps: 1000000  # Maximum number of steps in the environment before episode ends.
 env: CartPole-v1

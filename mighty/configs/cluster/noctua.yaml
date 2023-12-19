@@ -16,8 +16,10 @@ cluster:
   _target_: dask_jobqueue.SLURMCluster
   queue: normal  # set in cluster config
   #  account: myaccount
-  cores: 8
+  cores: 16
   memory: 32 GB
   walltime: 01:00:00
   processes: 1
   log_directory: tmp/mighty_smac
+  n_workers: 16
+  death_timeout: 30

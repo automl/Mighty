@@ -116,7 +116,7 @@ class MightyDQNAgent(MightyAgent):
             cls=td_update_class, default_cls=coax.td_learning.DoubleQLearning
         )
         if td_update_kwargs is None:
-            td_update_kwargs = {"q_targ": None, "optimizer": optax.adam(learning_rate)}
+            td_update_kwargs = {"optimizer": optax.adam(learning_rate)}
         self.td_update_kwargs = td_update_kwargs
 
         super().__init__(
