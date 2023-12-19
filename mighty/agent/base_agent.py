@@ -42,7 +42,7 @@ class MightyAgent(object):
         epsilon: float = 0.1,
         batch_size: int = 64,
         learning_starts: int = 1,
-        render_progress: bool = True,  # FIXME: Does this actually do anything or can we take it out?
+        render_progress: bool = True,
         log_tensorboard: bool = False,
         log_wandb: bool = False,
         wandb_kwargs: dict = {},
@@ -86,7 +86,7 @@ class MightyAgent(object):
 
         self.replay_buffer: Optional[BaseReplayBuffer] = None
         self.tracer: Optional[BaseRewardTracer] = None
-        self.policy: Optional = None
+        self.policy = None
 
         # Replay Buffer
         replay_buffer_class = retrieve_class(
@@ -231,6 +231,7 @@ class MightyAgent(object):
             TimeRemainingColumn(),
             "Elapsed:",
             TimeElapsedColumn(),
+            disable=not self.render_progress,
         ) as progress:
             steps_task = progress.add_task(
                 "Train Steps", total=n_steps, start=False, visible=False
