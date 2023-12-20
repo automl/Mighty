@@ -9,13 +9,14 @@ import hydra
 from hydra.utils import get_class
 from omegaconf import DictConfig
 from rich import print
+import numpy as np
 
 from mighty.agent.factory import get_agent_class
 from mighty.utils.logger import Logger
 
 
 @hydra.main("./configs", "base", version_base=None)
-def main(cfg: DictConfig):
+def main(cfg: DictConfig) -> float:
     """Parse config and run Mighty agent"""
     seed = cfg.seed
 
@@ -113,7 +114,16 @@ def main(cfg: DictConfig):
         n_episodes_eval=n_episodes_eval,
         eval_every_n_steps=eval_every_n_steps,
     )
+
+    # Final evaluation
+    eval_metrics_list = agent.evaluate(n_episodes_eval=n_episodes_eval)
     logger.close()
+
+    # When optimizing we minimize
+
+    # Get performance mean across instances (if any)
+    performance = np.mean([d["mean_eval_reward"] for d in eval_metrics_list])
+    return -performance
 
 
 if __name__ == "__main__":
