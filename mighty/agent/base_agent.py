@@ -348,21 +348,7 @@ class MightyAgent(object):
 
                     if steps_since_eval >= eval_every_n_steps:
                         steps_since_eval = 0
-                        self.logger.set_eval(True)
-                        for e in self.evals:
-                            eval_metrics = vmap(e, in_axes=(None, None, 0), out_axes=0)(
-                                self.policy,
-                                self.steps,
-                                jnp.arange(n_episodes_eval),
-                            )
-
-                        if self.writer is not None:
-                            self.writer.add_scalars("eval", eval_metrics)
-
-                        if self.log_wandb:
-                            wandb.log(eval_metrics)
-
-                        self.logger.set_eval(False)
+                        eval_metrics_list = self.evaluate(n_episodes_eval=n_episodes_eval)
 
                     if self.steps % human_log_every_n_steps == 0:
                         print(
@@ -389,6 +375,26 @@ class MightyAgent(object):
         if self.writer is not None:
             self.writer.flush()
             self.writer.close()
+
+    def evaluate(self, n_episodes_eval: int) -> list[dict]:
+        self.logger.set_eval(True)
+        eval_metrics_list = []
+        for e in self.evals:
+            eval_metrics = vmap(e, in_axes=(None, None, 0), out_axes=0)(
+                self.policy,
+                self.steps,
+                jnp.arange(n_episodes_eval),
+            )
+            eval_metrics_list.append(eval_metrics)
+
+            if self.writer is not None:
+                self.writer.add_scalars("eval", eval_metrics)
+
+            if self.log_wandb:
+                wandb.log(eval_metrics)
+
+        self.logger.set_eval(False)
+        return eval_metrics_list
 
     def get_state(self):
         """Return internal state for checkpointing."""
