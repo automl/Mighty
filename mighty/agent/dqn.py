@@ -63,8 +63,9 @@ class MightyDQNAgent(MightyAgent):
                 Type[coax.td_learning.QLearning],
                 Type[coax.td_learning.DoubleQLearning],
                 Type[coax.td_learning.SoftQLearning],
-                Type[coax.td_learning.ClippedDoubleQLearning],
-                Type[coax.td_learning.SoftClippedDoubleQLearning],
+                # TODO Add support for those QLearning types (API)
+                # Type[coax.td_learning.ClippedDoubleQLearning],
+                # Type[coax.td_learning.SoftClippedDoubleQLearning],
             ]
         ] = None,
         td_update_kwargs: Optional[TypeKwargs] = None,
