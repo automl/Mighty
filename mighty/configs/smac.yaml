@@ -28,9 +28,9 @@ hydra:
     smac_class: smac.facade.blackbox_facade.BlackBoxFacade
     scenario:
       seed: 42
-      n_trials: 100
+      n_trials: 200
       deterministic: true
-      n_workers: 16
+      n_workers: 10
     smac_kwargs:
       dask_client:
         _target_: dask.distributed.Client
@@ -38,20 +38,22 @@ hydra:
 
 debug: false
 seed: 0
-output_dir: /tmp
+output_dir: runs/optimization
 wandb_project: null
 tensorboard_file: null
-experiment_name: "mighty_experiment"
+experiment_name: ${env}_${algorithm}
 
 algorithm_kwargs:
   render_progress: False
 
-num_steps: 1000000  # Maximum number of steps in the environment before episode ends.
-env: CartPole-v1
-env_kwargs: {}
-env_wrappers: []
+# Set in env
+env: ???
+num_steps: ???
+env_kwargs: ???
+env_wrappers: ???
 
 # Training
-eval_every_n_steps: 1000  # After how many steps to evaluate.
+eval_every_n_steps: null  # After how many steps to evaluate.
 n_episodes_eval: null
 checkpoint: null  # Path to load model checkpoint
+save_model_every_n_steps: null
