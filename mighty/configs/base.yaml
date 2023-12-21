@@ -7,22 +7,23 @@ defaults:
 
 debug: false
 seed: 0
-output_dir: /tmp
+output_dir: runs/training
 wandb_project: null
 tensorboard_file: null
-experiment_name: "mighty_experiment"
+experiment_name: mighty_experiment
 
 algorithm_kwargs: {}
 
-num_steps: 1000000  # Maximum number of steps in the environment before episode ends.
-env: CartPole-v1
-env_kwargs: {}
-env_wrappers: []
+num_steps: ???  # Number of training steps
+env: ???
+env_kwargs: ???
+env_wrappers: ???
 
 # Training
 eval_every_n_steps: 1000  # After how many steps to evaluate.
 n_episodes_eval: null
 checkpoint: null  # Path to load model checkpoint
+save_model_every_n_steps: 5000
 
 
 hydra:
