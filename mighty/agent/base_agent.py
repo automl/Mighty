@@ -207,7 +207,7 @@ class MightyAgent(object):
         n_episodes_eval: int,
         eval_every_n_steps: int = 1_000,
         human_log_every_n_steps: int = 5000,
-        save_model_every_n_steps: int = 5000,
+        save_model_every_n_steps: int | None = 5000,
     ):
         """
         Trains the agent for n steps.
@@ -346,9 +346,10 @@ class MightyAgent(object):
                     s = s_next
                     self.logger.next_step()
 
-                    if steps_since_eval >= eval_every_n_steps:
-                        steps_since_eval = 0
-                        eval_metrics_list = self.evaluate(n_episodes_eval=n_episodes_eval)
+                    if eval_every_n_steps:
+                        if steps_since_eval >= eval_every_n_steps:
+                            steps_since_eval = 0
+                            eval_metrics_list = self.evaluate(n_episodes_eval=n_episodes_eval)
 
                     if self.steps % human_log_every_n_steps == 0:
                         print(
@@ -356,8 +357,9 @@ class MightyAgent(object):
                         )
                         log_reward_buffer = []
 
-                    if self.steps % save_model_every_n_steps == 0:
-                        self.save(self.steps)
+                    if save_model_every_n_steps:
+                        if self.steps % save_model_every_n_steps == 0:
+                            self.save(self.steps)
 
                 if isinstance(self.env, DACENV):
                     instance = self.env.instance

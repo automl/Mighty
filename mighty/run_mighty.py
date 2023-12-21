@@ -113,6 +113,7 @@ def main(cfg: DictConfig) -> float:
         n_steps=cfg.num_steps,
         n_episodes_eval=n_episodes_eval,
         eval_every_n_steps=eval_every_n_steps,
+        save_model_every_n_steps=cfg.save_model_every_n_steps
     )
 
     # Final evaluation
