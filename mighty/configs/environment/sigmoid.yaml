@@ -1,0 +1,9 @@
+# @package _global_
+
+num_steps: 100_000 # 250000
+env: SigmoidBenchmark
+env_wrappers:
+  - dacbench.wrappers.MultiDiscreteWrapper
+env_kwargs:
+  benchmark: true
+  dimension: 1

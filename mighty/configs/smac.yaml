@@ -28,7 +28,7 @@ hydra:
     smac_class: smac.facade.blackbox_facade.BlackBoxFacade
     scenario:
       seed: 42
-      n_trials: 200
+      n_trials: 300
       deterministic: true
       n_workers: 10
     smac_kwargs:
