@@ -1,0 +1,15 @@
+# @package _global_
+
+num_steps: 100_000 
+env: MountainCar-v0
+env_kwargs: {}
+env_wrappers: []
+
+# >>>>>>>>>>> tuned
+algorithm_kwargs:
+  batch_size: 256
+  epsilon: 0.013054448542931259
+  learning_rate: 0.00015946938031253374
+  n_units: 75
+  soft_update_weight: 0.929353805325771
+  td_update_class: coax.td_learning.QLearning
