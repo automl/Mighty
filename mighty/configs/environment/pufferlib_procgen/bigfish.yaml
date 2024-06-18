@@ -1,0 +1,7 @@
+# @package _global_
+
+num_steps: 25e6
+env: pufferlib.environments.procgen.bigfish
+env_kwargs: {}
+env_wrappers: []
+num_envs: 256
