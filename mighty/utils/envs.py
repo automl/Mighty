@@ -84,12 +84,12 @@ def make_pufferlib_env(cfg):
     if cfg.debug:
         env = make_env()
     else:
-        env = pufferlib.vector.make(make_env, num_envs=cfg.num_envs)
+        env = PufferlibToGymAdapter(pufferlib.vector.make(make_env, num_envs=cfg.num_envs))
 
     def get_eval():
         env = pufferlib.vector.make(make_env, num_envs=cfg.n_episodes_eval)
-        return env
-    
+        return PufferlibToGymAdapter(env)
+
     eval_default = cfg.n_episodes_eval
     return env, get_eval, eval_default
 
