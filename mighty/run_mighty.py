@@ -7,11 +7,9 @@ from typing import TYPE_CHECKING
 
 import hydra
 from hydra.utils import get_class
-from mighty.mighty_agents import MightyBBFEAgent, MightyPBTAgent
 from mighty.mighty_agents.factory import get_agent_class
 from mighty.utils.envs import make_mighty_env
 from mighty.utils.logger import Logger
-from mighty.utils.search_space_handling import search_space_to_config_space
 from rich import print
 
 warnings.filterwarnings("ignore")
@@ -60,13 +58,6 @@ def main(cfg: DictConfig) -> float:
     # Setup agent
     agent_class = get_agent_class(cfg.algorithm)
     args_agent = dict(cfg.algorithm_kwargs)
-    if agent_class is MightyBBFEAgent or agent_class is MightyPBTAgent:
-        assert (
-            "search_space" in cfg
-        ), "This is a meta algorithmic class and needs a search space"
-        args_agent["configspace"] = search_space_to_config_space(
-            search_space=cfg.search_space
-        )
     agent = agent_class(
         env=env,
         eval_env=eval_env,
