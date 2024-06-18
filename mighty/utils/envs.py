@@ -5,6 +5,7 @@ import importlib
 from functools import partial
 
 import gymnasium as gym
+from omegaconf import OmegaConf
 from mighty.utils.wrappers import PufferlibToGymAdapter
 
 try:
@@ -26,15 +27,20 @@ def make_dacbench_env(cfg):
         use_benchmark = cfg.env_kwargs["benchmark"]
 
     if use_benchmark:
-        del cfg.env_kwargs["benchmark"]
-        env = bench.get_benchmark(**cfg.env_kwargs)
-        eval_env = bench.get_benchmark(**cfg.env_kwargs)
+        benchmark_kwargs = OmegaConf.to_container(cfg.env_kwargs, resolve=True)
+        del benchmark_kwargs["benchmark"]
+        make_env = partial(bench.get_benchmark, **benchmark_kwargs)
     else:
         for k in cfg.env_kwargs:
             bench.config[k] = cfg.env_kwargs[k]
-        env = bench.get_environment()
-        eval_env = bench.get_environment()
-    eval_default = len(eval_env.instance_set.keys())
+        make_env = bench.get_environment
+
+    env = gym.vector.SyncVectorEnv([make_env for _ in range(cfg.num_envs)])
+    eval_env = partial(
+        gym.vector.SyncVectorEnv, [make_env for _ in range(cfg.n_episodes_eval)]
+    )
+    print(env.envs)
+    eval_default = len(env.envs[0].instance_set.keys())
     return env, eval_env, eval_default
 
 
