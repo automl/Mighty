@@ -3,5 +3,5 @@
 num_steps: 1e5
 env: SigmoidBenchmark
 env_kwargs: {benchmark: true, dimension: 1}
-env_wrappers: []
+env_wrappers: [mighty.utils.wrappers.MultiDiscreteActionWrapper]
 num_envs: 16

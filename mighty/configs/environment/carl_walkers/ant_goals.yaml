@@ -1,0 +1,13 @@
+# @package _global_
+
+num_steps: 25e6
+env: CARLBraxAnt
+env_wrappers: []
+
+env_kwargs:
+  context_sample_seed: 0
+  evaluation_context_sample_seed: 1
+  num_contexts: 10
+  num_evaluation_contexts: 10
+  context_feature_args: {"target_distance": [normal, 9.8, 1], "target_direction": [categorical, [1,2,3,4]]}
+  batch_size: 256

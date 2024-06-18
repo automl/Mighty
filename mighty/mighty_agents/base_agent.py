@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import TYPE_CHECKING
-
+import itertools
 import gymnasium as gym
 import hydra
 import numpy as np
@@ -389,7 +389,7 @@ class MightyAgent:
             else:
                 print(f"Trying to set hyperparameter {algo_name} which does not exist.")
 
-    def evaluate(self, n_eval_episodes, instance_ids=None):
+    def evaluate(self, n_eval_episodes):
         """Eval agent on an environment. (Full rollouts).
 
         :param env: The environment to evaluate on
@@ -399,26 +399,7 @@ class MightyAgent:
         self.logger.set_eval(True)
         terminated, truncated = False, False
         options = {}
-
-        # If we evaluate over instances, we create envs like this
-        # That's because the instance set might change between evaluations
-        if instance_ids is not None:
-            from functools import partial
-
-            def return_env(**kwargs):
-                env = self.eval_env()
-                env.instance_id = kwargs["instance_id"]
-                return env
-
-            eval_env = gym.vector.SyncVectorEnv(
-                [
-                    partial(return_env, inst_id)
-                    for inst_id in instance_ids
-                    for _ in range(n_eval_episodes)
-                ]
-            )
-        else:
-            eval_env = self.eval_env()
+        eval_env = self.eval_env()
 
         state, _ = eval_env.reset(options=options)
         rewards = np.zeros(n_eval_episodes)

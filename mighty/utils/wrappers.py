@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from functools import partial
-
+import itertools
 import gymnasium as gym
 import numpy as np
 
@@ -64,3 +64,40 @@ class MinigridImgVecObs(gym.Wrapper):
         self.single_observation_space = gym.spaces.Box(
             shape=self.env.observation_space.shape[1:], low=0, high=255
         )
+
+class MultiDiscreteActionWrapper(gym.Wrapper):
+    """Wrapper to cast MultiDiscrete action spaces to Discrete. This should improve usability with standard RL libraries."""
+
+    def __init__(self, env):
+        """
+        Initialize wrapper.
+
+        Parameters
+        ----------
+        env : gym.Env
+            Environment to wrap
+
+        """
+        super().__init__(env)
+        self.n_actions = len(self.env.single_action_space.nvec)
+        self.single_action_space = gym.spaces.Discrete(np.prod(self.env.single_action_space.nvec))
+        self.action_mapper = {}
+        for idx, prod_idx in zip(
+            range(np.prod(self.env.single_action_space.nvec)),
+            itertools.product(*[np.arange(val) for val in self.env.single_action_space.nvec]),
+        ):
+            self.action_mapper[idx] = prod_idx
+
+    def step(self, action):
+        """Maps discrete action value to array."""
+        action = [self.action_mapper[a] for a in action]
+        return self.env.step(action)
+    
+class CARLVectorEnvSimulator:
+    def __init__(self, env, **kwargs) -> None:
+        self.env = env
+        self.single_action_space = env.action_space
+        self.single_observation_space = env.observation_space
+
+    def close(self):
+        self.env.close()
