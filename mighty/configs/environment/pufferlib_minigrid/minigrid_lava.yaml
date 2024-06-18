@@ -1,7 +1,0 @@
-# @package _global_
-
-num_steps: 2e5
-env: pufferlib.environments.minigrid.MiniGrid-LavaGapS5-v0
-env_kwargs: {}
-env_wrappers: []
-num_envs: 64
