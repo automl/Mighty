@@ -1,21 +1,21 @@
-"""Curriculum Learning via Self-Paced Context Evaluation."""
-from __future__ import annotations
-
 import jax.numpy as jnp
-from mighty.mighty_meta.mighty_component import MightyMetaComponent
+
+from mighty.mighty_meta.mighty_component_deprecated import MightyMetaComponent
 
 
 class SPaCE(MightyMetaComponent):
     """Curriculum Learning via Self-Paced Context Evaluation."""
 
     def __init__(self, criterion="relative_improvement", threshold=0.1, k=1) -> None:
-        """SPaCE initialization.
+        """
+        SPaCE initialization.
 
         :param criterion: Ranking criterion
         :param threshold: Minimum average change needed to keep train set size
         :param k: Size of instance set increase
         :return:
         """
+
         super().__init__()
         self.criterion = criterion
         self.threshold = threshold
@@ -26,15 +26,17 @@ class SPaCE(MightyMetaComponent):
         self.pre_episode_methods = [self.get_instances]
 
     def get_instances(self, metrics):
-        """Get Training set on episode start.
+        """
+        Get Training set on episode start.
 
         :param metrics: Current metrics dict
         :return:
         """
+
         env = metrics["env"]
         vf = metrics["vf"]
         rollout_values = None
-        if "rollout_values" in metrics:
+        if "rollout_values" in metrics.keys():
             rollout_values = metrics["rollout_values"]
 
         if self.last_evals is None and rollout_values is None:
@@ -76,12 +78,14 @@ class SPaCE(MightyMetaComponent):
         env.instance_set = self.instance_set
 
     def get_evals(self, env, vf):
-        """Get values for s_0 of all instances.
+        """
+        Get values for s_0 of all instances.
 
         :param env: environment
         :param vf: value or q function
         :return:
         """
+
         values = []
         for i in self.all_instances:
             state, _ = env.reset(options={"instance_id": i})

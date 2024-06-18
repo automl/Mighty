@@ -1,15 +1,12 @@
-"""Curriculum Learning via Prioritized Level Replay.
-This is adapted from: https://github.com/facebookresearch/level-replay/blob/main/level_replay/level_sampler.py.
-"""
-from __future__ import annotations
-
+# This is adapted from: https://github.com/facebookresearch/level-replay/blob/main/level_replay/level_sampler.py
 import gymnasium as gym
 import numpy as np
-from mighty.mighty_meta.mighty_component import MightyMetaComponent
+
+from mighty.mighty_meta.mighty_component_deprecated import MightyMetaComponent
 
 
 class PrioritizedLevelReplay(MightyMetaComponent):
-    """Curriculum Learning via Prioritized Level Replay."""
+    """Curriculum Learning via Prioritized Level Replay"""
 
     def __init__(
         self,
@@ -22,25 +19,21 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         staleness_transform="power",
         staleness_temperature=1.0,
     ) -> None:
-        """PLR initialization.
+        """
+        PLR initialization.
 
         :param alpha: Decay factor for scores
-        :param rho: Minimum proportion of instances that has to be
-            seen before re-sampling seen ones
+        :param rho: Minimum proportion of instances that has to be seen before re-sampling seen ones
         :param staleness_coeff: Staleness coefficient
-        :param sample_strategy: Strategy for level sampling.
-            One of: random, sequential, policy_entropy, least_confidence,
-            min_margin, gae, value_l1, one_step_td_error
-        :param score_transform: Transformation for the score.
-            One of: max, constant, eps_greedy, rank, power softmax
+        :param sample_strategy: Strategy for level sampling. One of: random, sequential, policy_entropy, least_confidence, min_margin, gae, value_l1, one_step_td_error
+        :param score_transform: Transformation for the score. One of: max, constant, eps_greedy, rank, power softmax
         :param termperature: Temperature for score transformation
-        :param staleness_transform: Transformation for staleness.
-            One of: max, constant, eps_greedy, rank, power softmax
+        :param staleness_transform: Transformation for staleness. One of: max, constant, eps_greedy, rank, power softmax
         :param staleness_temperature: Temperature for staleness transformation
         :return:
         """
+
         super().__init__()
-        self.rng = np.random.default_rng()
         self.alpha = alpha
         self.rho = rho
         self.staleness_coef = staleness_coeff
@@ -59,23 +52,26 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         self.post_episode_methods = [self.add_rollout]
 
     def get_instance(self, metrics=None):
-        """Get Training instance on episode start.
+        """
+        Get Training instance on episode start.
 
         :param metrics: Current metrics dict
         :return:
         """
+
         if self.all_instances is None:
             self.all_instances = metrics["env"].instance_id_list
             for i in self.all_instances:
-                if i not in self.instance_scores:
+                if i not in self.instance_scores.keys():
                     self.instance_scores[i] = 0
-                if i not in self.staleness:
+                if i not in self.staleness.keys():
                     self.staleness[i] = 0
             if isinstance(metrics["env"].action_space, gym.spaces.Discrete):
                 self.num_actions = metrics["env"].action_space.n
 
         if self.sample_strategy == "random":
-            return self.rng.choice(self.all_instances)
+            instance = np.random.choice(self.all_instances)
+            return instance
 
         if self.sample_strategy == "sequential":
             instance = self.all_instances[self.index]
@@ -87,17 +83,18 @@ class PrioritizedLevelReplay(MightyMetaComponent):
             self.all_instances
         )
 
-        if proportion_seen >= self.rho and self.rng.rand() < proportion_seen:
-            level = self._sample_replay_level()
+        if proportion_seen >= self.rho and np.random.rand() < proportion_seen:
+            return self._sample_replay_level()
         else:
-            level = self._sample_unseen_level()
-        return level
+            return self._sample_unseen_level()
 
     def _sample_replay_level(self):
-        """Get already seen level.
+        """
+        Get already seen level.
 
         :return:
         """
+
         sample_weights = self.sample_weights()
 
         if np.isclose(np.sum(sample_weights), 0):
@@ -105,7 +102,7 @@ class PrioritizedLevelReplay(MightyMetaComponent):
                 sample_weights
             )
 
-        idx = self.rng.choice(np.arange(len(self.all_instances)), 1, p=sample_weights)[
+        idx = np.random.choice(np.arange(len(self.all_instances)), 1, p=sample_weights)[
             0
         ]
         instance = self.all_instances[idx]
@@ -113,16 +110,18 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         return instance
 
     def sample_weights(self):
-        """Get weights for sampling.
+        """
+        Get weights for sampling.
 
         :return:
         """
+
         weights = self._score_transform(
             self.score_transform, self.temperature, self.instance_scores
         )
         ww = []
-        for i, w in zip(self.all_instances, weights, strict=False):
-            if i not in self.instance_scores:
+        for i, w in zip(self.all_instances, weights):
+            if i not in self.instance_scores.keys():
                 ww.append(0)
             else:
                 ww.append(w)
@@ -138,8 +137,8 @@ class PrioritizedLevelReplay(MightyMetaComponent):
                 self.staleness_transform, self.staleness_temperature, self.staleness
             )
             ws = []
-            for i, w in zip(self.all_instances, staleness_weights, strict=False):
-                if i not in self.instance_scores:
+            for i, w in zip(self.all_instances, staleness_weights):
+                if i not in self.instance_scores.keys():
                     ws.append(0)
                 else:
                     ws.append(w)
@@ -155,16 +154,18 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         return weights
 
     def _sample_unseen_level(self):
-        """Get an unseen instance.
+        """
+        Get an unseen instance.
 
         :return:
         """
+
         sample_weights = np.zeros(len(self.all_instances))
         num_unseen = len(self.all_instances) - len(list(self.instance_scores.keys()))
         for c, i in enumerate(self.all_instances):
-            if i not in self.instance_scores:
+            if i not in self.instance_scores.keys():
                 sample_weights[c] = 1 / num_unseen
-        idx = self.rng.choice(np.arange(len(self.all_instances)), 1, p=sample_weights)[
+        idx = np.random.choice(np.arange(len(self.all_instances)), 1, p=sample_weights)[
             0
         ]
         instance = self.all_instances[idx]
@@ -172,7 +173,8 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         return instance
 
     def _update_staleness(self, selected_id):
-        """Update instance staleness.
+        """
+        Update instance staleness.
 
         :param selected_id: instance id for which to update
         :return:
@@ -182,42 +184,45 @@ class PrioritizedLevelReplay(MightyMetaComponent):
             self.staleness[selected_id] = 0
 
     def score_function(self, reward, values, logits):
-        """Get score.
+        """
+        Get score.
 
         :param reward: Rollout rewards
         :param values: Rollout values
         :param logits: Rollout logits
         :return: score
         """
+
         if self.sample_strategy == "random":
-            score = 1
+            return 1
         elif self.sample_strategy == "policy_entropy":
-            score = self._average_entropy(logits)
+            return self._average_entropy(logits)
         elif self.sample_strategy == "least_confidence":
-            score = self._average_least_confidence(logits)
+            return self._average_least_confidence(logits)
         elif self.sample_strategy == "min_margin":
-            score = self._average_min_margin(logits)
+            return self._average_min_margin(logits)
         elif self.sample_strategy == "gae":
-            score = self._average_gae(reward, values)
+            return self._average_gae(reward, values)
         elif self.sample_strategy == "value_l1":
-            score = self._average_value_l1(reward, values)
+            return self._average_value_l1(reward, values)
         elif self.sample_strategy == "one_step_td_error":
-            score = self._one_step_td_error(reward, values)
+            return self._one_step_td_error(reward, values)
         else:
             raise NotImplementedError
-        return score
 
     def add_rollout(self, metrics):
-        """Save rollout stats.
+        """
+        Save rollout stats.
 
         :param metrics: Current metrics dict
         :return:
         """
+
         instance_id = metrics["env"].inst_id
         episode_reward = metrics["episode_reward"]
         rollout_values = metrics["rollout_values"]
         rollout_logits = None
-        if "rollout_logits" in metrics:
+        if "rollout_logits" in metrics.keys():
             rollout_logits = metrics["rollout_logits"]
 
         score = self.score_function(episode_reward, rollout_values, rollout_logits)
@@ -227,11 +232,13 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         ) * old_score + self.alpha * score
 
     def _average_entropy(self, episode_logits):
-        """Get average entropy.
+        """
+        Get average entropy.
 
         :param episode_logits: Rollout logits
         :return: entropy
         """
+
         max_entropy = (
             -(1.0 / self.num_actions)
             * np.log(1.0 / self.num_actions)
@@ -243,49 +250,59 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         )
 
     def _average_least_confidence(self, episode_logits):
-        """Get least confidence.
+        """
+        Get least confidence.
 
         :param episode_logits: Rollout logits
         :return: least average confidence
         """
+
         return 1 - np.mean(np.exp(np.max(episode_logits, axis=-1)[0]))
 
     def _average_min_margin(self, episode_logits):
-        """Get minimal margin.
+        """
+        Get minimal margin.
 
         :param episode_logits: Rollout logits
         :return: min margin
         """
+
         top2_confidence = np.exp(episode_logits[np.argsort(episode_logits)[::-1]][:2])
-        return 1 - np.mean(top2_confidence[:, 0] - top2_confidence[:, 1])
+        return 1 - np.mean((top2_confidence[:, 0] - top2_confidence[:, 1]))
 
     def _average_gae(self, rewards, value_preds):
-        """Get average gae.
+        """
+        Get average gae.
 
         :param rewards: Rollout rewards
         :param value_preds: Rollout values
         :return: average_gae
         """
+
         advantages = rewards - value_preds
         return np.mean(advantages)
 
     def _average_value_l1(self, rewards, value_preds):
-        """Get average value l1.
+        """
+        Get average value l1.
 
         :param rewards: Rollout rewards
         :param value_preds: Rollout values
         :return: average l1
         """
+
         advantages = rewards - value_preds
         return np.mean(abs(advantages))
 
     def _one_step_td_error(self, rewards, value_preds):
-        """Get one step td error.
+        """
+        Get one step td error.
 
         :param rewards: Rollout rewards
         :param value_preds: Rollout values
         :return: td error
         """
+
         max_t = len(rewards)
         td_errors = (
             rewards[:-1] + value_preds[: max_t - 1] - value_preds[1:max_t]
@@ -293,7 +310,8 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         return np.mean(abs(td_errors))
 
     def _score_transform(self, transform, temperature, scores):
-        """Transform score.
+        """
+        Transform score.
 
         :param transform: Transformation to apply
         :param temperature: Transformation temperature
@@ -307,9 +325,9 @@ class PrioritizedLevelReplay(MightyMetaComponent):
             weights = np.zeros_like(scores)
             scores = scores[:]
             for i in range(len(scores)):
-                if i not in self.instance_scores:
+                if i not in self.instance_scores.keys():
                     scores[i] = -float("inf")
-            argmax = self.rng.choice(np.flatnonzero(np.isclose(scores, max(scores))))
+            argmax = np.random.choice(np.flatnonzero(np.isclose(scores, max(scores))))
             weights[argmax] = 1.0
         elif transform == "eps_greedy":
             weights = np.zeros_like(scores)

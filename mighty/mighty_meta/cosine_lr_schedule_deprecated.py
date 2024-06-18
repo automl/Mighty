@@ -1,8 +1,6 @@
-"""Cosine LR Schedule with optional warm restarts."""
-from __future__ import annotations
-
 import numpy as np
-from mighty.mighty_meta.mighty_component import MightyMetaComponent
+
+from mighty.mighty_meta.mighty_component_deprecated import MightyMetaComponent
 
 
 class CosineLRSchedule(MightyMetaComponent):
@@ -16,7 +14,8 @@ class CosineLRSchedule(MightyMetaComponent):
         restart_every=10000,
         restart_multiplier=1.2,
     ) -> None:
-        """Cosine schedule initialization.
+        """
+        Cosine schedule initialization.
 
         :param initial_lr: Initial maximal LR
         :param num_decay_steps: Length of schedule in steps
@@ -25,6 +24,7 @@ class CosineLRSchedule(MightyMetaComponent):
         :param restart multiplier: Multiplies current learning rate on restart.
         :return:
         """
+
         super().__init__()
         self.restart_every = restart_every
         self.t_mult = restart_multiplier
@@ -35,11 +35,13 @@ class CosineLRSchedule(MightyMetaComponent):
         self.pre_step_methods = [self.adapt_lr]
 
     def adapt_lr(self, metrics):
-        """Adapt LR on step.
+        """
+        Adapt LR on step.
 
         :param metrics: Dict of current metrics
         :return:
         """
+
         self.t += 1
         if self.restart_every > 0 and self.t >= self.restart_every:
             self.t = 0

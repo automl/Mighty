@@ -1,43 +1,45 @@
-import os
-from pathlib import Path
-from typing import List, Optional, Type, Union
+"""Base agent template."""
+from __future__ import annotations
 
-import coax
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+import gymnasium as gym
 import hydra
-import jax.numpy as jnp
 import numpy as np
+import torch
 import wandb
-from coax.experience_replay._simple import BaseReplayBuffer
-from coax.reward_tracing._base import BaseRewardTracer
-from jax import vmap
+from mighty.mighty_replay import MightyReplay, TransitionBatch
+from mighty.utils.env_handling import CARLENV, DACENV, MIGHTYENV
 from omegaconf import DictConfig
+from rich import print
 from rich.progress import BarColumn, Progress, TimeElapsedColumn, TimeRemainingColumn
 
-from mighty.env.env_handling import CARLENV, DACENV, MIGHTYENV
-from mighty.mighty_replay import MightyReplay
-from mighty.utils.logger import Logger
-from mighty.utils.types import TypeKwargs
+if TYPE_CHECKING:
+    from mighty.utils.logger import Logger
+    from mighty.utils.types import TypeKwargs
 
 
-def retrieve_class(cls: Union[str, DictConfig, Type], default_cls: Type) -> Type:
+def retrieve_class(cls: str | DictConfig | type, default_cls: type) -> type:
     """Get coax or mighty class."""
     if cls is None:
         cls = default_cls
-    elif type(cls) is DictConfig:
+    elif isinstance(cls, DictConfig):
         cls = hydra.utils.get_class(cls._target_)
-    elif type(cls) is str:
+    elif isinstance(cls, str):
         cls = hydra.utils.get_class(cls)
     return cls
 
 
-class MightyAgent(object):
+class MightyAgent:
     """Base agent for Coax RL implementations."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0915, PLR0912
         self,
         env: MIGHTYENV,
         logger: Logger,
-        eval_env: Optional[MIGHTYENV] = None,
+        seed: int | None = None,
+        eval_env: MIGHTYENV | None = None,
         learning_rate: float = 0.01,
         epsilon: float = 0.1,
         batch_size: int = 64,
@@ -45,18 +47,14 @@ class MightyAgent(object):
         render_progress: bool = True,
         log_tensorboard: bool = False,
         log_wandb: bool = False,
-        wandb_kwargs: dict = {},
-        replay_buffer_class: Optional[
-            Union[str, DictConfig, Type[BaseReplayBuffer]]
-        ] = None,
-        replay_buffer_kwargs: Optional[TypeKwargs] = None,
-        tracer_class: Optional[Union[str, DictConfig, Type[BaseRewardTracer]]] = None,
-        tracer_kwargs: Optional[TypeKwargs] = None,
-        meta_methods: Optional[List[Union[str, Type]]] = [],
-        meta_kwargs: Optional[list[TypeKwargs]] = [],
+        wandb_kwargs: dict | None = None,
+        replay_buffer_class: str | DictConfig | type[MightyReplay] | None = None,
+        replay_buffer_kwargs: TypeKwargs | None = None,
+        meta_methods: list[str | type] | None = None,
+        meta_kwargs: list[TypeKwargs] | None = None,
+        verbose: bool = True,
     ):
-        """
-        Base agent initialization.
+        """Base agent initialization.
 
         Creates all relevant class variables and calls agent-specific init function
 
@@ -78,15 +76,26 @@ class MightyAgent(object):
         :param meta_kwargs: List of kwargs for the meta learning modules
         :return:
         """
-
+        if meta_kwargs is None:
+            meta_kwargs = []
+        if meta_methods is None:
+            meta_methods = []
+        if wandb_kwargs is None:
+            wandb_kwargs = {}
         self.learning_rate = learning_rate
         self._epsilon = epsilon
         self._batch_size = batch_size
         self._learning_starts = learning_starts
 
-        self.replay_buffer: Optional[BaseReplayBuffer] = None
-        self.tracer: Optional[BaseRewardTracer] = None
+        self.replay_buffer: MightyReplay | None = None
         self.policy = None
+
+        self.seed = seed
+        if self.seed is not None:
+            self.rng = np.random.default_rng(seed=seed)
+            torch.manual_seed(seed)
+        else:
+            self.rng = np.random.default_rng()
 
         # Replay Buffer
         replay_buffer_class = retrieve_class(
@@ -95,27 +104,12 @@ class MightyAgent(object):
         if replay_buffer_kwargs is None:
             replay_buffer_kwargs = {
                 "capacity": 1_000_000,
-                "random_seed": None,
             }
         self.replay_buffer_class = replay_buffer_class
         self.replay_buffer_kwargs = replay_buffer_kwargs
 
-        # Reward Tracer
-        tracer_class = retrieve_class(
-            cls=tracer_class, default_cls=coax.reward_tracing.NStep
-        )
-        if tracer_kwargs is None:
-            tracer_kwargs = {
-                "n": 1,
-                "gamma": 0.9,
-            }
-        self.tracer_class = tracer_class
-        self.tracer_kwargs = tracer_kwargs
-
-        if logger is not None:
-            output_dir = logger.log_dir
-        else:
-            output_dir = None
+        output_dir = logger.log_dir if logger is not None else None
+        self.verbose = verbose
 
         self.env = env
         if eval_env is None:
@@ -123,23 +117,11 @@ class MightyAgent(object):
         else:
             self.eval_env = eval_env
 
-        self.evals = []
-        if isinstance(self.eval_env, DACENV) or isinstance(self.eval_env, CARLENV):
-            eval_instance_ids = (
-                self.eval_env.instance_id_list
-                if isinstance(self.eval_env, DACENV)
-                else list(self.eval_env.contexts.keys())
-            )
-            for i in eval_instance_ids:
-                self.evals.append(make_eval(self.eval_env, i, logger))
-        else:
-            self.evals.append(make_eval(self.eval_env, None, logger))
-
         self.logger = logger
         self.render_progress = render_progress
         self.output_dir = output_dir
         if self.output_dir is not None:
-            self.model_dir = os.path.join(self.output_dir, "models")
+            self.model_dir = Path(self.output_dir) / Path("models")
 
         # Create meta modules
         self.meta_modules = {}
@@ -172,36 +154,86 @@ class MightyAgent(object):
             wandb.init(**wandb_kwargs)
 
         self.initialize_agent()
+        self.steps = 0
 
     def _initialize_agent(self):
         """Agent/algorithm specific initializations."""
-
         raise NotImplementedError
 
     def initialize_agent(self):
-        """
-        General initialization of tracer and buffer for all agents.
+        """General initialization of tracer and buffer for all agents.
 
-        Algorithm specific initialization like policies etc. are done in _initialize_agent
+        Algorithm specific initialization like policies etc.
+        are done in _initialize_agent
         """
-
-        self.tracer = self.tracer_class(
-            **self.tracer_kwargs
-        )  # specify how to trace the transitions
         self.replay_buffer = self.replay_buffer_class(**self.replay_buffer_kwargs)
 
         self._initialize_agent()
 
-    def update_agent(self, step):
-        """Policy/value function update"""
+    def update_agent(self):
+        """Policy/value function update."""
         raise NotImplementedError
 
     def adapt_hps(self, metrics):
         """Set hyperparameters."""
         self.learning_rate = metrics["hp/lr"]
         self._epsilon = metrics["hp/pi_epsilon"]
+        return metrics
 
-    def train(
+    def make_checkpoint_dir(self, t):
+        """Checkpoint model.
+
+        :param T: Current timestep
+        :return:
+        """
+        logdir = self.logger.log_dir
+        self.upper_checkpoint_dir = Path(logdir) / Path("checkpoints")
+        if not self.upper_checkpoint_dir.exists():
+            Path(self.upper_checkpoint_dir).mkdir()
+        self.checkpoint_dir = self.upper_checkpoint_dir / f"{t}"
+        if not self.checkpoint_dir.exists():
+            Path(self.checkpoint_dir).mkdir()
+
+    def __del__(self):
+        """Close wandb upon deletion."""
+        self.env.close()
+        if self.log_wandb:
+            wandb.finish()
+
+    def step(self, observation, metrics):
+        """This is a util function for the runner,
+        combining meta_modules and prediction.
+        """
+        for k in self.meta_modules:
+            self.meta_modules[k].pre_step(metrics)
+
+        metrics = self.adapt_hps(metrics)
+        return self.policy(observation, metrics=metrics)
+
+    def update(self, metrics):
+        """Update agent."""
+        for k in self.meta_modules:
+            self.meta_modules[k].pre_update(metrics)
+
+        agent_update_metrics = self.update_agent()
+        metrics.update(agent_update_metrics)
+        metrics = {k: np.array(v) for k, v in metrics.items()}
+        metrics["step"] = self.steps
+
+        if self.writer is not None:
+            self.writer.add_scalars("training_metrics", metrics, global_step=self.steps)
+
+        if self.log_wandb:
+            wandb.log(metrics)
+
+        metrics["env"] = self.env
+        metrics["vf"] = self.value_function
+        metrics["policy"] = self.policy
+        for k in self.meta_modules:
+            self.meta_modules[k].post_update(metrics)
+        return metrics
+
+    def run(  # noqa: PLR0915
         self,
         n_steps: int,
         n_episodes_eval: int,
@@ -209,19 +241,7 @@ class MightyAgent(object):
         human_log_every_n_steps: int = 5000,
         save_model_every_n_steps: int | None = 5000,
     ):
-        """
-        Trains the agent for n steps.
-
-        Evaluation is done for the given number of episodes each evaluation interval.
-
-        :param n_steps: The number of training steps
-        :param n_episodes_eval: The number of episodes to evaluate
-        :param eval_every_n_steps: Evaluation intervall
-        :param human_log_every_n_episodes: Intervall for human readable logging to the command line
-        :param save_mode_every_n_episodes: Intervall for model checkpointing
-        :return:
-        """
-
+        """Run agent."""
         episodes = 0
         with Progress(
             "[progress.description]{task.description}",
@@ -234,12 +254,10 @@ class MightyAgent(object):
             disable=not self.render_progress,
         ) as progress:
             steps_task = progress.add_task(
-                "Train Steps", total=n_steps, start=False, visible=False
+                "Train Steps", total=n_steps - self.steps, start=False, visible=False
             )
-            progress.start_task(steps_task)
-            self.steps = 0
             steps_since_eval = 0
-            log_reward_buffer = []
+            progress.start_task(steps_task)
             metrics = {
                 "env": self.env,
                 "vf": self.value_function,
@@ -248,235 +266,215 @@ class MightyAgent(object):
                 "hp/lr": self.learning_rate,
                 "hp/pi_epsilon": self._epsilon,
             }
+            s, _ = self.env.reset()
+            episode_reward = np.zeros(s.squeeze().shape[0])
+            last_episode_reward = episode_reward
+            progress.update(steps_task, visible=True)
             while self.steps < n_steps:
-                # Remove rollout data from last episode
-                for k in list(metrics.keys()):
-                    if "rollout" in k:
-                        del metrics[k]
-
-                for k in self.meta_modules.keys():
-                    self.meta_modules[k].pre_episode(metrics)
-
-                progress.update(steps_task, visible=True)
-                s, info = self.env.reset()
-                terminated, truncated = False, False
-                episode_reward = 0
                 metrics["episode_reward"] = episode_reward
-                while not (terminated or truncated) and self.steps < n_steps:
-                    for k in self.meta_modules.keys():
-                        self.meta_modules[k].pre_step(metrics)
-                    self.adapt_hps(metrics)
+                action = self.step(s, metrics)
+                next_s, reward, terminated, truncated, _ = self.env.step(action)
+                dones = np.logical_or(terminated, truncated)
+                transition = TransitionBatch(s, action, reward, next_s, dones)
+                transition_metrics = self.get_transition_metrics(transition, metrics)
+                metrics.update(transition_metrics)
+                self.replay_buffer.add(transition, metrics)
+                episode_reward += reward
 
-                    a = self.policy(s, metrics=metrics)
-                    s_next, r, terminated, truncated, info = self.env.step(a)
-                    episode_reward += r
+                # Log everything
+                t = {
+                    "seed": self.seed,
+                    "step": self.steps,
+                    "reward": reward.tolist(),
+                    "action": action.tolist(),
+                    "state": s.tolist(),
+                    "next_state": next_s.tolist(),
+                    "terminated": terminated.tolist(),
+                    "truncated": truncated.tolist(),
+                    "episode_reward": last_episode_reward,
+                }
+                metrics["episode_reward"] = episode_reward
+                self.logger.log_dict(t)
+                if self.writer is not None:
+                    self.writer.add_scalars("transition", t, global_step=self.steps)
 
-                    self.logger.log("reward", r)
-                    self.logger.log("action", a)
-                    self.logger.log("next_state", s_next)
-                    self.logger.log("state", s)
-                    self.logger.log("terminated", terminated)
-                    self.logger.log("truncated", truncated)
-                    t = {
-                        "step": self.steps,
-                        "reward": r,
-                        "action": a,
-                        "terminated": terminated,
-                        "truncated": truncated,
-                        "info": info,
-                    }
-                    metrics["episode_reward"] = episode_reward
+                if self.log_wandb:
+                    wandb.log(t)
 
-                    if self.writer is not None:
-                        self.writer.add_scalars("transition", t, global_step=self.steps)
+                for k in self.meta_modules:
+                    self.meta_modules[k].post_step(metrics)
 
-                    if self.log_wandb:
-                        wandb.log(t)
-
-                    for k in self.meta_modules.keys():
-                        self.meta_modules[k].post_step(metrics)
-
-                    log_reward_buffer.append(r)
-                    self.steps += 1
-                    steps_since_eval += 1
+                self.steps += len(action)
+                steps_since_eval += len(action)
+                for _ in range(len(action)):
                     progress.advance(steps_task)
 
-                    # add transition to buffer
-                    self.tracer.add(s, a, r, terminated or truncated)
-                    while self.tracer:
-                        transition = self.tracer.pop()
-                        transition_metrics = self.get_transition_metrics(
-                            transition, metrics
-                        )
-                        metrics.update(transition_metrics)
-                        if isinstance(transition.extra_info, dict):
-                            transition.extra_info.update(info)
-                        else:
-                            transition.extra_info = info
-                        self.replay_buffer.add(transition, transition_metrics)
+                # Update agent
+                if (
+                    len(self.replay_buffer) >= self._batch_size
+                    and self.steps >= self._learning_starts
+                ):
+                    metrics = self.update(metrics)
 
-                    # update
-                    if (
-                        len(self.replay_buffer) >= self._batch_size
-                        and self.steps >= self._learning_starts
-                    ):
-                        for k in self.meta_modules.keys():
-                            self.meta_modules[k].pre_step(metrics)
+                # End step
+                self.last_state = s
+                s = next_s
+                self.logger.next_step()
 
-                        agent_update_metrics = self.update_agent(self.steps)
-                        metrics.update(agent_update_metrics)
-                        metrics = {k: np.array(v) for k, v in metrics.items()}
-                        metrics["step"] = self.steps
+                # Evaluate
+                if eval_every_n_steps and steps_since_eval >= eval_every_n_steps:
+                    steps_since_eval = 0
+                    self.evaluate(n_eval_episodes=n_episodes_eval)
 
-                        if self.writer is not None:
-                            self.writer.add_scalars(
-                                "training_metrics", metrics, global_step=self.steps
-                            )
+                # Log to command line
+                if self.steps % human_log_every_n_steps == 0 and self.verbose:
+                    mean_last_ep_reward = np.round(
+                        np.mean(last_episode_reward), decimals=2
+                    )
+                    mean_last_step_reward = np.round(
+                        np.mean(mean_last_ep_reward / len(last_episode_reward)),
+                        decimals=2,
+                    )
+                    print(
+                        f"""Steps: {self.steps}, Latest Episode Reward: {mean_last_ep_reward}, Latest Step Reward: {mean_last_step_reward}"""  # noqa: E501
+                    )
 
-                        if self.log_wandb:
-                            wandb.log(metrics)
+                # Save
+                if (
+                    save_model_every_n_steps
+                    and self.steps % save_model_every_n_steps == 0
+                ):
+                    self.save(self.steps)
 
-                        metrics["env"] = self.env
-                        metrics["vf"] = self.value_function
-                        metrics["policy"] = self.policy
-                        for k in self.meta_modules.keys():
-                            self.meta_modules[k].pre_step(metrics)
+                if np.any(dones):
+                    last_episode_reward = np.where(
+                        dones, episode_reward, last_episode_reward
+                    )
+                    episode_reward = np.where(dones, 0, episode_reward)
+                    # End episode
+                    if isinstance(self.env, DACENV):
+                        instance = self.env.instance
+                    elif isinstance(self.env, CARLENV):
+                        instance = self.env.context
+                    else:
+                        instance = None
+                    self.logger.next_episode(instance)
+                    episodes += 1
+                    for k in self.meta_modules:
+                        self.meta_modules[k].post_episode(metrics)
 
-                    self.last_state = s
-                    s = s_next
-                    self.logger.next_step()
+                    # Remove rollout data from last episode
+                    # TODO: only do this for finished envs
+                    for k in list(metrics.keys()):
+                        if "rollout" in k:
+                            del metrics[k]
 
-                    if eval_every_n_steps:
-                        if steps_since_eval >= eval_every_n_steps:
-                            steps_since_eval = 0
-                            eval_metrics_list = self.evaluate(n_episodes_eval=n_episodes_eval)
+                    for k in self.meta_modules:
+                        self.meta_modules[k].pre_episode(metrics)
+        return metrics
 
-                    if self.steps % human_log_every_n_steps == 0:
-                        print(
-                            f"Steps: {self.steps}, Reward: {sum(log_reward_buffer) / len(log_reward_buffer)}"
-                        )
-                        log_reward_buffer = []
+    def apply_config(self, config):
+        """Apply config to agent."""
+        for n in config:
+            algo_name = n.split(".")[-1]
+            if hasattr(self, algo_name):
+                setattr(self, algo_name, config[n])
+            elif hasattr(self, "_" + algo_name):
+                setattr(self, "_" + algo_name, config[n])
+            elif n in ["architecture", "n_units", "n_layers", "size"]:
+                pass
+            else:
+                print(f"Trying to set hyperparameter {algo_name} which does not exist.")
 
-                    if save_model_every_n_steps:
-                        if self.steps % save_model_every_n_steps == 0:
-                            self.save(self.steps)
-
-                if isinstance(self.env, DACENV):
-                    instance = self.env.instance
-                elif isinstance(self.env, CARLENV):
-                    instance = self.env.context
-                else:
-                    instance = None
-                self.logger.next_episode(instance)
-                episodes += 1
-                for k in self.meta_modules.keys():
-                    self.meta_modules[k].post_episode(metrics)
-
-        # At the end make sure logger writes buffer to file
-        self.logger.write()
-        if self.writer is not None:
-            self.writer.flush()
-            self.writer.close()
-
-    def evaluate(self, n_episodes_eval: int) -> list[dict]:
-        self.logger.set_eval(True)
-        eval_metrics_list = []
-        for e in self.evals:
-            eval_metrics = vmap(e, in_axes=(None, None, 0), out_axes=0)(
-                self.policy,
-                self.steps,
-                jnp.arange(n_episodes_eval),
-            )
-            eval_metrics_list.append(eval_metrics)
-
-            if self.writer is not None:
-                self.writer.add_scalars("eval", eval_metrics)
-
-            if self.log_wandb:
-                wandb.log(eval_metrics)
-
-        self.logger.set_eval(False)
-        return eval_metrics_list
-
-    def get_state(self):
-        """Return internal state for checkpointing."""
-        raise NotImplementedError
-
-    def set_state(self, state):
-        """Set internal state after loading."""
-        raise NotImplementedError
-
-    def load(self, path):
-        """
-        Load checkpointed model.
-
-        :param path: Model path
-        :return:
-        """
-        state = coax.utils.load(path)
-        self.set_state(state=state)
-
-    def save(self, T):
-        """
-        Checkpoint model.
-
-        :param T: Current timestep
-        :return:
-        """
-        logdir = self.logger.log_dir
-        filepath = Path(os.path.join(logdir, "checkpoints", f"checkpoint_{T}.pkl.lz4"))
-        if not filepath.is_file() or True:  # TODO build logic
-            state = self.get_state()
-            coax.utils.dump(state, str(filepath))
-            print(f"Saved checkpoint to {filepath}")
-
-    def __del__(self):
-        """Close wandb upon deletion."""
-        if self.log_wandb:
-            wandb.finish()
-
-
-def make_eval(env, instance_id, logger):
-    """Eval constructor function."""
-    def eval(policy, steps, _):
-        """
-        Eval agent on an environment. (Full rollouts)
+    def evaluate(self, n_eval_episodes, instance_ids=None):
+        """Eval agent on an environment. (Full rollouts).
 
         :param env: The environment to evaluate on
         :param episodes: The number of episodes to evaluate
         :return:
         """
-
-        rewards = []
+        self.logger.set_eval(True)
         terminated, truncated = False, False
         options = {}
-        if instance_id is not None:
-            options = {"instance_id": instance_id}
-        state, _ = env.reset(options=options)
-        r = 0
-        while not (terminated or truncated):
-            action = policy(state, eval=True)
-            state, reward, terminated, truncated, _ = env.step(action)
-            r += reward
-            logger.next_step()
-        rewards.append(r)
 
-        if isinstance(env, DACENV):
-            instance = env.instance
-        elif isinstance(env, CARLENV):
-            instance = env.context
+        # If we evaluate over instances, we create envs like this
+        # That's because the instance set might change between evaluations
+        if instance_ids is not None:
+            from functools import partial
+
+            def return_env(**kwargs):
+                env = self.eval_env()
+                env.instance_id = kwargs["instance_id"]
+                return env
+
+            eval_env = gym.vector.SyncVectorEnv(
+                [
+                    partial(return_env, inst_id)
+                    for inst_id in instance_ids
+                    for _ in range(n_eval_episodes)
+                ]
+            )
+        else:
+            eval_env = self.eval_env()
+
+        state, _ = eval_env.reset(options=options)
+        rewards = np.zeros(n_eval_episodes)
+        steps = np.zeros(n_eval_episodes)
+        mask = np.zeros(n_eval_episodes)
+        while not np.all(mask):
+            action = self.policy(state, evaluate=True)
+            state, reward, terminated, truncated, _ = eval_env.step(action)
+            rewards += reward * (1 - mask)
+            steps += 1 * (1 - mask)
+            dones = np.logical_or(terminated, truncated)
+            mask = np.where(dones, 1, mask)
+            self.logger.next_step()
+
+        eval_env.close()
+
+        if isinstance(self.eval_env, DACENV):
+            instance = eval_env.instance
+        elif isinstance(self.eval_env, CARLENV):
+            instance = eval_env.context
         else:
             instance = None
-        logger.next_episode(instance)
-        logger.write()
+        self.logger.next_episode(instance)
+        self.logger.write()
 
         eval_metrics = {
-            "step": steps,
-            "eval_episodes": np.array(rewards),
+            "step": self.steps,
+            "eval_episodes": np.array(rewards) / steps,
+            "mean_eval_step_reward": np.mean(rewards) / steps,
             "mean_eval_reward": np.mean(rewards),
         }
         if instance is not None:
             eval_metrics["instance"] = instance
-        return eval_metrics
 
-    return eval
+        if self.verbose:
+            print("")
+            print(
+                "------------------------------------------------------------------------------"
+            )
+            print(
+                f"""Evaluation performance after {self.steps} steps:
+                {np.round(np.mean(rewards), decimals=2)}"""
+            )
+            print(
+                f"""Evaluation performance per step after {self.steps} steps:
+                {np.round(np.mean(rewards/ steps), decimals=2)}"""
+            )
+            print(
+                "------------------------------------------------------------------------------"
+            )
+            print("")
+
+        self.logger.log_dict(eval_metrics)
+
+        if self.writer is not None:
+            self.writer.add_scalars("eval", eval_metrics)
+
+        if self.log_wandb:
+            wandb.log(eval_metrics)
+
+        self.logger.set_eval(False)
+        return eval_metrics

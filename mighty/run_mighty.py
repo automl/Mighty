@@ -1,23 +1,30 @@
+"""Run Mighty agent."""
+from __future__ import annotations
+
+import logging
 import warnings
+from typing import TYPE_CHECKING
+
+import hydra
+from hydra.utils import get_class
+from mighty.mighty_agents import MightyBBFEAgent, MightyPBTAgent
+from mighty.mighty_agents.factory import get_agent_class
+from mighty.utils.envs import make_mighty_env
+from mighty.utils.logger import Logger
+from mighty.utils.search_space_handling import search_space_to_config_space
+from rich import print
 
 warnings.filterwarnings("ignore")
 # warnings.filterwarnings("ignore", category=DeprecationWarning)
 # warnings.filterwarnings("ignore", category=FutureWarning)
-import logging
 
-import hydra
-from hydra.utils import get_class
-from omegaconf import DictConfig
-from rich import print
-import numpy as np
-
-from mighty.agent.factory import get_agent_class
-from mighty.utils.logger import Logger
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
 
 
 @hydra.main("./configs", "base", version_base=None)
 def main(cfg: DictConfig) -> float:
-    """Parse config and run Mighty agent"""
+    """Parse config and run Mighty agent."""
     seed = cfg.seed
 
     # Initialize Logger
@@ -26,8 +33,6 @@ def main(cfg: DictConfig) -> float:
         output_path=cfg.output_dir,
         step_write_frequency=100,
         episode_write_frequency=None,
-        log_to_wandb=cfg.wandb_project,
-        log_to_tensorboad=cfg.tensorboard_file,
         hydra_config=cfg,
         cli_log_lvl=logging.INFO,
     )
@@ -35,68 +40,41 @@ def main(cfg: DictConfig) -> float:
 
     # Check whether env is from DACBench, CARL or gym
     # Make train and eval env
-    if cfg.env.endswith("Benchmark"):
-        from dacbench import benchmarks
+    env, base_eval_env, eval_default = make_mighty_env(cfg)
 
-        bench = getattr(benchmarks, cfg.env)()
-
-        use_benchmark = False
-        if "benchmark" in cfg.env_kwargs.keys():
-            use_benchmark = cfg.env_kwargs["benchmark"]
-
-        if use_benchmark:
-            del cfg.env_kwargs["benchmark"]
-            env = bench.get_benchmark(**cfg.env_kwargs)
-            eval_env = bench.get_benchmark(**cfg.env_kwargs)
-        else:
-            for k in cfg.env_kwargs.keys():
-                bench.config[k] = cfg.env_kwargs[k]
-            env = bench.get_environment()
-            eval_env = bench.get_environment()
-        eval_default = len(eval_env.instance_set.keys())
-    elif cfg.env.startswith("CARL"):
-        import carl
-        from carl.context.sampling import sample_contexts
-
-        if "num_contexts" not in cfg.env_kwargs.keys():
-            cfg.env_kwargs["num_contexts"] = 100
-        if "context_feature_args" not in cfg.env_kwargs.keys():
-            cfg.env_kwargs["context_feature_args"] = []
-
-        contexts = sample_contexts(cfg.env, **cfg.env_kwargs)
-        eval_contexts = sample_contexts(cfg.env, **cfg.env_kwargs)
-
-        env_class = getattr(carl.envs, cfg.env)
-        env = env_class(contexts=contexts)
-        eval_env = env_class(contexts=eval_contexts)
-        eval_default = len(eval_contexts)
-    else:
-        import gymnasium as gym
-
-        env = gym.make(cfg.env, **cfg.env_kwargs)
-        eval_env = gym.make(cfg.env, **cfg.env_kwargs)
-        eval_default = 1
-
+    wrapper_classes = []
     for w in cfg.env_wrappers:
-        if "wrapper_kwargs" in cfg.keys():
-            wkwargs = cfg.wrapper_kwargs
-        else:
-            wkwargs = {}
+        wkwargs = cfg.wrapper_kwargs if "wrapper_kwargs" in cfg else {}
         cls = get_class(w)
         env = cls(env, **wkwargs)
-        eval_env = cls(eval_env, **wkwargs)
+        wrapper_classes.append((cls, wkwargs))
+
+    def wrap_eval():
+        wrapped_env = base_eval_env()
+        for cls, wkwargs in wrapper_classes:
+            wrapped_env = cls(wrapped_env, **wkwargs)
+        return wrapped_env
+
+    eval_env = wrap_eval
 
     # Setup agent
     agent_class = get_agent_class(cfg.algorithm)
     args_agent = dict(cfg.algorithm_kwargs)
+    if agent_class is MightyBBFEAgent or agent_class is MightyPBTAgent:
+        assert (
+            "search_space" in cfg
+        ), "This is a meta algorithmic class and needs a search space"
+        args_agent["configspace"] = search_space_to_config_space(
+            search_space=cfg.search_space
+        )
     agent = agent_class(
         env=env,
         eval_env=eval_env,
         logger=logger,
+        seed=cfg.seed,
         **args_agent,
     )
 
-    n_episodes_eval = cfg.n_episodes_eval if cfg.n_episodes_eval else eval_default
     eval_every_n_steps = cfg.eval_every_n_steps
 
     # Load checkpoint if one is given
@@ -109,21 +87,20 @@ def main(cfg: DictConfig) -> float:
     print("#" * 80)
     print(f'Using agent type "{agent}" to learn')
     print("#" * 80)
-    agent.train(
+    agent.run(
         n_steps=cfg.num_steps,
-        n_episodes_eval=n_episodes_eval,
+        n_episodes_eval=cfg.n_episodes_eval,
         eval_every_n_steps=eval_every_n_steps,
-        save_model_every_n_steps=cfg.save_model_every_n_steps
+        save_model_every_n_steps=cfg.save_model_every_n_steps,
     )
 
     # Final evaluation
-    eval_metrics_list = agent.evaluate(n_episodes_eval=n_episodes_eval)
+    eval_metrics_list = agent.evaluate(n_eval_episodes=cfg.n_episodes_eval)
     logger.close()
 
     # When optimizing we minimize
-
     # Get performance mean across instances (if any)
-    performance = np.mean([d["mean_eval_reward"] for d in eval_metrics_list])
+    performance = eval_metrics_list["mean_eval_reward"]
     return -performance
 
 
