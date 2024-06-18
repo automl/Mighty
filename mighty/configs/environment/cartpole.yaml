@@ -4,3 +4,4 @@ num_steps: 50_000
 env: CartPole-v1
 env_kwargs: {}
 env_wrappers: []
+num_envs: 1

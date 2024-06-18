@@ -267,7 +267,10 @@ class MightyAgent:
                 "hp/pi_epsilon": self._epsilon,
             }
             s, _ = self.env.reset()
-            episode_reward = np.zeros(s.squeeze().shape[0])
+            if len(s.squeeze().shape) == 0:
+                episode_reward = [0]
+            else:
+                episode_reward = np.zeros(s.squeeze().shape[0])
             last_episode_reward = episode_reward
             progress.update(steps_task, visible=True)
             while self.steps < n_steps:

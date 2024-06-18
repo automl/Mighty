@@ -7,37 +7,6 @@ import gymnasium as gym
 import numpy as np
 
 
-class PufferlibToGymAdapter(gym.Wrapper):
-    """Adapter for Pufferlib environments to be used with OpenAI Gym."""
-
-    def __init__(self, env):
-        """Adapter for Pufferlib environments to be used with OpenAI Gym."""
-        super().__init__(env)
-        self.metadata = {
-            "render.modes": ["human", "rgb_array"],
-            "video.frames_per_second": 60,
-        }
-
-    def reset(self, **kwargs):
-        """Reset the environment and return the initial observation."""
-        if "options" in kwargs:
-            del kwargs["options"]
-        obs, info, env_id, mask = self.env.reset(**kwargs)
-        return_info = {"env_id": env_id, "mask": mask, "info": info}
-        return obs, return_info
-
-    def step(self, action):
-        """Take a step in the environment."""
-        obs, rewards, dones, truncateds, infos, env_ids, masks = self.env.step(action)
-        return (
-            obs,
-            rewards,
-            dones,
-            truncateds,
-            {"env_id": env_ids, "mask": masks, "info": infos},
-        )
-
-
 class FlattenVecObs(gym.Wrapper):
     """Flatten observation space of a vectorized environment."""
 

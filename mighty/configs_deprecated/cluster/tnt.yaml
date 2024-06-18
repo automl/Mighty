@@ -1,0 +1,15 @@
+defaults:
+  - override hydra/launcher: submitit_slurm
+
+cluster:
+  queue: cpu_short  # partition
+
+hydra:
+  launcher:
+    partition: cpu_short  # change this to your partition name
+    #gres: gpu:1     # use this option when running on GPUs
+    mem_gb: 12       # memory requirements
+    cpus_per_task: 20  # number of cpus per run
+    timeout_min: 720   # timeout in minutes
+    setup:
+      - export XLA_PYTHON_CLIENT_PREALLOCATE=false

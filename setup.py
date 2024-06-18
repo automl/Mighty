@@ -9,7 +9,7 @@ setup(
     python_requires=">=3.9",
     install_requires=requirements,
     package_data={"mighty": ["requirements.txt"]},
-    packages=find_packages(exclude=['tests', 'examples', 'docs', 'checkpointing_test']),
+    packages=find_packages(exclude=['test', 'examples', 'docs', 'checkpointing_test']),
     author="TODO",
     version="0.0.1",
     test_suite="nose.collector",

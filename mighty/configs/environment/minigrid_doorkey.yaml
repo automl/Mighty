@@ -1,0 +1,7 @@
+# @package _global_
+
+num_steps: 2e5
+env: MiniGrid-DoorKey-5x5-v0
+env_kwargs: {}
+env_wrappers: [minigrid.wrappers.ImgObsWrapper, mighty.utils.wrappers.MinigridImgVecObs]
+num_envs: 1

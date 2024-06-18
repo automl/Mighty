@@ -5,7 +5,7 @@
 # These have been configured to only really run short tasks. Longer form tasks
 # are usually completed in github actions.
 
-.PHONY: help install-dev check format pre-commit clean build clean-doc clean-build test doc publish
+.PHONY: help install-dev install check format pre-commit clean build clean-doc clean-build test doc publish
 
 help:
 	@echo "Makefile Mighty"
@@ -39,6 +39,9 @@ INDEX_HTML := file://${DOCDIR}/html/build/index.html
 install-dev:
 	$(PIP) install -e ".[dev, docs, all, examples]"
 	pre-commit install
+
+install:
+	$(PIP) install -e ".[all, examples]"
 
 check-black:
 	$(BLACK)  mighty test --check || :

@@ -1,0 +1,17 @@
+# @package _global_
+defaults:
+  - override /hydra/launcher: submitit_slurm
+
+cluster:
+  queue: ai  # partition
+
+hydra:
+  launcher:
+    partition: ai
+    cpus_per_task: 1
+    name: expl2
+    timeout_min: 20
+    mem_gb: 4
+    setup:
+      - module load Miniconda3
+      - conda activate /bigwork/nhwpbenc/conda/envs/mighty

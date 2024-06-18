@@ -74,20 +74,22 @@ def make_procgen_env(cfg):
 
 def make_pufferlib_env(cfg):
     """Make pufferlib environment."""
-    from pufferlib.vectorization import Multiprocessing, Serial
-
-    vec = Serial if cfg.debug else Multiprocessing
+    import pufferlib
+    import pufferlib.vector
 
     domain = ".".join(cfg.env.split(".")[:-1])
     name = cfg.env.split(".")[-1]
     get_env_func = importlib.import_module(domain).env_creator
     make_env = partial(get_env_func(name), **cfg.env_kwargs)
-    env = PufferlibToGymAdapter(vec(make_env, num_envs=cfg.num_envs))
+    if cfg.debug:
+        env = make_env()
+    else:
+        env = pufferlib.vector.make(make_env, num_envs=cfg.num_envs)
 
     def get_eval():
-        env = vec(make_env, num_envs=cfg.n_episodes_eval)
-        return PufferlibToGymAdapter(env)
-
+        env = pufferlib.vector.make(make_env, num_envs=cfg.n_episodes_eval)
+        return env
+    
     eval_default = cfg.n_episodes_eval
     return env, get_eval, eval_default
 

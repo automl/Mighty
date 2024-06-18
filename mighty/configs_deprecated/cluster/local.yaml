@@ -1,0 +1,13 @@
+# @package _global_
+# defaults:
+#   - override /hydra/launcher: joblib
+
+# hydra:
+#   launcher:
+#     n_jobs: 16
+
+cluster:
+  _target_: distributed.deploy.local.LocalCluster
+  n_workers: ${hydra.sweeper.scenario.n_workers}
+  processes: false
+  threads_per_worker: 1

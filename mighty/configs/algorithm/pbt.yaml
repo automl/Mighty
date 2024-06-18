@@ -1,0 +1,27 @@
+# @package _global_
+algorithm: PBT
+
+algorithm_kwargs:
+  base_agent: mighty.mighty_agents.MightyDQNAgent
+  base_agent_kwargs:
+    learning_rate: 0.001
+    batch_size: 64  # Batch size for training.
+    gamma: 0.9  # The amount by which to discount future rewards.
+    soft_update_weight: 1.  # If we set :math:`\tau=1` we do a hard update. If we pick a smaller value, we do a smooth update.
+    td_update_class: mighty.mighty_update.QLearning #Simple Q-learning update instead of default DDQN
+    q_kwargs:
+      dueling: False
+      feature_extractor_kwargs:
+        architecture: mlp
+        n_layers: 1
+        hidden_sizes: [32]
+      head_kwargs:
+        hidden_sizes: [32]
+  population_size: 8
+  configuration_points: 10
+  variant: "pbt"
+  replay_buffer_class:
+    _target_: mighty.mighty_replay.PrioritizedReplay #Using prioritized experience replay
+  replay_buffer_kwargs:
+    capacity: 1000000  # Maximum size of replay buffer.
+    alpha: 0.6
