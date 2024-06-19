@@ -43,32 +43,19 @@ install-dev:
 install:
 	$(PIP) install -e ".[all, examples]"
 
-check-black:
-	$(BLACK)  mighty test --check || :
-
-check-isort:
-	$(ISORT) mighty test --check || :
-
-check-pydocstyle:
-	$(PYDOCSTYLE) mighty || :
-
-check-flake8:
-	$(FLAKE8) mighty || :
-	$(FLAKE8) test || :
 
 # pydocstyle does not have easy ignore rules, instead, we include as they are covered
-check: check-black check-isort check-flake8 check-pydocstyle
+check: 
+	ruff format --check mighty test
+	ruff check mighty test
 
 pre-commit:
 	$(PRECOMMIT) run --all-files
 
-format-black:
-	$(BLACK) mighty test
-
-format-isort:
-	$(ISORT) mighty test
-
-format: format-black format-isort
+format: 
+	ruff format --silent mighty test
+	ruff check --fix --silent mighty test --exit-zero
+	ruff check --fix mighty test --exit-zero
 
 test:
 	$(PYTEST) -v --cov=mighty test --durations=20

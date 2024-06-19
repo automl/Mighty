@@ -80,7 +80,9 @@ class TestBatch:
         assert (
             batch.actions.shape == batch.dones.shape
         ), "Action shape was not equal to reward shape."
-        assert len(batch.actions.shape) == len(batch.observations.shape) - 1, f"""Action shape was not one less than observation shape:
+        assert (
+            len(batch.actions.shape) == len(batch.observations.shape) - 1
+        ), f"""Action shape was not one less than observation shape:
             {batch.actions}///{batch.actions.shape} ---
             {batch.observations}///{batch.observations.shape}."""
 
@@ -478,14 +480,18 @@ class TestPrioritizedReplay:
         replay.add(batch, {"td_error": [0, 0, 1]})
         batchset = [replay.sample(batch_size=1) for _ in range(50)]
         all_actions = [act for batch in batchset for act in batch.actions]
-        assert ~all(x == all_actions[0] for x in all_actions), """All sampled batches were different
+        assert ~all(
+            x == all_actions[0] for x in all_actions
+        ), """All sampled batches were different
             (even though probabilities should prevent this)."""
 
         replay = self.get_replay(batch, size, empty=True)
         replay.add(batch, {"td_error": [4, 4, 4]})
         batchset = [replay.sample(batch_size=1) for _ in range(10)]
         all_actions = [act for batch in batchset for act in batch.actions]
-        assert ~all(x == all_actions[0] for x in all_actions), """All sampled batches were the same
+        assert ~all(
+            x == all_actions[0] for x in all_actions
+        ), """All sampled batches were the same
             (although probabilities should prevent this)."""
 
     def test_reset(self):

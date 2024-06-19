@@ -1,4 +1,5 @@
 """Cosine LR Schedule with optional warm restarts."""
+
 from __future__ import annotations
 
 import numpy as np

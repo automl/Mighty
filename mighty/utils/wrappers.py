@@ -1,4 +1,5 @@
 """Utility wrappers for environments."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -24,7 +25,7 @@ class PufferlibToGymAdapter(gym.Wrapper):
             del kwargs["options"]
         obs, info = self.env.reset(**kwargs)
         return obs, info
-    
+
 
 class FlattenVecObs(gym.Wrapper):
     """Flatten observation space of a vectorized environment."""
@@ -65,6 +66,7 @@ class MinigridImgVecObs(gym.Wrapper):
             shape=self.env.observation_space.shape[1:], low=0, high=255
         )
 
+
 class MultiDiscreteActionWrapper(gym.Wrapper):
     """Wrapper to cast MultiDiscrete action spaces to Discrete. This should improve usability with standard RL libraries."""
 
@@ -80,11 +82,15 @@ class MultiDiscreteActionWrapper(gym.Wrapper):
         """
         super().__init__(env)
         self.n_actions = len(self.env.single_action_space.nvec)
-        self.single_action_space = gym.spaces.Discrete(np.prod(self.env.single_action_space.nvec))
+        self.single_action_space = gym.spaces.Discrete(
+            np.prod(self.env.single_action_space.nvec)
+        )
         self.action_mapper = {}
         for idx, prod_idx in zip(
             range(np.prod(self.env.single_action_space.nvec)),
-            itertools.product(*[np.arange(val) for val in self.env.single_action_space.nvec]),
+            itertools.product(
+                *[np.arange(val) for val in self.env.single_action_space.nvec]
+            ),
         ):
             self.action_mapper[idx] = prod_idx
 
@@ -92,12 +98,28 @@ class MultiDiscreteActionWrapper(gym.Wrapper):
         """Maps discrete action value to array."""
         action = [self.action_mapper[a] for a in action]
         return self.env.step(action)
-    
-class CARLVectorEnvSimulator:
+
+
+class CARLVectorEnvSimulator(gym.vector.VectorEnv):
     def __init__(self, env, **kwargs) -> None:
         self.env = env
         self.single_action_space = env.action_space
         self.single_observation_space = env.observation_space
+        if hasattr(env, "num_envs"):
+            self.num_envs = env.num_envs
+        else:
+            self.num_envs = 1
+
+        if hasattr(env, "envs"):
+            self.envs = env.envs
+        else:
+            self.envs = [env]
 
     def close(self):
         self.env.close()
+
+    def reset(self, **kwargs):
+        return self.env.reset()
+
+    def step(self, actions):
+        return self.env.step(actions)

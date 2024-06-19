@@ -68,7 +68,9 @@ class TestDQN:
         dqn_pred = dqn(dummy_input)
         assert dqn_pred.shape == (50, 4), "Output should have shape (1, 4)"
         calculated_pred = dqn.advantage(dqn.head(dqn.feature_extractor(dummy_input)))
-        assert torch.allclose(dqn_pred, calculated_pred), """Prediction should be equal to
+        assert torch.allclose(
+            dqn_pred, calculated_pred
+        ), """Prediction should be equal to
             advantage(head(feature_extractor(dummy_input)))"""
 
         dqn = DQN(num_actions=4, obs_size=3, dueling=True)

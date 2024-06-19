@@ -5,7 +5,10 @@ import jax
 import numpy as onp
 from coax.reward_tracing import TransitionBatch
 
-from mighty.mighty_replay.mighty_replay_buffer_deprecated import MightyReplay, flatten_infos
+from mighty.mighty_replay.mighty_replay_buffer_deprecated import (
+    MightyReplay,
+    flatten_infos,
+)
 
 
 class HERGoalWrapper(gym.Wrapper):

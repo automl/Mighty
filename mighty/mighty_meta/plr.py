@@ -1,6 +1,7 @@
 """Curriculum Learning via Prioritized Level Replay.
 This is adapted from: https://github.com/facebookresearch/level-replay/blob/main/level_replay/level_sampler.py.
 """
+
 from __future__ import annotations
 
 import gymnasium as gym

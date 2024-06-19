@@ -1,4 +1,5 @@
 """Template for meta-learning components."""
+
 from __future__ import annotations
 
 

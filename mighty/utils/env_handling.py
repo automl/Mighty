@@ -1,4 +1,5 @@
 """Env typing utilities for Mighty."""
+
 from __future__ import annotations
 
 import importlib

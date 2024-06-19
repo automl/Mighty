@@ -92,11 +92,11 @@ def search_space_to_config_space(
     -------
     ConfigurationSpace
     """
-    if type(search_space) == str:
+    if isinstance(search_space, str):
         with open(search_space) as f:
             jason_string = f.read()
         cs = csjson.read(jason_string)
-    elif type(search_space) == DictConfig:
+    elif isinstance(search_space, DictConfig):
         # reorder hyperparameters as List[Dict]
         hyperparameters = []
         for name, cfg in search_space.hyperparameters.items():

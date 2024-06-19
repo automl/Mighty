@@ -109,9 +109,9 @@ class MightySACAgent(MightyAgent):
         self.qlearning1: Optional[coax.td_learning.DoubleQLearning] = None
         self.qlearning2: Optional[coax.td_learning.DoubleQLearning] = None
         self.soft_pg: Optional[coax.policy_objectives.SoftPG] = None
-        self.policy_regularizer: Optional[
-            coax.regularizers.NStepEntropyRegularizer
-        ] = None
+        self.policy_regularizer: Optional[coax.regularizers.NStepEntropyRegularizer] = (
+            None
+        )
 
         self.td_update_class = retrieve_class(
             cls=td_update_class, default_cls=coax.td_learning.DoubleQLearning

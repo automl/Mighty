@@ -4,7 +4,9 @@ import jax.numpy as jnp
 import numpy as np
 from jax import jit
 
-from mighty.mighty_exploration.mighty_exploration_policy_deprecated import MightyExplorationPolicy
+from mighty.mighty_exploration.mighty_exploration_policy_deprecated import (
+    MightyExplorationPolicy,
+)
 
 
 class EZGreedy(MightyExplorationPolicy):

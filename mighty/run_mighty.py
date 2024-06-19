@@ -1,4 +1,5 @@
 """Run Mighty agent."""
+
 from __future__ import annotations
 
 import logging
@@ -40,6 +41,7 @@ def main(cfg: DictConfig) -> float:
     # Make train and eval env
     env, base_eval_env, eval_default = make_mighty_env(cfg)
 
+    # TODO: move wrapping to env handling?
     wrapper_classes = []
     for w in cfg.env_wrappers:
         wkwargs = cfg.wrapper_kwargs if "wrapper_kwargs" in cfg else {}

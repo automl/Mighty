@@ -1,4 +1,5 @@
 """Environment creation utilities."""
+
 from __future__ import annotations
 
 import importlib
@@ -35,12 +36,20 @@ def make_dacbench_env(cfg):
             bench.config[k] = cfg.env_kwargs[k]
         make_env = bench.get_environment
 
-    #TODO: enable test mode for DACBench eval env
+    def make_eval_env(make_env):
+        eval_env = make_env()
+        eval_env.use_test_set()
+        return eval_env
+
     env = gym.vector.SyncVectorEnv([make_env for _ in range(cfg.num_envs)])
     eval_env = partial(
-        gym.vector.SyncVectorEnv, [make_env for _ in range(cfg.n_episodes_eval)]
+        gym.vector.SyncVectorEnv,
+        [
+            partial(make_eval_env, make_env)
+            for _ in range(cfg.n_episodes_eval * len(env.envs[0].instance_set.keys()))
+        ],
     )
-    eval_default = len(env.envs[0].instance_set.keys())
+    eval_default = len(env.envs[0].instance_set.keys()) * cfg.n_episodes_eval
     return env, eval_env, eval_default
 
 
@@ -69,31 +78,47 @@ def make_carl_env(cfg):
         context_distributions = []
         for context_feature, dist_args in env_kwargs["context_feature_args"].items():
             if dist_args[0] == "uniform-int":
-                dist = carl.context.context_space.UniformIntegerContextFeature(context_feature, lower=dist_args[1], upper=dist_args[2])
+                dist = carl.context.context_space.UniformIntegerContextFeature(
+                    context_feature, lower=dist_args[1], upper=dist_args[2]
+                )
             elif dist_args[0] == "uniform-float":
-                dist = carl.context.context_space.UniformFloatContextFeature(context_feature, lower=dist_args[1], upper=dist_args[2])
+                dist = carl.context.context_space.UniformFloatContextFeature(
+                    context_feature, lower=dist_args[1], upper=dist_args[2]
+                )
             elif dist_args[0] == "normal":
-                dist = carl.context.context_space.NormalFloatContextFeature(context_feature, mu=dist_args[1], sigma=dist_args[2])
+                dist = carl.context.context_space.NormalFloatContextFeature(
+                    context_feature, mu=dist_args[1], sigma=dist_args[2]
+                )
             elif dist_args[0] == "categorical":
-                dist = carl.context.context_space.CategoricalContextFeature(context_feature, choices=dist_args[1])
+                dist = carl.context.context_space.CategoricalContextFeature(
+                    context_feature, choices=dist_args[1]
+                )
             else:
-                raise ValueError("Unknown context distribution type. Valid types are: uniform-int, uniform-float, normal, categorical.")
+                raise ValueError(
+                    "Unknown context distribution type. Valid types are: uniform-int, uniform-float, normal, categorical."
+                )
             context_distributions.append(dist)
 
-        context_sampler = ContextSampler(context_distributions, context_space=env_class.get_context_space(), seed=env_kwargs["context_sample_seed"])
+        context_sampler = ContextSampler(
+            context_distributions,
+            context_space=env_class.get_context_space(),
+            seed=env_kwargs["context_sample_seed"],
+        )
         contexts = context_sampler.sample_contexts(env_kwargs["num_contexts"])
         context_sampler.seed(env_kwargs["evaluation_context_sample_seed"])
-        eval_contexts = context_sampler.sample_contexts(env_kwargs["num_evaluation_contexts"])
+        eval_contexts = context_sampler.sample_contexts(
+            env_kwargs["num_evaluation_contexts"]
+        )
     else:
         contexts = {0: env_class.get_default_context()}
         eval_contexts = {0: env_class.get_default_context()}
-    
+
     env = env_class(contexts=contexts)
     eval_env = env_class(contexts=eval_contexts)
 
     env = CARLVectorEnvSimulator(env)
-    eval_env = CARLVectorEnvSimulator(eval_env)
-    eval_default = len(eval_contexts)
+    eval_env = partial(CARLVectorEnvSimulator, eval_env)
+    eval_default = len(eval_contexts) * cfg.n_episodes_eval
     return env, eval_env, eval_default
 
 
@@ -105,8 +130,9 @@ def make_procgen_env(cfg):
         env = envpool.make(ProcgenGym3Env, env_type="gym", **cfg.env_kwargs)
     else:
         env = ProcgenGym3Env(num=cfg.num_envs, env_name=cfg.env.split(":")[-1])
-    # TODO: needs a partial here
-    eval_env = ProcgenGym3Env(num=cfg.n_episodes_eval, env_name=cfg.env.split(":")[-1])
+    eval_env = partial(
+        ProcgenGym3Env, num=cfg.n_episodes_eval, env_name=cfg.env.split(":")[-1]
+    )
     eval_default = cfg.n_episodes_eval
     return env, eval_env, eval_default
 
@@ -120,10 +146,7 @@ def make_pufferlib_env(cfg):
     name = cfg.env.split(".")[-1]
     get_env_func = importlib.import_module(domain).env_creator
     make_env = partial(get_env_func(name), **cfg.env_kwargs)
-    if cfg.debug:
-        env = make_env()
-    else:
-        env = PufferlibToGymAdapter(pufferlib.vector.make(make_env, num_envs=cfg.num_envs))
+    env = PufferlibToGymAdapter(pufferlib.vector.make(make_env, num_envs=cfg.num_envs))
 
     def get_eval():
         env = pufferlib.vector.make(make_env, num_envs=cfg.n_episodes_eval)
@@ -156,8 +179,11 @@ def make_mighty_env(cfg):
         env, eval_env, eval_default = make_pufferlib_env(cfg)
     elif ENVPOOL:
         env = envpool.make(cfg.env, env_type="gym", **cfg.env_kwargs)
-        eval_env = gym.make(cfg.env, **cfg.env_kwargs)
-        eval_default = 1
+        make_env = partial(gym.make, cfg.env, **cfg.env_kwargs)
+        eval_env = partial(
+            gym.vector.SyncVectorEnv, [make_env for _ in range(cfg.n_episodes_eval)]
+        )
+        eval_default = cfg.n_episodes_eval
     else:
         env, eval_env, eval_default = make_gym_env(cfg)
     return env, eval_env, eval_default
