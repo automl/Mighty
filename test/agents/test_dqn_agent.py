@@ -7,24 +7,13 @@ import gymnasium as gym
 import numpy as np
 import torch
 import torch.nn.functional as F
+from utils import DummyEnv
 from mighty.mighty_agents.dqn import MightyDQNAgent
 from mighty.mighty_exploration.epsilon_greedy import EpsilonGreedy
 from mighty.mighty_models.dqn import DQN
 from mighty.mighty_replay import PrioritizedReplay, TransitionBatch
 from mighty.mighty_update.q_learning import DoubleQLearning, QLearning
 from mighty.utils.logger import Logger
-
-
-class DummyEnv(gym.Env):
-    def __init__(self):
-        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(3,))
-        self.action_space = gym.spaces.Discrete(4)
-
-    def reset(self):
-        return self.observation_space.sample(), {}
-
-    def step(self, action):
-        return self.observation_space.sample(), 0, False, False, {}
 
 
 class TestDQNAgent:

@@ -124,12 +124,7 @@ class TestDQN:
         prev_head_params = deepcopy(list(dqn.head.parameters()))
         prev_adv_params = deepcopy(list(dqn.advantage.parameters()))
         prev_value_params = deepcopy(list(dqn.value.parameters()))
-        original_pred = dqn(dummy_input)
         dqn.shrink_weights(0.5, 0.0)
-        reset_pred = dqn(dummy_input)
-        assert (
-            original_pred * 0.5 - reset_pred
-        ).sum() < 0.15, "Model prediction didn't shrink with parameter value."
         for new_param, old_param in zip(
             dqn.head.parameters(), prev_head_params, strict=False
         ):

@@ -74,6 +74,8 @@ class TestEpsilonGreedy:
         policy = self.get_policy(epsilon=0.0)
         actions, qvals = policy.explore_func(state)
         greedy_actions, greedy_qvals = policy.sample_action(state)
+        print(greedy_actions)
+        print(actions)
         assert all(
             a == g for g in greedy_actions for a in actions
         ), f"Actions should match greedy: {actions}///{greedy_actions}"
@@ -98,3 +100,19 @@ class TestEpsilonGreedy:
         assert (
             sum(actions[:, -1] == 1) / 100 < 0.33
         ), "High index actions should not match greedy more than 1/3 of the time."
+
+    @pytest.mark.parametrize(
+        "state",
+        [
+            torch.tensor([[0, 1], [0, 1]]),
+            torch.tensor([[0, 235, 67], [0, 1, 2]]),
+            torch.tensor(
+                [[0, 235, 67], [0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2]]
+            ),
+        ],
+    )
+    def test_multiple_epsilons(self, state):
+        """Test multiple epsilon values."""
+        policy = self.get_policy(epsilon=[0.1, 0.5])
+        assert np.all(policy.epsilon == [0.1, 0.5]), "Epsilon should be [0.1, 0.5]."
+        policy.explore_func(state)
