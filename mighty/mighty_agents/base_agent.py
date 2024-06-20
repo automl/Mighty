@@ -177,6 +177,8 @@ class MightyAgent:
         """Set hyperparameters."""
         self.learning_rate = metrics["hp/lr"]
         self._epsilon = metrics["hp/pi_epsilon"]
+        self._batch_size = metrics["hp/batch_size"]
+        self._learning_starts = metrics["hp/learning_starts"]
         return metrics
 
     def make_checkpoint_dir(self, t):
@@ -264,6 +266,8 @@ class MightyAgent:
                 "step": self.steps,
                 "hp/lr": self.learning_rate,
                 "hp/pi_epsilon": self._epsilon,
+                "hp/batch_size": self._batch_size,
+                "hp/learning_starts": self._learning_starts,
             }
             s, _ = self.env.reset()
             if len(s.squeeze().shape) == 0:

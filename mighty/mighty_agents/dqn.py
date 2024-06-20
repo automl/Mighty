@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 
 import dill
 import numpy as np
@@ -57,7 +57,7 @@ class MightyDQNAgent(MightyAgent):
         # DDQN Specific Args
         use_target: bool = True,
         n_units: int = 8,
-        soft_update_weight: float = 0.01,  # TODO which default value?
+        soft_update_weight: float = 0.01,
         policy_class: str | DictConfig | type[MightyExplorationPolicy] | None = None,
         policy_kwargs: TypeKwargs | None = None,
         q_class: str | DictConfig | type[DQN] | None = None,
@@ -213,30 +213,31 @@ class MightyDQNAgent(MightyAgent):
                 )
         return metrics_q
 
-    def get_transition_metrics(self, transition, metrics):
+    def get_transition_metrics(self, transition, metrics: Dict):
         """Get metrics per transition.
 
         :param transition: Current transition
         :param metrics: Current metrics dict
         :return:
         """
-        if "rollout_errors" not in metrics:
-            metrics["rollout_values"] = np.empty(0)
+        if "rollout_values" not in metrics:
+            metrics["rollout_values"] = np.empty((0, self.env.single_action_space.n))
 
         metrics["td_error"] = (
             self.qlearning.td_error(transition, self.q, self.q_target).detach().numpy()
         )
-        metrics["rollout_values"] = np.append(
-            metrics["rollout_values"],
+        values = (
             self.value_function(
                 torch.as_tensor(transition.observations, dtype=torch.float32)
             )
             .detach()
-            .numpy(),
+            .numpy()
+            .reshape((transition.observations.shape[0], -1))
         )
+        metrics["rollout_values"] = np.append(metrics["rollout_values"], values, axis=0)
         return metrics
 
-    def save(self, t):
+    def save(self, t: int):
         """Return current agent state, e.g. for saving.
 
         For DQN, this consists of:
@@ -294,6 +295,7 @@ class MightyDQNAgent(MightyAgent):
     def adapt_hps(self, metrics):
         """Set hyperparameters."""
         metrics = super().adapt_hps(metrics)
-        self.policy.epsilon = self._epsilon
+        if "hp/soft_update_weight" in metrics:
+            self.soft_update_weight = metrics["hp/soft_update_weight"]
         for g in self.qlearning.optimizer.param_groups:
             g["lr"] = self.learning_rate
