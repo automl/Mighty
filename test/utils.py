@@ -8,18 +8,18 @@ class DummyEnv(gym.Env):
     def __init__(self):
         self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(3,))
         self.action_space = gym.spaces.Discrete(4)
-        self.instance_id = None
+        self.inst_id = None
 
     @property
     def instance_id_list(self):
-        return [self.instance_id]
+        return [self.inst_id]
 
     def set_inst_id(self, inst_id):
-        self.instance_id = inst_id
+        self.inst_id = inst_id
 
     def reset(self):
-        if self.instance_id is None:
-            self.instance_id = np.random.default_rng().integers(0, 100)
+        if self.inst_id is None:
+            self.inst_id = np.random.default_rng().integers(0, 100)
         return self.observation_space.sample(), {}
 
     def step(self, action):
