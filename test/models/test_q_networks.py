@@ -120,7 +120,6 @@ class TestDQN:
 
     def test_shrink_weights(self):
         dqn = DQN(num_actions=4, obs_size=3, dueling=True)
-        dummy_input = torch.rand((5, 3))
         prev_head_params = deepcopy(list(dqn.head.parameters()))
         prev_adv_params = deepcopy(list(dqn.advantage.parameters()))
         prev_value_params = deepcopy(list(dqn.value.parameters()))

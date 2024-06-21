@@ -205,7 +205,7 @@ class MightyAgent:
         """This is a util function for the runner,
         combining meta_modules and prediction.
         """
-        for k in self.meta_modules:
+        for k in self.meta_modules.keys():
             self.meta_modules[k].pre_step(metrics)
 
         metrics = self.adapt_hps(metrics)
@@ -311,6 +311,7 @@ class MightyAgent:
                     self.meta_modules[k].post_step(metrics)
 
                 self.steps += len(action)
+                metrics["step"] = self.steps
                 steps_since_eval += len(action)
                 for _ in range(len(action)):
                     progress.advance(steps_task)

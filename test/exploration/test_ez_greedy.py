@@ -1,22 +1,12 @@
-import os
 import numpy as np
 import gymnasium as gym
-from utils import DummyEnv
+from utils import DummyEnv, clean
 from mighty.utils.logger import Logger
 from mighty.mighty_agents.dqn import MightyDQNAgent
 from mighty.mighty_exploration.ez_greedy import EZGreedy
 
 
 class TestEZGreedy:
-    def clean(self, logger):
-        logger.close()
-        os.remove(logger.log_file.name)
-        if (logger.log_dir / "rewards.jsonl").exists():
-            os.remove(logger.log_dir / "rewards.jsonl")
-        if (logger.log_dir / "eval.jsonl").exists():
-            os.remove(logger.log_dir / "eval.jsonl")
-        os.removedirs(logger.log_dir)
-
     def test_init(self) -> None:
         env = gym.vector.SyncVectorEnv([DummyEnv for _ in range(1)])
         logger = Logger("test_dqn_agent", "test_dqn_agent")
@@ -48,7 +38,7 @@ class TestEZGreedy:
         ), "Policy should be an instance of EZGreedy when creating with class."
         assert np.all(dqn.policy.epsilon == [0.5, 0.3]), "Epsilon should be [0.5, 0.3]."
         assert dqn.policy.zipf_param == 3, "zipf_param should be 3."
-        self.clean(logger)
+        clean(logger)
 
     def test_skip_single(self) -> None:
         env = gym.vector.SyncVectorEnv([DummyEnv for _ in range(1)])
@@ -58,6 +48,7 @@ class TestEZGreedy:
             logger,
             use_target=False,
             policy_class="mighty.mighty_exploration.EZGreedy",
+            policy_kwargs={"epsilon": 0.0, "zipf_param": 3},
         )
 
         state, _ = env.reset()
@@ -65,6 +56,7 @@ class TestEZGreedy:
         assert np.all(
             action < env.single_action_space.n
         ), "Action should be within the action space."
+        assert len(action) == len(state), "Action should be predicted per state."
 
         dqn.policy.skipped = np.array([1])
         next_action = dqn.policy([state])
@@ -72,7 +64,7 @@ class TestEZGreedy:
             action == next_action
         ), "Action should be the same as the previous action when skip is active."
         assert dqn.policy.skipped[0] == 0, "Skip should be decayed by one."
-        self.clean(logger)
+        clean(logger)
 
     def test_skip_batch(self) -> None:
         env = gym.vector.SyncVectorEnv([DummyEnv for _ in range(2)])
@@ -82,20 +74,21 @@ class TestEZGreedy:
             logger,
             use_target=False,
             policy_class=EZGreedy,
-            policy_kwargs={"epsilon": [0.5, 0.3], "zipf_param": 3},
+            policy_kwargs={"epsilon": [0.5, 1.0], "zipf_param": 3},
         )
 
         state, _ = env.reset()
-        action = dqn.policy([state, state])
+        action = dqn.policy(state)
         assert all(
-            [a < env.single_action_space.n for a in action[0]]
+            [a < env.single_action_space.n for a in action]
         ), "Actions should be within the action space."
+        assert len(action) == len(state), "Action should be predicted per state."
 
         dqn.policy.skipped = np.array([3, 0])
-        next_action = dqn.policy([state, state])
-        assert np.allclose(
-            action[0], next_action[0]
-        ), "First action should be the same as the previous action when skip is active."
+        next_action = dqn.policy(state + 2)
+        assert (
+            action[0] == next_action[0]
+        ), f"First action should be the same as the previous action when skip is active: {action[0]} != {next_action[0]}"
         assert dqn.policy.skipped[0] == 2, "Skip should be decayed by one."
         assert dqn.policy.skipped[1] >= 0, "Skip should not be decayed below one."
-        self.clean(logger)
+        clean(logger)

@@ -7,7 +7,7 @@ import gymnasium as gym
 import numpy as np
 import torch
 import torch.nn.functional as F
-from utils import DummyEnv
+from utils import DummyEnv, clean
 from mighty.mighty_agents.dqn import MightyDQNAgent
 from mighty.mighty_exploration.epsilon_greedy import EpsilonGreedy
 from mighty.mighty_models.dqn import DQN
@@ -17,15 +17,6 @@ from mighty.utils.logger import Logger
 
 
 class TestDQNAgent:
-    def clean(self, logger):
-        logger.close()
-        os.remove(logger.log_file.name)
-        if (logger.log_dir / "rewards.jsonl").exists():
-            os.remove(logger.log_dir / "rewards.jsonl")
-        if (logger.log_dir / "eval.jsonl").exists():
-            os.remove(logger.log_dir / "eval.jsonl")
-        os.removedirs(logger.log_dir)
-
     def test_init(self):
         env = gym.vector.SyncVectorEnv([DummyEnv for _ in range(1)])
         logger = Logger("test_dqn_agent", "test_dqn_agent")
@@ -80,7 +71,7 @@ class TestDQNAgent:
         assert dqn._batch_size == 32, "Batch size should be 32"
         assert dqn.learning_rate == 0.01, "Learning rate should be 0.01"
         assert dqn._epsilon == 0.1, "Epsilon should be 0.1"
-        self.clean(logger)
+        clean(logger)
 
     def test_update(self):
         torch.manual_seed(0)
@@ -137,7 +128,7 @@ class TestDQNAgent:
                 manual, agent, atol=1e-2
             ), "Model parameters should be equal to manual update"
 
-        self.clean(logger)
+        clean(logger)
 
     def test_adapt_hps(self):
         metrics = {
@@ -203,7 +194,7 @@ class TestDQNAgent:
             len(metrics["rollout_values"]) == 3
         ), "New value prediction should be added"
         assert len(metrics["td_error"]) == 1, "TD error is overwritten"
-        self.clean(logger)
+        clean(logger)
 
     def test_act(self):
         pass

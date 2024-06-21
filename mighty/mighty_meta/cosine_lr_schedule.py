@@ -28,9 +28,9 @@ class CosineLRSchedule(MightyMetaComponent):
         """
         super().__init__()
         self.restart_every = restart_every
+        self.n_restarts = 0
         self.t_mult = restart_multiplier
         self.eta_max = initial_lr
-        self.t = 0
         self.t_max = num_decay_steps
         self.eta_min = min_lr
         self.pre_step_methods = [self.adapt_lr]
@@ -41,18 +41,21 @@ class CosineLRSchedule(MightyMetaComponent):
         :param metrics: Dict of current metrics
         :return:
         """
-        self.t += 1
-        if self.restart_every > 0 and self.t >= self.restart_every:
-            self.t = 0
-            self.eta_max = (
-                self.eta_min
-                + 0.5
-                * (self.eta_max - self.eta_min)
-                * (1 + np.cos((self.t / self.t_max) * np.pi))
-                * self.t_mult
-            )
-            metrics["hp/lr"] = self.eta_max
-        else:
+        reset = False
+        if self.restart_every > 0:
+            if self.n_restarts < np.floor(metrics["step"]/self.restart_every):
+                self.n_restarts += 1
+                self.eta_max = (
+                    self.eta_min
+                    + 0.5
+                    * (self.eta_max - self.eta_min)
+                    * (1 + np.cos((metrics["step"]/ self.t_max) * np.pi))
+                    * self.t_mult
+                )
+                metrics["hp/lr"] = self.eta_max
+                reset = True
+
+        if metrics["step"] < self.t_max and not reset:
             metrics["hp/lr"] = self.eta_min + 0.5 * (self.eta_max - self.eta_min) * (
-                1 + np.cos((self.t / self.t_max) * np.pi)
+                1 + np.cos((metrics["step"] / self.t_max) * np.pi)
             )
