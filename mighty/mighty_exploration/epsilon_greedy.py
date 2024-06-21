@@ -44,6 +44,6 @@ class EpsilonGreedy(MightyExplorationPolicy):
             exploration_flags = np.array(exploration_flags)
             random_actions = self.rng.integers(len(qvals[0]), size=len(greedy_actions))
             actions = np.where(exploration_flags, random_actions, greedy_actions)
-            return actions, qvals
+            return actions.astype(int), qvals
 
         self.explore_func = explore_func

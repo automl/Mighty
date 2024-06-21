@@ -1,1 +1,0 @@
-python ../mighty/run_mighty.py algorithm=ddqn env=SigmoidBenchmark env_wrappers=[dacbench.wrappers.MultiDiscreteActionWrapper] +algorithm_kwargs.meta_methods=[mighty.mighty_meta.PrioritizedLevelReplay]

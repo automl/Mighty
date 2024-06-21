@@ -1,0 +1,1 @@
+python mighty/run_mighty.py algorithm=ddqn environment=dacbench/sigmoid_benchmark +algorithm_kwargs.meta_methods=[mighty.mighty_meta.PrioritizedLevelReplay]

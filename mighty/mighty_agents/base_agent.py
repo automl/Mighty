@@ -404,9 +404,9 @@ class MightyAgent:
         eval_env = self.eval_env()
 
         state, _ = eval_env.reset(options=options)
-        rewards = np.zeros(n_eval_episodes)
-        steps = np.zeros(n_eval_episodes)
-        mask = np.zeros(n_eval_episodes)
+        rewards = np.zeros(eval_env.num_envs)
+        steps = np.zeros(eval_env.num_envs)
+        mask = np.zeros(eval_env.num_envs)
         while not np.all(mask):
             action = self.policy(state, evaluate=True)
             state, reward, terminated, truncated, _ = eval_env.step(action)

@@ -4,3 +4,4 @@ num_steps: 100_000
 env: MountainCar-v0
 env_kwargs: {}
 env_wrappers: []
+num_envs: 32

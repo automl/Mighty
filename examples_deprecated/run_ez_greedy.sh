@@ -1,1 +1,0 @@
-python ../mighty/run_mighty.py algorithm=dqn env=Acrobot-v1 +algorithm_kwargs.policy_class=mighty.mighty_exploration.EZGreedy

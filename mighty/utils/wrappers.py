@@ -152,7 +152,7 @@ class ContextualVecEnv(gym.vector.SyncVectorEnv):
 
     @property
     def inst_ids(self):
-        return [self.envs[i].instance_id for i in range(self.num_envs)]
+        return [self.envs[i].inst_id for i in range(self.num_envs)]
 
     @property
     def instances(self):

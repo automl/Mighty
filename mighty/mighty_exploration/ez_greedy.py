@@ -74,6 +74,6 @@ class EZGreedy(MightyExplorationPolicy):
             # Apply skip
             skips = [self.skipped[i] > 0 for i in range(len(self.skipped))]
             actions = np.where(skips, self.frozen_actions, actions)
-            return actions, qvals
+            return actions.astype(int), qvals
 
         self.explore_func = explore_func
