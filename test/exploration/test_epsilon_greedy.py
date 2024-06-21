@@ -66,4 +66,6 @@ class TestEpsilonGreedy:
         policy = self.get_policy(epsilon=[0.1, 0.5])
         assert np.all(policy.epsilon == [0.1, 0.5]), "Epsilon should be [0.1, 0.5]."
         action, _ = policy.explore_func(state)
-        assert len(action) == len(state.numpy()), f"Action should be predicted per state: len({action}) != len({state.numpy()})."
+        assert (
+            len(action) == len(state.numpy())
+        ), f"Action should be predicted per state: len({action}) != len({state.numpy()})."

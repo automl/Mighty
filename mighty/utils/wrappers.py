@@ -123,3 +123,42 @@ class CARLVectorEnvSimulator(gym.vector.VectorEnv):
 
     def step(self, actions):
         return self.env.step(actions)
+
+    @property
+    def instance_id_list(self):
+        return list(self.env.contexts.keys())
+
+    @property
+    def inst_ids(self):
+        return self.env.context_id
+
+    @property
+    def instances(self):
+        return self.env.context
+
+    @inst_ids.setter
+    def inst_ids(self, inst_id):
+        self.env.context_id = inst_id
+
+    @instances.setter
+    def instances(self, instance):
+        self.env.context = instance
+
+
+class ContextualVecEnv(gym.vector.SyncVectorEnv):
+    @property
+    def instance_id_list(self):
+        return self.envs[0].instance_id_list
+
+    @property
+    def inst_ids(self):
+        return [self.envs[i].instance_id for i in range(self.num_envs)]
+
+    @property
+    def instances(self):
+        return [self.envs[i].instance for i in range(self.num_envs)]
+
+    @inst_ids.setter
+    def inst_ids(self, inst_ids):
+        for i in range(self.num_envs):
+            self.envs[i].set_inst_id(inst_ids[i])

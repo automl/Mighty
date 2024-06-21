@@ -22,6 +22,7 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         temperature=1.0,
         staleness_transform="power",
         staleness_temperature=1.0,
+        eps=1e-3,
     ) -> None:
         """PLR initialization.
 
@@ -46,6 +47,7 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         self.rho = rho
         self.staleness_coef = staleness_coeff
         self.sample_strategy = sample_strategy
+        self.eps = eps
         self.instance_scores = {}
         self.staleness = {}
         self.all_instances = None
@@ -65,34 +67,26 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         :param metrics: Current metrics dict
         :return:
         """
-        if self.all_instances is None:
-            self.all_instances = metrics["env"].instance_id_list
-            for i in self.all_instances:
-                if i not in self.instance_scores:
-                    self.instance_scores[i] = 0
-                if i not in self.staleness:
-                    self.staleness[i] = 0
-            if isinstance(metrics["env"].action_space, gym.spaces.Discrete):
-                self.num_actions = metrics["env"].action_space.n
-
         if self.sample_strategy == "random":
-            return self.rng.choice(self.all_instances)
+            instances = self.rng.choice(self.all_instances, size=self.num_instances)
 
         if self.sample_strategy == "sequential":
-            instance = self.all_instances[self.index]
-            self.index = (self.index + 1) % len(self.all_instances)
-            return instance
+            instances = []
+            for _ in range(self.num_instances):
+                instances.append(self.all_instances[self.index])
+                self.index = (self.index + 1) % len(self.all_instances)
 
         num_unseen = len(self.all_instances) - len(list(self.instance_scores.keys()))
         proportion_seen = (len(self.all_instances) - num_unseen) / len(
             self.all_instances
         )
-
-        if proportion_seen >= self.rho and self.rng.rand() < proportion_seen:
-            level = self._sample_replay_level()
-        else:
-            level = self._sample_unseen_level()
-        return level
+        instances = []
+        for _ in range(self.num_instances):
+            if proportion_seen >= self.rho and self.rng.random() < proportion_seen:
+                instances.append(self._sample_replay_level())
+            else:
+                instances.append(self._sample_unseen_level())
+        metrics["env"].inst_ids = instances
 
     def _sample_replay_level(self):
         """Get already seen level.
@@ -193,10 +187,16 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         if self.sample_strategy == "random":
             score = 1
         elif self.sample_strategy == "policy_entropy":
+            if logits is None:
+                raise ValueError("Logits are required for policy entropy.")
             score = self._average_entropy(logits)
         elif self.sample_strategy == "least_confidence":
+            if logits is None:
+                raise ValueError("Logits are required for least confidence.")
             score = self._average_least_confidence(logits)
         elif self.sample_strategy == "min_margin":
+            if logits is None:
+                raise ValueError("Logits are required for min margin.")
             score = self._average_min_margin(logits)
         elif self.sample_strategy == "gae":
             score = self._average_gae(reward, values)
@@ -214,18 +214,34 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         :param metrics: Current metrics dict
         :return:
         """
-        instance_id = metrics["env"].inst_id
+        instance_ids = metrics["env"].inst_ids
         episode_reward = metrics["episode_reward"]
         rollout_values = metrics["rollout_values"]
-        rollout_logits = None
+        rollout_logits = [None] * len(instance_ids)
         if "rollout_logits" in metrics:
             rollout_logits = metrics["rollout_logits"]
 
-        score = self.score_function(episode_reward, rollout_values, rollout_logits)
-        old_score = self.instance_scores[instance_id]
-        self.instance_scores[instance_id] = (
-            1 - self.alpha
-        ) * old_score + self.alpha * score
+        if self.all_instances is None:
+            self.all_instances = metrics["env"].instance_id_list
+            self.num_instances = len(metrics["env"].inst_ids)
+            for i in self.all_instances:
+                if i not in self.instance_scores:
+                    self.instance_scores[i] = 0
+                if i not in self.staleness:
+                    self.staleness[i] = 0
+            if isinstance(metrics["env"].action_space, gym.spaces.Discrete):
+                self.num_actions = metrics["env"].action_space.n
+
+        for instance_id, ep_rew, rollouts, logits in zip(
+            instance_ids, episode_reward, rollout_values, rollout_logits
+        ):
+            score = self.score_function(ep_rew, rollouts, logits)
+            if instance_id not in self.instance_scores:
+                self.instance_scores[instance_id] = 0
+            old_score = self.instance_scores[instance_id]
+            self.instance_scores[instance_id] = (
+                1 - self.alpha
+            ) * old_score + self.alpha * score
 
     def _average_entropy(self, episode_logits):
         """Get average entropy.
@@ -288,9 +304,7 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         :return: td error
         """
         max_t = len(rewards)
-        td_errors = (
-            rewards[:-1] + value_preds[: max_t - 1] - value_preds[1:max_t]
-        ).abs()
+        td_errors = rewards[:-1] + value_preds[: max_t - 1] - value_preds[1:max_t]
         return np.mean(abs(td_errors))
 
     def _score_transform(self, transform, temperature, scores):
@@ -315,7 +329,7 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         elif transform == "eps_greedy":
             weights = np.zeros_like(scores)
             weights[np.argmax(scores)] = 1.0 - self.eps
-            weights += self.eps / len(self.seeds)
+            weights += self.eps / len(self.all_instances)
         elif transform == "rank":
             temp = np.flip(np.argsort(scores))
             ranks = np.empty_like(temp)

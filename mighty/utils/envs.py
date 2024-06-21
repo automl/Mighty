@@ -7,7 +7,11 @@ from functools import partial
 
 import gymnasium as gym
 from omegaconf import OmegaConf
-from mighty.utils.wrappers import PufferlibToGymAdapter
+from mighty.utils.wrappers import (
+    PufferlibToGymAdapter,
+    ContextualVecEnv,
+    CARLVectorEnvSimulator,
+)
 
 try:
     import envpool
@@ -41,9 +45,9 @@ def make_dacbench_env(cfg):
         eval_env.use_test_set()
         return eval_env
 
-    env = gym.vector.SyncVectorEnv([make_env for _ in range(cfg.num_envs)])
+    env = ContextualVecEnv([make_env for _ in range(cfg.num_envs)])
     eval_env = partial(
-        gym.vector.SyncVectorEnv,
+        ContextualVecEnv,
         [
             partial(make_eval_env, make_env)
             for _ in range(cfg.n_episodes_eval * len(env.envs[0].instance_set.keys()))
@@ -55,7 +59,6 @@ def make_dacbench_env(cfg):
 
 def make_carl_env(cfg):
     """Make carl environment."""
-    from mighty.utils.wrappers import CARLVectorEnvSimulator
     import carl
     from carl.context.sampler import ContextSampler
 

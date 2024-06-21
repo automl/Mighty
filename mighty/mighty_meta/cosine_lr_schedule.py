@@ -43,13 +43,13 @@ class CosineLRSchedule(MightyMetaComponent):
         """
         reset = False
         if self.restart_every > 0:
-            if self.n_restarts < np.floor(metrics["step"]/self.restart_every):
+            if self.n_restarts < np.floor(metrics["step"] / self.restart_every):
                 self.n_restarts += 1
                 self.eta_max = (
                     self.eta_min
                     + 0.5
                     * (self.eta_max - self.eta_min)
-                    * (1 + np.cos((metrics["step"]/ self.t_max) * np.pi))
+                    * (1 + np.cos((metrics["step"] / self.t_max) * np.pi))
                     * self.t_mult
                 )
                 metrics["hp/lr"] = self.eta_max

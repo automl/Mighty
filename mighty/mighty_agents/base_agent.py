@@ -359,10 +359,8 @@ class MightyAgent:
                     )
                     episode_reward = np.where(dones, 0, episode_reward)
                     # End episode
-                    if isinstance(self.env, DACENV):
+                    if isinstance(self.env, DACENV) or isinstance(self.env, CARLENV):
                         instance = self.env.instance
-                    elif isinstance(self.env, CARLENV):
-                        instance = self.env.context
                     else:
                         instance = None
                     self.logger.next_episode(instance)
@@ -420,10 +418,8 @@ class MightyAgent:
 
         eval_env.close()
 
-        if isinstance(self.eval_env, DACENV):
+        if isinstance(self.eval_env, DACENV) or isinstance(self.env, CARLENV):
             instance = eval_env.instance
-        elif isinstance(self.eval_env, CARLENV):
-            instance = eval_env.context
         else:
             instance = None
         self.logger.next_episode(instance)
