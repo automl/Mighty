@@ -9,13 +9,17 @@ class DummyEnv(gym.Env):
         self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(3,))
         self.action_space = gym.spaces.Discrete(4)
         self.inst_id = None
+        self.instance_set = [42]
 
     @property
     def instance_id_list(self):
         return [self.inst_id]
-
+    
     def set_inst_id(self, inst_id):
         self.inst_id = inst_id
+
+    def set_instance_set(self, instance_set):
+        self.instance_set = instance_set
 
     def reset(self):
         if self.inst_id is None:

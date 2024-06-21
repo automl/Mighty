@@ -135,6 +135,10 @@ class CARLVectorEnvSimulator(gym.vector.VectorEnv):
     @property
     def instances(self):
         return self.env.context
+    
+    @property
+    def instance_set(self):
+        return self.env.contexts
 
     @inst_ids.setter
     def inst_ids(self, inst_id):
@@ -143,6 +147,10 @@ class CARLVectorEnvSimulator(gym.vector.VectorEnv):
     @instances.setter
     def instances(self, instance):
         self.env.context = instance
+
+    @instance_set.setter
+    def instance_set(self, instance_set):
+        self.env.contexts = instance_set
 
 
 class ContextualVecEnv(gym.vector.SyncVectorEnv):
@@ -157,8 +165,24 @@ class ContextualVecEnv(gym.vector.SyncVectorEnv):
     @property
     def instances(self):
         return [self.envs[i].instance for i in range(self.num_envs)]
+    
+    @property
+    def instance_set(self):
+        return [self.envs[i].instance_set for i in range(self.num_envs)]
 
     @inst_ids.setter
     def inst_ids(self, inst_ids):
         for i in range(self.num_envs):
             self.envs[i].set_inst_id(inst_ids[i])
+
+    @instance_set.setter
+    def instance_set(self, instance_set):
+        # Split instance set into parallel sets
+        parallel_sets = [instance_set[i:i + self.num_envs] for i in range(0, len(instance_set), self.num_envs)]
+        addons = 0
+        while len(parallel_sets[-1]) != len(parallel_sets[0]):
+            parallel_sets[-1].append(parallel_sets[0][addons])
+            addons += 1
+
+        for i, ps in enumerate(parallel_sets):
+            self.envs[i].set_instance_set(ps)
