@@ -11,6 +11,7 @@ from mighty.utils.wrappers import (
     PufferlibToGymAdapter,
     ContextualVecEnv,
     CARLVectorEnvSimulator,
+    ProcgenVecEnv,
 )
 
 try:
@@ -127,15 +128,16 @@ def make_carl_env(cfg):
 
 def make_procgen_env(cfg):
     """Make procgen environment."""
-    from procgen import ProcgenGym3Env
+    from procgen import ProcgenEnv
 
     if ENVPOOL:
-        env = envpool.make(ProcgenGym3Env, env_type="gym", **cfg.env_kwargs)
+        env = envpool.make(ProcgenEnv, env_type="gym", **cfg.env_kwargs)
     else:
-        env = ProcgenGym3Env(num=cfg.num_envs, env_name=cfg.env.split(":")[-1])
-    eval_env = partial(
-        ProcgenGym3Env, num=cfg.n_episodes_eval, env_name=cfg.env.split(":")[-1]
-    )
+        env = ProcgenVecEnv(
+            ProcgenEnv(num_envs=cfg.num_envs, env_name=cfg.env.split(":")[-1])
+        )
+    eval_base = ProcgenEnv(num_envs=cfg.n_episodes_eval, env_name=cfg.env.split(":")[-1])
+    eval_env = partial(ProcgenVecEnv, eval_base)
     eval_default = cfg.n_episodes_eval
     return env, eval_env, eval_default
 

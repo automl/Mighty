@@ -13,7 +13,7 @@ from mighty.utils.envs import (
     make_procgen_env,
     make_pufferlib_env,
 )
-from mighty.utils.wrappers import PufferlibToGymAdapter, CARLVectorEnvSimulator
+from mighty.utils.wrappers import PufferlibToGymAdapter, CARLVectorEnvSimulator, ProcgenVecEnv
 
 try:
     import envpool
@@ -414,10 +414,10 @@ class TestEnvCreation:
                 ), "Environment should be an envpool env if we create a gym env with envpool installed."
             else:
                 assert isinstance(
-                    env, ProcgenGym3Env
+                    env, ProcgenVecEnv
                 ), "Environment should be ProcGen env if we create a gym env without envpool installed."
             assert isinstance(
-                eval_env(), ProcgenGym3Env
+                eval_env(), ProcgenVecEnv
             ), "Eval env should be a ProcGen env."
         else:
             Warning("Procgen not installed, skipping test.")
