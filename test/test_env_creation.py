@@ -13,7 +13,11 @@ from mighty.utils.envs import (
     make_procgen_env,
     make_pufferlib_env,
 )
-from mighty.utils.wrappers import PufferlibToGymAdapter, CARLVectorEnvSimulator, ProcgenVecEnv
+from mighty.utils.wrappers import (
+    PufferlibToGymAdapter,
+    CARLVectorEnvSimulator,
+    ProcgenVecEnv,
+)
 
 try:
     import envpool

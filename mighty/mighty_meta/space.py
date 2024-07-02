@@ -44,12 +44,12 @@ class SPaCE(MightyMetaComponent):
 
         if self.last_evals is None and rollout_values is None:
             self.instance_set = np.random.default_rng().choice(
-                    self.all_instances, size=self.current_instance_set_size
-                )
+                self.all_instances, size=self.current_instance_set_size
+            )
         elif self.last_evals is None:
             self.instance_set = np.random.default_rng().choice(
-                    self.all_instances, size=self.current_instance_set_size
-                )
+                self.all_instances, size=self.current_instance_set_size
+            )
             self.last_evals = np.nanmean(rollout_values)
         else:
             if (

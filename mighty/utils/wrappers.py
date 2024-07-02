@@ -132,25 +132,29 @@ class CARLVectorEnvSimulator(gym.vector.VectorEnv):
     def inst_ids(self):
         return self.env.context_id
 
-        @property
-        def instances(self):
-            return self.env.context
+    @property
+    def instances(self):
+        return self.env.context
 
-            @property
-            def instance_set(self):
-                return self.env.contexts
+    @property
+    def instance_set(self):
+        return self.env.contexts
 
-                @inst_ids.setter
-                def inst_ids(self, inst_id):
-                    self.env.context_id = inst_id
+    @property
+    def instance_set(self):
+        return self.env.contexts
 
-                    @instances.setter
-                    def instances(self, instance):
-                        self.env.context = instance
+    @inst_ids.setter
+    def inst_ids(self, inst_id):
+        self.env.context_id = inst_id
 
-                        @instance_set.setter
-                        def instance_set(self, instance_set):
-                            self.env.contexts = instance_set
+    @instances.setter
+    def instances(self, instance):
+        self.env.context = instance
+
+    @instance_set.setter
+    def instance_set(self, instance_set):
+        self.env.contexts = instance_set
 
 
 class ContextualVecEnv(gym.vector.SyncVectorEnv):
@@ -271,7 +275,7 @@ class ProcgenVecEnv(gym.vector.SyncVectorEnv):
             / self.rew_count
         )
         rews = np.clip(
-            (obs - self.running_mean) / np.sqrt(self.running_std + self.eps),
+            (rews - self.running_mean) / np.sqrt(self.running_std + self.eps),
             -self.clip_obs,
             self.clip_obs,
         )   

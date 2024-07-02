@@ -14,7 +14,7 @@ class DummyEnv(gym.Env):
     @property
     def instance_id_list(self):
         return [self.inst_id]
-    
+
     def set_inst_id(self, inst_id):
         self.inst_id = inst_id
 

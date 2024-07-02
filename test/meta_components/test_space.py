@@ -6,6 +6,7 @@ from mighty.utils.logger import Logger
 from mighty.mighty_agents.dqn import MightyDQNAgent
 from mighty.utils.wrappers import ContextualVecEnv
 
+
 class TestSPaCE:
     def test_init(self) -> None:
         space = SPaCE(criterion="improvement", threshold=0.5, k=2)
@@ -17,11 +18,19 @@ class TestSPaCE:
 
     def test_get_instances(self) -> None:
         space = SPaCE()
-        metrics = {"env": DummyEnv(), "vf": DummyModel(), "rollout_values": [[0.0, 0.6, 0.7]]}
+        metrics = {
+            "env": DummyEnv(),
+            "vf": DummyModel(),
+            "rollout_values": [[0.0, 0.6, 0.7]],
+        }
         space.get_instances(metrics)
-        assert len(space.all_instances) == 1, f"Expected 1, got {len(space.all_instances)}"
-        assert len(space.instance_set) == 1, f"Expected 1, got {len(space.instance_set)}"
-        assert space.last_evals is not None, f"Evals should not be None."
+        assert (
+            len(space.all_instances) == 1
+        ), f"Expected 1, got {len(space.all_instances)}"
+        assert (
+            len(space.instance_set) == 1
+        ), f"Expected 1, got {len(space.instance_set)}"
+        assert space.last_evals is not None, "Evals should not be None."
 
     def test_get_evals(self) -> None:
         vf = DummyModel()
@@ -40,9 +49,7 @@ class TestSPaCE:
             use_target=False,
             meta_methods=["mighty.mighty_meta.SPaCE"],
         )
-        assert (
-            dqn.meta_modules["SPaCE"] is not None
-        ), "SPaCE should be initialized."
+        assert dqn.meta_modules["SPaCE"] is not None, "SPaCE should be initialized."
         dqn.run(100, 0)
         assert (
             dqn.meta_modules["SPaCE"].all_instances is not None
@@ -51,4 +58,3 @@ class TestSPaCE:
             env.inst_ids[0] in dqn.meta_modules["SPaCE"].all_instances
         ), "Instance should be in all instances."
         clean(logger)
-        

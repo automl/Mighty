@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import TYPE_CHECKING
+from abc import ABC
 import hydra
 import numpy as np
 import torch
@@ -30,7 +31,7 @@ def retrieve_class(cls: str | DictConfig | type, default_cls: type) -> type:
     return cls
 
 
-class MightyAgent:
+class MightyAgent(ABC):
     """Base agent for Coax RL implementations."""
 
     def __init__(  # noqa: PLR0915, PLR0912
@@ -241,9 +242,12 @@ class MightyAgent:
         eval_every_n_steps: int = 1_000,
         human_log_every_n_steps: int = 5000,
         save_model_every_n_steps: int | None = 5000,
+        env=None,
     ):
         """Run agent."""
         episodes = 0
+        if env is not None:
+            self.env = env
         with Progress(
             "[progress.description]{task.description}",
             BarColumn(),
@@ -331,7 +335,7 @@ class MightyAgent:
                 # Evaluate
                 if eval_every_n_steps and steps_since_eval >= eval_every_n_steps:
                     steps_since_eval = 0
-                    self.evaluate(n_eval_episodes=n_episodes_eval)
+                    self.evaluate()
 
                 # Log to command line
                 if self.steps % human_log_every_n_steps == 0 and self.verbose:
@@ -391,7 +395,7 @@ class MightyAgent:
             else:
                 print(f"Trying to set hyperparameter {algo_name} which does not exist.")
 
-    def evaluate(self, n_eval_episodes):
+    def evaluate(self, eval_env: MIGHTYENV | None = None):
         """Eval agent on an environment. (Full rollouts).
 
         :param env: The environment to evaluate on
@@ -401,7 +405,8 @@ class MightyAgent:
         self.logger.set_eval(True)
         terminated, truncated = False, False
         options = {}
-        eval_env = self.eval_env()
+        if eval_env is None:
+            eval_env = self.eval_env()
 
         state, _ = eval_env.reset(options=options)
         rewards = np.zeros(eval_env.num_envs)

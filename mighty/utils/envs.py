@@ -136,7 +136,9 @@ def make_procgen_env(cfg):
         env = ProcgenVecEnv(
             ProcgenEnv(num_envs=cfg.num_envs, env_name=cfg.env.split(":")[-1])
         )
-    eval_base = ProcgenEnv(num_envs=cfg.n_episodes_eval, env_name=cfg.env.split(":")[-1])
+    eval_base = ProcgenEnv(
+        num_envs=cfg.n_episodes_eval, env_name=cfg.env.split(":")[-1]
+    )
     eval_env = partial(ProcgenVecEnv, eval_base)
     eval_default = cfg.n_episodes_eval
     return env, eval_env, eval_default
