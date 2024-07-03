@@ -27,7 +27,7 @@ except ImportError:
     ENVPOOL = False
 
 try:
-    from procgen import ProcgenGym3Env
+    import procgen  # noqa: F401
 
     PROCGEN = True
 except ImportError:

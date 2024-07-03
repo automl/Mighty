@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from mighty.mighty_agents.mighty_agent import MightyAgent
 
 
-def get_agent_class(agent_type: str) -> type(MightyAgent):
+def get_runner_class(agent_type: str) -> type(MightyAgent):
     """Transforms config keyword for agents to class."""
     agent_class = None
     if agent_type in ("default", "standard", "online"):

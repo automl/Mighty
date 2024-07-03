@@ -23,8 +23,8 @@ class PufferlibToGymAdapter(gym.Wrapper):
         """Reset the environment and return the initial observation."""
         if "options" in kwargs:
             del kwargs["options"]
-            obs, info = self.env.reset(**kwargs)
-            return obs, info
+        obs, info = self.env.reset(**kwargs)
+        return obs, info
 
 
 class FlattenVecObs(gym.Wrapper):
@@ -140,10 +140,6 @@ class CARLVectorEnvSimulator(gym.vector.VectorEnv):
     def instance_set(self):
         return self.env.contexts
 
-    @property
-    def instance_set(self):
-        return self.env.contexts
-
     @inst_ids.setter
     def inst_ids(self, inst_id):
         self.env.context_id = inst_id
@@ -196,11 +192,19 @@ class ContextualVecEnv(gym.vector.SyncVectorEnv):
 
 
 class ProcgenVecEnv(gym.vector.SyncVectorEnv):
-    def __init__(self, env, normalize_observations=False, normalize_reward=True, eps=1e-4, clip_obs=10, **kwargs) -> None:
+    def __init__(
+        self,
+        env,
+        normalize_observations=False,
+        normalize_reward=True,
+        eps=1e-4,
+        clip_obs=10,
+        **kwargs,
+    ) -> None:
         self.env = env
         self.observation_space = gym.spaces.Box(
-            low=np.ones((3,64, 64))*-np.inf,
-            high=np.ones((3, 64, 64))*np.inf,
+            low=np.ones((3, 64, 64)) * -np.inf,
+            high=np.ones((3, 64, 64)) * np.inf,
             dtype=np.int32,
         )
         self.single_action_space = env.action_space
@@ -278,7 +282,7 @@ class ProcgenVecEnv(gym.vector.SyncVectorEnv):
             (rews - self.running_mean) / np.sqrt(self.running_std + self.eps),
             -self.clip_obs,
             self.clip_obs,
-        )   
+        )
 
         self.rew_count += len(rews)
         return rews

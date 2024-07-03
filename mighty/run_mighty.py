@@ -13,6 +13,7 @@ from mighty.utils.envs import make_mighty_env
 from mighty.utils.logger import Logger
 from rich import print
 
+
 warnings.filterwarnings("ignore")
 # warnings.filterwarnings("ignore", category=DeprecationWarning)
 # warnings.filterwarnings("ignore", category=FutureWarning)
