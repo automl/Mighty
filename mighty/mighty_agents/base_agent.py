@@ -174,6 +174,9 @@ class MightyAgent(ABC):
         # Set buffer size in PPO to be the total experiences collected per update step
         if "buffer_size" in self.buffer_kwargs:
             self.buffer_kwargs["buffer_size"] = self._batch_size
+            self.buffer_kwargs["obs_shape"] = self.env.single_observation_space.shape[0]
+            self.buffer_kwargs["act_dim"] = int(self.env.single_action_space.n)
+            self.buffer_kwargs["n_envs"] = self.env.observation_space.shape[0]
 
         self.buffer = self.buffer_class(**self.buffer_kwargs)
 
