@@ -50,7 +50,7 @@ class MightyRunner(ABC):
                 wrapped_env = cls(wrapped_env, **wkwargs)
             return wrapped_env
 
-        eval_env = wrap_eval
+        eval_env = wrap_eval()
 
         # Setup agent
         agent_class = get_agent_class(cfg.algorithm)

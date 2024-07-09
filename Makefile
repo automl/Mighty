@@ -38,7 +38,6 @@ INDEX_HTML := file://${DOCDIR}/html/build/index.html
 
 install-dev:
 	$(PIP) install -e ".[dev, docs, all, examples]"
-	pre-commit install
 
 install:
 	$(PIP) install ".[all, examples]"
