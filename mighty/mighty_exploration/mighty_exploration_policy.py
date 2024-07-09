@@ -28,21 +28,26 @@ class MightyExplorationPolicy:
         # Undistorted action sampling
         if self.algo == "q":
 
-            def sample_func(s):
-                s = torch.as_tensor(s, dtype=torch.float32)
-                qs = self.model(s)
+            def sample_func(state):
+                state = torch.as_tensor(state, dtype=torch.float32)
+                qs = self.model(state)
                 return np.argmax(qs.detach(), axis=1), qs
 
         else:
 
-            def sample_func(s, std=None):
-                pred = self.model(s)
+            def sample_func(state):
+                state = torch.FloatTensor(state)
+
                 if discrete:
-                    dist = torch.distributions.Categorical(pred)
+                    pred = self.model(state)
+                    dist = torch.distributions.Categorical(logits=pred)
                 else:
-                    dist = torch.distributions.MultivariateNormal(pred, std)
+                    pred, std = self.model(state)
+                    dist = torch.distributions.Normal(pred, std)
+
                 action = dist.sample()
-                return action.detach(), dist.log_prob.detach()
+                log_prob = dist.log_prob(action)
+                return action, log_prob
 
         self.sample_action = sample_func
 
@@ -63,6 +68,7 @@ class MightyExplorationPolicy:
             output = (action, logprobs) if return_logp else action
         else:
             output = self.explore(s, return_logp, metrics)
+
         return output
 
     def explore(self, s, return_logp, _):
