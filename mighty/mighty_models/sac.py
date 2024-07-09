@@ -1,8 +1,6 @@
-import torch
 from torch import nn
-from typing import Tuple
-from copy import deepcopy
-from mighty.mighty_models.networks import MLP, make_feature_extractor
+from mighty.mighty_models.networks import make_feature_extractor
+
 
 class SACModel(nn.Module):
     """SAC Model with policy and Q-networks."""
@@ -12,17 +10,16 @@ class SACModel(nn.Module):
         self.obs_size = obs_size
         self.action_size = action_size
 
-    
         # Policy network mapping observations to actions
         self.policy_net = nn.Sequential(
             make_feature_extractor(
                 architecture="mlp",
                 obs_shape=obs_size,
-                 n_layers=len(hidden_sizes),
+                n_layers=len(hidden_sizes),
                 hidden_sizes=hidden_sizes,
-                activation=activation
+                activation=activation,
             )[0],
-            nn.Linear(hidden_sizes[-1], 2)
+            nn.Linear(hidden_sizes[-1], 2),
         )
 
         # Q-networks mapping observation and actions to Q-values
@@ -32,9 +29,9 @@ class SACModel(nn.Module):
                 obs_shape=obs_size + action_size,
                 n_layers=len(hidden_sizes),
                 hidden_sizes=hidden_sizes,
-                activation=activation
+                activation=activation,
             )[0],
-            nn.Linear(hidden_sizes[-1], 1)
+            nn.Linear(hidden_sizes[-1], 1),
         )
         self.q_net2 = nn.Sequential(
             make_feature_extractor(
@@ -42,9 +39,9 @@ class SACModel(nn.Module):
                 obs_shape=obs_size + action_size,
                 n_layers=len(hidden_sizes),
                 hidden_sizes=hidden_sizes,
-                activation=activation
+                activation=activation,
             )[0],
-            nn.Linear(hidden_sizes[-1], 1)
+            nn.Linear(hidden_sizes[-1], 1),
         )
 
         # Value network
@@ -54,18 +51,18 @@ class SACModel(nn.Module):
                 obs_shape=obs_size,
                 n_layers=len(hidden_sizes),
                 hidden_sizes=hidden_sizes,
-                activation=activation
+                activation=activation,
             )[0],
-            nn.Linear(hidden_sizes[-1], 1)
+            nn.Linear(hidden_sizes[-1], 1),
         )
 
     def forward(self, state):
         return self.forward_policy(state)
-    
+
     def forward_policy(self, state):
         x = self.policy_net(state)
         mean, log_std = x.chunk(2, dim=-1)
-        log_std = log_std.clamp(-20, 2)        
+        log_std = log_std.clamp(-20, 2)
         return mean, log_std.exp()
 
     def forward_q1(self, state_action):

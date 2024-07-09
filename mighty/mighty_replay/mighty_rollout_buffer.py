@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 
 import dill as pickle
 import numpy as np
 import torch
 from mighty.mighty_replay.buffer import MightyBuffer
 
-import torch
 
 
 class RolloutBatch:
@@ -24,7 +22,9 @@ class RolloutBatch:
         log_probs,
         values,
     ):
-        self.observations = torch.from_numpy(observations.astype(np.float32)).unsqueeze(0)
+        self.observations = torch.from_numpy(observations.astype(np.float32)).unsqueeze(
+            0
+        )
         self.actions = torch.from_numpy(actions.astype(np.float32)).unsqueeze(0)
         self.rewards = torch.from_numpy(rewards.astype(np.float32)).unsqueeze(0)
         self.advantages = torch.from_numpy(advantages.astype(np.float32)).unsqueeze(0)
@@ -71,7 +71,6 @@ class MightyRolloutBuffer(MightyBuffer):
         gamma: float = 0.99,
         n_envs: int = 1,
     ):
-        
         self.buffer_size = buffer_size
         self.obs_shape = obs_shape
         self.act_dim = act_dim
@@ -82,7 +81,6 @@ class MightyRolloutBuffer(MightyBuffer):
         self.reset()
 
     def reset(self) -> None:
-
         self.observations = []
         self.actions = []
         self.rewards = []
@@ -109,23 +107,23 @@ class MightyRolloutBuffer(MightyBuffer):
             else:
                 next_non_terminal = 1.0 - self.episode_starts[step + 1]
                 next_values = self.values[step + 1]
-            
-            
+
             delta = (
                 self.rewards[step]
                 + self.gamma * next_values * next_non_terminal
                 - self.values[step]
             )
-        
-            last_gae_lam = (delta + self.gamma * self.gae_lambda * next_non_terminal * last_gae_lam)
-            
+
+            last_gae_lam = (
+                delta + self.gamma * self.gae_lambda * next_non_terminal * last_gae_lam
+            )
+
             self.advantages[step] = last_gae_lam
         self.returns = self.advantages + self.values
 
     def add(self, rollout_batch: RolloutBatch, _):
-        
         # import pdb; pdb.set_trace()
-        
+
         if len(self.observations) == 0:
             self.observations = rollout_batch.observations
             self.actions = rollout_batch.actions
@@ -149,10 +147,9 @@ class MightyRolloutBuffer(MightyBuffer):
             self.log_probs = torch.cat((self.log_probs, rollout_batch.log_probs))
             self.values = torch.cat((self.values, rollout_batch.values))
         # if len(self) > self.buffer_size:
-            
+
         #     import pdb; pdb.set_trace()
-            
-            
+
         #     self.observations = self.observations[len(self) - self.buffer_size :]
         #     self.actions = self.actions[len(self) - self.buffer_size :]
         #     self.rewards = self.rewards[len(self) - self.buffer_size :]
@@ -187,7 +184,7 @@ class MightyRolloutBuffer(MightyBuffer):
         return RolloutBatch(*data)
 
     def __len__(self):
-        return len(self.observations)*self.n_envs
+        return len(self.observations) * self.n_envs
 
     def __bool__(self):
         return bool(self.observations)

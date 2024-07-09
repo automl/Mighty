@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
-from mighty.mighty_models.networks import MLP, make_feature_extractor
+from mighty.mighty_models.networks import make_feature_extractor
 
-import pdb
 
 from typing import Tuple
 
@@ -55,7 +54,7 @@ class PPOModel(nn.Module):
         """Default Forward as the forward pass through the policy network."""
 
         return self.forward_policy(x)
-    
+
     def forward_policy(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """Forward pass through the policy network."""
 
@@ -70,7 +69,7 @@ class PPOModel(nn.Module):
             return mean, log_std.exp()
         else:
             return x  # return logits
-    
+
     def forward_value(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through the value network."""
         return self.value_net(x)

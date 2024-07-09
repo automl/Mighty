@@ -84,7 +84,6 @@ class MightyRunner(ABC):
         return self.agent.evaluate(eval_env)
 
     def close(self):
-        self.agent.close()
         self.logger.close()
 
     def run(self):

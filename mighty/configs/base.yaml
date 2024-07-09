@@ -1,12 +1,13 @@
 defaults:
   - _self_
   - algorithm: dqn
-  - environment: gymnasium/cartpole
+  - environment: pufferlib_ocean/bandit
   - search_space: dqn_gym_classic
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
   - override hydra/help: mighty_help
 
+runner: standard
 debug: false
 seed: 0
 output_dir: runs

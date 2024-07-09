@@ -10,7 +10,6 @@ import numpy as np
 import torch
 import wandb
 from mighty.mighty_replay import (
-    MightyBuffer,
     MightyReplay,
     TransitionBatch,
     RolloutBatch,
@@ -23,6 +22,7 @@ from rich.progress import BarColumn, Progress, TimeElapsedColumn, TimeRemainingC
 if TYPE_CHECKING:
     from mighty.utils.logger import Logger
     from mighty.utils.types import TypeKwargs
+
 
 def retrieve_class(cls: str | DictConfig | type, default_cls: type) -> type:
     """Get coax or mighty class."""
@@ -171,7 +171,6 @@ class MightyAgent(ABC):
         are done in _initialize_agent
         """
 
-
         # Set buffer size in PPO to be the total experiences collected per update step
         if "buffer_size" in self.buffer_kwargs:
             self.buffer_kwargs["buffer_size"] = self._batch_size
@@ -247,7 +246,6 @@ class MightyAgent(ABC):
     def run(  # noqa: PLR0915
         self,
         n_steps: int,
-        n_episodes_eval: int,
         eval_every_n_steps: int = 1_000,
         human_log_every_n_steps: int = 5000,
         save_model_every_n_steps: int | None = 5000,
@@ -299,7 +297,7 @@ class MightyAgent(ABC):
                     action = self.step(curr_s, metrics)
                 else:
                     action, log_prob = self.step(curr_s, metrics)
-                
+
                 next_s, reward, terminated, truncated, _ = self.env.step(action)
                 dones = np.logical_or(terminated, truncated)
 
@@ -312,7 +310,9 @@ class MightyAgent(ABC):
                     self.buffer.add(transition, metrics)
                 else:
                     values = (
-                        self.value_function(torch.as_tensor(curr_s, dtype=torch.float32))
+                        self.value_function(
+                            torch.as_tensor(curr_s, dtype=torch.float32)
+                        )
                         .detach()
                         .numpy()
                         .reshape((curr_s.shape[0],))
@@ -322,9 +322,7 @@ class MightyAgent(ABC):
                         observations=curr_s,
                         actions=action,
                         rewards=reward,
-                        advantages=np.zeros_like(
-                            reward
-                        ),  # Placeholder, compute later
+                        advantages=np.zeros_like(reward),  # Placeholder, compute later
                         returns=np.zeros_like(reward),  # Placeholder, compute later
                         episode_starts=dones,
                         log_probs=log_prob,
@@ -369,16 +367,13 @@ class MightyAgent(ABC):
                     len(self.buffer) >= self._batch_size
                     and self.steps >= self._learning_starts
                 ):
-
                     if self.agent_type == "PPO":
                         # Compute returns and advantages for PPO
                         last_values = self.value_function(
                             torch.as_tensor(next_s, dtype=torch.float32)
                         ).detach()
-                        
-                        self.buffer.compute_returns_and_advantage(
-                            last_values, dones
-                        )
+
+                        self.buffer.compute_returns_and_advantage(last_values, dones)
 
                     metrics = self.update(metrics)
 
@@ -421,9 +416,7 @@ class MightyAgent(ABC):
                     )
                     episode_reward = np.where(dones, 0, episode_reward)
                     # End episode
-                    if isinstance(self.env, DACENV) or isinstance(
-                        self.env, CARLENV
-                    ):
+                    if isinstance(self.env, DACENV) or isinstance(self.env, CARLENV):
                         instance = self.env.instance
                     else:
                         instance = None
@@ -463,7 +456,7 @@ class MightyAgent(ABC):
         :param episodes: The number of episodes to evaluate
         :return:
         """
-        
+
         self.logger.set_eval(True)
         terminated, truncated = False, False
         options = {}

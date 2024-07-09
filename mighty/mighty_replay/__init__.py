@@ -4,10 +4,7 @@ from mighty.mighty_replay.mighty_replay_buffer import (
     PrioritizedReplay,
     TransitionBatch,
 )
-from mighty.mighty_replay.mighty_rollout_buffer import (
-    MightyRolloutBuffer,
-    RolloutBatch
-)
+from mighty.mighty_replay.mighty_rollout_buffer import MightyRolloutBuffer, RolloutBatch
 
 
 __all__ = [
@@ -16,5 +13,5 @@ __all__ = [
     "TransitionBatch",
     "MightyRolloutBuffer",
     "MightyBuffer",
-    "RolloutBatch"
+    "RolloutBatch",
 ]
