@@ -21,7 +21,7 @@ class TestCosineLR:
         lr = 1.5
         dqn.learning_rate = lr
         for i in range(4):
-            metrics = dqn.run(n_steps=10 * (i + 1), n_episodes_eval=0)
+            metrics = dqn.run(n_steps=10 * (i + 1))
             assert (
                 metrics["hp/lr"] == dqn.learning_rate
             ), f"Learning rate should be set to schedule value {metrics['hp/lr']} instead of {dqn.learning_rate}."

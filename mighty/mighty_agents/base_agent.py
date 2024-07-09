@@ -461,7 +461,7 @@ class MightyAgent(ABC):
         terminated, truncated = False, False
         options = {}
         if eval_env is None:
-            eval_env = self.eval_env()
+            eval_env = self.eval_env
 
         state, _ = eval_env.reset(options=options)
         rewards = np.zeros(eval_env.num_envs)
