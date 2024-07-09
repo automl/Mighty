@@ -1,16 +1,14 @@
 from .mighty_runner import MightyRunner
 from .mighty_online_runner import MightyOnlineRunner
 from .mighty_maml_runner import MightyMAMLRunner, MightyTRPOMAMLRunner
-from .mighty_nes_runner import MightyNESRunner
+from .mighty_es_runner import MightyESRunner
 
-VALID_RUNNER_TYPES = ["standard", "default", "online", "nes", "xnes", "snes"]
+VALID_RUNNER_TYPES = ["standard", "default", "online", "es"]
 RUNNER_CLASSES = {
     "standard": MightyOnlineRunner,
     "default": MightyOnlineRunner,
     "online": MightyOnlineRunner,
-    "nes": MightyNESRunner,
-    "xnes": MightyNESRunner,
-    "snes": MightyNESRunner,
+    "es": MightyESRunner,
 }
 from .factory import get_runner_class  # noqa: E402
 
@@ -19,6 +17,6 @@ __all__ = [
     "MightyOnlineRunner",
     "MightyMAMLRunner",
     "MightyTRPOMAMLRunner",
-    "MightyNESRunner",
+    "MightyESRunner",
     "get_runner_class",
 ]

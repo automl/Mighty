@@ -2,7 +2,7 @@ from __future__ import annotations
 import shutil
 from omegaconf import OmegaConf
 from copy import deepcopy
-from mighty.mighty_runners import MightyRunner, MightyNESRunner
+from mighty.mighty_runners import MightyRunner, MightyESRunner
 from mighty.mighty_agents import MightyAgent
 from mighty.utils.logger import Logger
 from mighty.utils.wrappers import PufferlibToGymAdapter
@@ -10,8 +10,11 @@ from mighty.utils.wrappers import PufferlibToGymAdapter
 class TestMightyNESRunner:
     runner_config = OmegaConf.create(
         {
-            "runner": "nes",
-            "es": "xnes",
+            "runner": "es",
+            "es": "evosax.xNES",
+            "search_targets": ["parameters", "_batch_size", "learning_rate"],
+            "rl_train_agent": True,
+            "num_steps_per_iteration": 10,
             "iterations": 2,
             "popsize": 3,
             "debug": False,
@@ -53,7 +56,7 @@ class TestMightyNESRunner:
         }
     )
     def test_init(self):
-        runner = MightyNESRunner(self.runner_config)
+        runner = MightyESRunner(self.runner_config)
         assert isinstance(
             runner, MightyRunner
         ), "MightyNESRunner should be an instance of MightyRunner"
@@ -67,8 +70,10 @@ class TestMightyNESRunner:
         assert runner.rng is not None, "RNG should be set"
 
     def test_run(self):
-        runner = MightyNESRunner(self.runner_config)
+        runner = MightyESRunner(self.runner_config)
         old_params = deepcopy(runner.agent.parameters)
+        old_lr = runner.agent.learning_rate
+        old_batch_size = runner.agent._batch_size
         train_results, eval_results = runner.run()
         new_params = runner.agent.parameters
         assert isinstance(train_results, dict), "Train results should be a dictionary"
@@ -77,4 +82,7 @@ class TestMightyNESRunner:
         param_equals = [o==p for o,p in zip(old_params,new_params)]
         for params in param_equals:
             assert not all(params.flatten()), "Parameters should have changed in training"
+        assert not old_lr == runner.agent.learning_rate, "Learning rate should have changed in training"
+        assert not old_batch_size == runner.agent._batch_size, "Batch size should have changed in training"
         shutil.rmtree("test_nes_runner")
+

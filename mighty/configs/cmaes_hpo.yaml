@@ -10,9 +10,10 @@ defaults:
 runner: es
 popsize: 5
 iterations: 100
-es: evosax.xNES
-search_targets: ["parameters"]
-rl_train_agent: false
+es: evosax.CMA_ES
+search_targets: ["learning_rate", "_batch_size"]
+rl_train_agent: true
+num_steps_per_iteration: 1000
 
 debug: false
 seed: 0
