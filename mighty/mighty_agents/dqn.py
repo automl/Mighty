@@ -188,7 +188,7 @@ class MightyDQNAgent(MightyAgent):
         :param step: Current training step
         :return:
         """
-        transition_batch = self.replay_buffer.sample(batch_size=self._batch_size)
+        transition_batch = self.buffer.sample(batch_size=self._batch_size)
         preds, targets = self.qlearning.get_targets(
             transition_batch, self.q, self.q_target
         )
@@ -234,6 +234,7 @@ class MightyDQNAgent(MightyAgent):
             .numpy()
             .reshape((transition.observations.shape[0], -1))
         )
+
         metrics["rollout_values"] = np.append(metrics["rollout_values"], values, axis=0)
         return metrics
 
@@ -267,7 +268,7 @@ class MightyDQNAgent(MightyAgent):
         # Save replay buffer
         if self.save_replay:
             replay_path = self.checkpoint_dir / "replay.pkl"
-            self.replay_buffer.save(replay_path)
+            self.buffer.save(replay_path)
         print(f"Saved checkpoint at {self.checkpoint_dir}")
 
     def load(self, path):
@@ -288,7 +289,7 @@ class MightyDQNAgent(MightyAgent):
 
         replay_path = base_path / "replay.pkl"
         if replay_path.exists():
-            self.replay_buffer = dill.loads(replay_path)
+            self.buffer = dill.loads(replay_path)
         if self.verbose:
             print(f"Loaded checkpoint at {path}")
 
@@ -299,3 +300,7 @@ class MightyDQNAgent(MightyAgent):
             self.soft_update_weight = metrics["hp/soft_update_weight"]
         for g in self.qlearning.optimizer.param_groups:
             g["lr"] = self.learning_rate
+
+    @property
+    def agent_type(self):
+        return "DQN"

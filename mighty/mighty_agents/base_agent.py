@@ -9,7 +9,12 @@ import hydra
 import numpy as np
 import torch
 import wandb
-from mighty.mighty_replay import MightyReplay, TransitionBatch
+from mighty.mighty_replay import (
+    MightyBuffer,
+    MightyReplay,
+    TransitionBatch,
+    RolloutBatch,
+)
 from mighty.utils.env_handling import CARLENV, DACENV, MIGHTYENV
 from omegaconf import DictConfig
 from rich import print
@@ -18,7 +23,6 @@ from rich.progress import BarColumn, Progress, TimeElapsedColumn, TimeRemainingC
 if TYPE_CHECKING:
     from mighty.utils.logger import Logger
     from mighty.utils.types import TypeKwargs
-
 
 def retrieve_class(cls: str | DictConfig | type, default_cls: type) -> type:
     """Get coax or mighty class."""
@@ -87,7 +91,7 @@ class MightyAgent(ABC):
         self._batch_size = batch_size
         self._learning_starts = learning_starts
 
-        self.replay_buffer: MightyReplay | None = None
+        self.buffer: MightyReplay | None = None
         self.policy = None
 
         self.seed = seed
@@ -105,8 +109,8 @@ class MightyAgent(ABC):
             replay_buffer_kwargs = {
                 "capacity": 1_000_000,
             }
-        self.replay_buffer_class = replay_buffer_class
-        self.replay_buffer_kwargs = replay_buffer_kwargs
+        self.buffer_class = replay_buffer_class
+        self.buffer_kwargs = replay_buffer_kwargs
 
         output_dir = logger.log_dir if logger is not None else None
         self.verbose = verbose
@@ -166,7 +170,13 @@ class MightyAgent(ABC):
         Algorithm specific initialization like policies etc.
         are done in _initialize_agent
         """
-        self.replay_buffer = self.replay_buffer_class(**self.replay_buffer_kwargs)
+
+
+        # Set buffer size in PPO to be the total experiences collected per update step
+        if "buffer_size" in self.buffer_kwargs:
+            self.buffer_kwargs["buffer_size"] = self._batch_size
+
+        self.buffer = self.buffer_class(**self.buffer_kwargs)
 
         self._initialize_agent()
 
@@ -203,14 +213,13 @@ class MightyAgent(ABC):
             wandb.finish()
 
     def step(self, observation, metrics):
-        """This is a util function for the runner,
-        combining meta_modules and prediction.
-        """
         for k in self.meta_modules.keys():
             self.meta_modules[k].pre_step(metrics)
 
         metrics = self.adapt_hps(metrics)
-        return self.policy(observation, metrics=metrics)
+        return self.policy(
+            observation, metrics=metrics, return_logp=(self.agent_type != "DQN")
+        )
 
     def update(self, metrics):
         """Update agent."""
@@ -259,7 +268,10 @@ class MightyAgent(ABC):
             disable=not self.render_progress,
         ) as progress:
             steps_task = progress.add_task(
-                "Train Steps", total=n_steps - self.steps, start=False, visible=False
+                "Train Steps",
+                total=n_steps - self.steps,
+                start=False,
+                visible=False,
             )
             steps_since_eval = 0
             progress.start_task(steps_task)
@@ -273,22 +285,54 @@ class MightyAgent(ABC):
                 "hp/batch_size": self._batch_size,
                 "hp/learning_starts": self._learning_starts,
             }
-            s, _ = self.env.reset()
-            if len(s.squeeze().shape) == 0:
+            curr_s, _ = self.env.reset()
+            if len(curr_s.squeeze().shape) == 0:
                 episode_reward = [0]
             else:
-                episode_reward = np.zeros(s.squeeze().shape[0])
+                episode_reward = np.zeros(curr_s.squeeze().shape[0])
             last_episode_reward = episode_reward
             progress.update(steps_task, visible=True)
             while self.steps < n_steps:
                 metrics["episode_reward"] = episode_reward
-                action = self.step(s, metrics)
+
+                if self.agent_type == "DQN":
+                    action = self.step(curr_s, metrics)
+                else:
+                    action, log_prob = self.step(curr_s, metrics)
+                
                 next_s, reward, terminated, truncated, _ = self.env.step(action)
                 dones = np.logical_or(terminated, truncated)
-                transition = TransitionBatch(s, action, reward, next_s, dones)
-                transition_metrics = self.get_transition_metrics(transition, metrics)
-                metrics.update(transition_metrics)
-                self.replay_buffer.add(transition, metrics)
+
+                if self.agent_type in ["DQN", "SAC"]:
+                    transition = TransitionBatch(curr_s, action, reward, next_s, dones)
+                    transition_metrics = self.get_transition_metrics(
+                        transition, metrics
+                    )
+                    metrics.update(transition_metrics)
+                    self.buffer.add(transition, metrics)
+                else:
+                    values = (
+                        self.value_function(torch.as_tensor(curr_s, dtype=torch.float32))
+                        .detach()
+                        .numpy()
+                        .reshape((curr_s.shape[0],))
+                    )
+
+                    rollout_batch = RolloutBatch(
+                        observations=curr_s,
+                        actions=action,
+                        rewards=reward,
+                        advantages=np.zeros_like(
+                            reward
+                        ),  # Placeholder, compute later
+                        returns=np.zeros_like(reward),  # Placeholder, compute later
+                        episode_starts=dones,
+                        log_probs=log_prob,
+                        values=values,
+                    )
+
+                    self.buffer.add(rollout_batch, metrics)
+
                 episode_reward += reward
 
                 # Log everything
@@ -297,7 +341,7 @@ class MightyAgent(ABC):
                     "step": self.steps,
                     "reward": reward.tolist(),
                     "action": action.tolist(),
-                    "state": s.tolist(),
+                    "state": curr_s.tolist(),
                     "next_state": next_s.tolist(),
                     "terminated": terminated.tolist(),
                     "truncated": truncated.tolist(),
@@ -322,14 +366,28 @@ class MightyAgent(ABC):
 
                 # Update agent
                 if (
-                    len(self.replay_buffer) >= self._batch_size
+                    len(self.buffer) >= self._batch_size
                     and self.steps >= self._learning_starts
                 ):
+
+                    if self.agent_type == "PPO":
+                        # Compute returns and advantages for PPO
+                        last_values = self.value_function(
+                            torch.as_tensor(next_s, dtype=torch.float32)
+                        ).detach()
+                        
+                        self.buffer.compute_returns_and_advantage(
+                            last_values, dones
+                        )
+
                     metrics = self.update(metrics)
 
+                    if self.agent_type == "PPO":
+                        self.buffer.reset()
+
                 # End step
-                self.last_state = s
-                s = next_s
+                self.last_state = curr_s
+                curr_s = next_s
                 self.logger.next_step()
 
                 # Evaluate
@@ -363,7 +421,9 @@ class MightyAgent(ABC):
                     )
                     episode_reward = np.where(dones, 0, episode_reward)
                     # End episode
-                    if isinstance(self.env, DACENV) or isinstance(self.env, CARLENV):
+                    if isinstance(self.env, DACENV) or isinstance(
+                        self.env, CARLENV
+                    ):
                         instance = self.env.instance
                     else:
                         instance = None
@@ -378,6 +438,7 @@ class MightyAgent(ABC):
                         if "rollout" in k:
                             del metrics[k]
 
+                    # Meta Module hooks
                     for k in self.meta_modules:
                         self.meta_modules[k].pre_episode(metrics)
         return metrics
@@ -402,6 +463,7 @@ class MightyAgent(ABC):
         :param episodes: The number of episodes to evaluate
         :return:
         """
+        
         self.logger.set_eval(True)
         terminated, truncated = False, False
         options = {}

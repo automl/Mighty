@@ -61,6 +61,15 @@ def main(cfg: DictConfig) -> float:
     # Setup agent
     agent_class = get_agent_class(cfg.algorithm)
     args_agent = dict(cfg.algorithm_kwargs)
+
+    # Update args_agent with obs_shape and action_dim
+    if cfg.algorithm == "PPO":
+        args_agent["rollout_buffer_kwargs"][
+            "obs_shape"
+        ] = env.single_observation_space.shape
+        args_agent["rollout_buffer_kwargs"]["act_dim"] = int(env.single_action_space.n)
+        args_agent["rollout_buffer_kwargs"]["n_envs"] = cfg.num_envs
+
     agent = agent_class(
         env=env,
         eval_env=eval_env,
@@ -81,6 +90,7 @@ def main(cfg: DictConfig) -> float:
     print("#" * 80)
     print(f'Using agent type "{agent}" to learn')
     print("#" * 80)
+
     agent.run(
         n_steps=cfg.num_steps,
         n_episodes_eval=cfg.n_episodes_eval,
@@ -89,7 +99,7 @@ def main(cfg: DictConfig) -> float:
     )
 
     # Final evaluation
-    eval_metrics_list = agent.evaluate(n_eval_episodes=cfg.n_episodes_eval)
+    eval_metrics_list = agent.evaluate()
     logger.close()
 
     # When optimizing we minimize
