@@ -8,6 +8,7 @@ import dill as pickle
 import numpy as np
 import torch
 
+from mighty.mighty_replay.buffer import MightyBuffer
 
 def flatten_infos(xs):
     """Transform info dict to flat list.
@@ -69,7 +70,7 @@ class TransitionBatch:
         )
 
 
-class MightyReplay:
+class MightyReplay(MightyBuffer):
     """Simple replay buffer."""
 
     # TODO: add device
