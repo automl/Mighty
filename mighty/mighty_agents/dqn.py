@@ -153,6 +153,14 @@ class MightyDQNAgent(MightyAgent):
         """Q-function."""
         return self.q
 
+    @property
+    def parameters(self):
+        """Q-function parameters."""
+        if self.use_target:
+            return list(self.q.parameters()) + list(self.q_target.parameters())
+        else:
+            return list(self.q.parameters())
+
     def _initialize_agent(self):
         """Initialize DQN specific things like q-function."""
         if not isinstance(self.q_kwargs, dict):

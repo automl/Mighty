@@ -56,17 +56,17 @@ class TestMightyRunner:
         assert isinstance(
             runner, MightyRunner
         ), "MightyOnlineRunner should be an instance of MightyRunner"
-        assert isinstance(runner.agent, MightyAgent)
-        assert isinstance(runner.logger, Logger)
-        assert isinstance(runner.agent.eval_env, PufferlibToGymAdapter)
-        assert runner.agent.env is not None
-        assert runner.eval_every_n_steps == self.runner_config.eval_every_n_steps
-        assert runner.num_steps == self.runner_config.num_steps
+        assert isinstance(runner.agent, MightyAgent), "MightyOnlineRunner should have a MightyAgent"
+        assert isinstance(runner.logger, Logger), "MightyOnlineRunner should have a Logger"
+        assert isinstance(runner.agent.eval_env, PufferlibToGymAdapter), "Eval env should be a PufferlibToGymAdapter"
+        assert runner.agent.env is not None, "Env should not be None"
+        assert runner.eval_every_n_steps == self.runner_config.eval_every_n_steps, "Eval every n steps should be set"
+        assert runner.num_steps == self.runner_config.num_steps, "Num steps should be set"
 
     def test_train(self):
         runner = MightyOnlineRunner(self.runner_config)
         results = runner.train(100)
-        assert isinstance(results, dict)
+        assert isinstance(results, dict), "Results should be a dictionary"
         alternate_env = True
         with pytest.raises(AttributeError):
             runner.train(100, alternate_env)
@@ -74,23 +74,24 @@ class TestMightyRunner:
     def test_evaluate(self):
         runner = MightyOnlineRunner(self.runner_config)
         results = runner.evaluate()
-        assert isinstance(results, dict)
-        assert "mean_eval_reward" in results
+        assert isinstance(results, dict), "Results should be a dictionary"
+        assert "mean_eval_reward" in results, "Results should have mean_eval_reward"
         alternate_env = True
         with pytest.raises(AttributeError):
             runner.evaluate(alternate_env)
 
     def test_close(self):
         runner = MightyOnlineRunner(self.runner_config)
-        assert isinstance(runner.logger, Logger)
+        assert not runner.logger.reward_log_file.closed, "Reward log file should be open"
+        assert not runner.logger.eval_log_file.closed, "Eval log file should be open"
         runner.close()
-        assert runner.logger.reward_log_file.closed
-        assert runner.logger.eval_log_file.closed
+        assert runner.logger.reward_log_file.closed, "Reward log file should be closed"
+        assert runner.logger.eval_log_file.closed, "Eval log file should be closed"
 
     def test_run(self):
         runner = MightyOnlineRunner(self.runner_config)
         train_results, eval_results = runner.run()
-        assert isinstance(train_results, dict)
-        assert isinstance(eval_results, dict)
-        assert "mean_eval_reward" in eval_results
+        assert isinstance(train_results, dict), "Train results should be a dictionary"
+        assert isinstance(eval_results, dict), "Eval results should be a dictionary"
+        assert "mean_eval_reward" in eval_results, "Eval results should have mean_eval_reward"
         shutil.rmtree("test_runner")
