@@ -23,7 +23,7 @@ class MightyMAMLRunner(MightyRunner):
 
     def run(self):
         all_rewards = []
-        for maml_epoch in self.epochs:
+        for maml_epoch in self.maml_epochs:
             iteration_loss = 0.0
             iteration_reward = 0.0
             for task in self.maml_tasks:

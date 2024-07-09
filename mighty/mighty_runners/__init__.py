@@ -8,7 +8,7 @@ RUNNER_CLASSES = {
     "default": MightyOnlineRunner,
     "online": MightyOnlineRunner,
 }
-from .factory import get_runner_class
+from .factory import get_runner_class  # noqa: E402
 
 __all__ = [
     "MightyRunner",

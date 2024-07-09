@@ -7,6 +7,7 @@ from mighty.mighty_agents import MightyAgent
 from mighty.utils.logger import Logger
 from mighty.utils.wrappers import PufferlibToGymAdapter
 
+
 class TestMightyRunner:
     runner_config = OmegaConf.create(
         {
@@ -17,12 +18,11 @@ class TestMightyRunner:
             "wandb_project": None,
             "tensorboard_file": None,
             "experiment_name": "mighty_experiment",
-            "algorithm_kwargs": {},
-            "eval_every_n_steps": 1e4, 
+            "eval_every_n_steps": 1e4,
             "n_episodes_eval": 10,
             "checkpoint": None,
             "save_model_every_n_steps": 5e5,
-            "num_steps": 100, 
+            "num_steps": 100,
             "env": "pufferlib.environments.ocean.bandit",
             "env_kwargs": {},
             "env_wrappers": [],
@@ -41,15 +41,21 @@ class TestMightyRunner:
                 "q_kwargs": {
                     "dueling": False,
                     "feature_extractor_kwargs": {
-                    "architecture": "mlp",
-                    "n_layers": 1,
-                    "hidden_sizes": [32]},
-                    "head_kwargs": {"hidden_sizes": [32]}}
-        }}
+                        "architecture": "mlp",
+                        "n_layers": 1,
+                        "hidden_sizes": [32],
+                    },
+                    "head_kwargs": {"hidden_sizes": [32]},
+                },
+            },
+        }
     )
+
     def test_init(self):
         runner = MightyOnlineRunner(self.runner_config)
-        assert isinstance(runner, MightyRunner), "MightyOnlineRunner should be an instance of MightyRunner"
+        assert isinstance(
+            runner, MightyRunner
+        ), "MightyOnlineRunner should be an instance of MightyRunner"
         assert isinstance(runner.agent, MightyAgent)
         assert isinstance(runner.logger, Logger)
         assert isinstance(runner.agent.eval_env, PufferlibToGymAdapter)

@@ -5,7 +5,19 @@ from .sac import MightySACAgent
 
 
 VALID_AGENT_TYPES = ["DQN", "PPO", "SAC", "DDQN"]
-AGENT_CLASSES = {"DQN": MightyDQNAgent, "PPO": MightyPPOAgent, "SAC": MightySACAgent, "DDQN": MightyDQNAgent}
+AGENT_CLASSES = {
+    "DQN": MightyDQNAgent,
+    "PPO": MightyPPOAgent,
+    "SAC": MightySACAgent,
+    "DDQN": MightyDQNAgent,
+}
 
-from .factory import get_agent_class
-__all__ = ["MightyAgent", "get_agent_class", "MightyDQNAgent", "MightyPPOAgent", "MightySACAgent"]
+from .factory import get_agent_class  # noqa: E402
+
+__all__ = [
+    "MightyAgent",
+    "get_agent_class",
+    "MightyDQNAgent",
+    "MightyPPOAgent",
+    "MightySACAgent",
+]

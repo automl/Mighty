@@ -9,7 +9,6 @@ import torch
 from mighty.mighty_replay.buffer import MightyBuffer
 
 
-
 class RolloutBatch:
     def __init__(
         self,

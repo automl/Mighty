@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 def get_agent_class(agent_type: str) -> type(MightyAgent):
     """Transforms config keyword for agents to class."""
     agent_class = None
-    if agent_type in VALID_AGENT_TYPES: 
+    if agent_type in VALID_AGENT_TYPES:
         agent_class = AGENT_CLASSES[agent_type]
     else:
         raise ValueError(f"Unknown agent_type {agent_type}.")

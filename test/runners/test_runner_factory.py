@@ -5,7 +5,11 @@ from mighty.mighty_runners.factory import get_runner_class
 from mighty.mighty_runners.mighty_online_runner import MightyOnlineRunner
 
 VALID_RUNNER_TYPES = ["standard", "default", "online"]
-RUNNER_CLASSES = {"standard": MightyOnlineRunner, "default": MightyOnlineRunner, "online": MightyOnlineRunner}
+RUNNER_CLASSES = {
+    "standard": MightyOnlineRunner,
+    "default": MightyOnlineRunner,
+    "online": MightyOnlineRunner,
+}
 
 
 class TestFactory:

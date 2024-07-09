@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 from mighty.mighty_agents.factory import get_agent_class
-from mighty.mighty_agents.dqn import MightyDQNAgent
 from mighty.mighty_agents import VALID_AGENT_TYPES, AGENT_CLASSES
+
 
 class TestFactory:
     def test_create_agent(self):
