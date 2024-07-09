@@ -1,6 +1,5 @@
 import torch
 import torch.optim as optim
-from torch.distributions import Normal
 from typing import Dict
 from mighty.mighty_models.ppo import PPOModel
 
@@ -31,11 +30,11 @@ class PPOUpdate:
 
     def update(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
         """Update the PPO model."""
-        
+
         states = batch.observations.squeeze(0)
         actions = batch.actions.squeeze(0)
-        rewards = batch.rewards.squeeze(0)
-        episode_starts = batch.episode_starts.squeeze(0)
+        # rewards = batch.rewards.squeeze(0)
+        # episode_starts = batch.episode_starts.squeeze(0)
         old_log_probs = batch.log_probs.squeeze(0)
         advantages = batch.advantages.squeeze(0)
         returns = batch.returns.squeeze(0)
@@ -52,7 +51,7 @@ class PPOUpdate:
         dist = torch.distributions.Categorical(logits=logits)
         log_probs = dist.log_prob(actions).sum(dim=-1, keepdim=True)
         entropy = dist.entropy().sum(dim=-1, keepdim=True)
-        
+
         ratios = torch.exp(log_probs - old_log_probs)
         surr1 = ratios * advantages
         surr2 = torch.clamp(ratios, 1.0 - self.epsilon, 1.0 + self.epsilon) * advantages

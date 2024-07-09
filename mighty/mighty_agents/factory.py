@@ -17,7 +17,7 @@ def get_agent_class(agent_type: str) -> type(MightyAgent):
     agent_class = None
     if agent_type in ("DDQN", "DQN"):
         agent_class = MightyDQNAgent
-    
+
     elif agent_type == "SAC":
         agent_class = MightySACAgent
     elif agent_type == "PPO":

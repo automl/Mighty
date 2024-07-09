@@ -1,12 +1,8 @@
-
-import numpy as np
 import torch
 import torch.optim as optim
-from torch.distributions import Normal
 import torch.nn.functional as F
-from typing import Dict
 from mighty.mighty_models.sac import SACModel
-from torchviz import make_dot
+
 
 def polyak_update(source_params, target_params, tau):
     for target_param, param in zip(target_params, source_params):
@@ -14,7 +10,16 @@ def polyak_update(source_params, target_params, tau):
 
 
 class SACUpdate:
-    def __init__(self, model: SACModel, policy_lr: float = 0.001, q_lr: float = 0.001, value_lr: float = 0.001, tau: float = 0.005, alpha: float = 0.2, gamma: float = 0.99):
+    def __init__(
+        self,
+        model: SACModel,
+        policy_lr: float = 0.001,
+        q_lr: float = 0.001,
+        value_lr: float = 0.001,
+        tau: float = 0.005,
+        alpha: float = 0.2,
+        gamma: float = 0.99,
+    ):
         """
         Initialize the SAC update mechanism.
 
@@ -34,7 +39,6 @@ class SACUpdate:
         self.alpha = alpha
         self.gamma = gamma
 
-    
     def calculate_td_error(self, transition):
         """Calculate the TD error for a given transition.
 
@@ -42,21 +46,66 @@ class SACUpdate:
         :return: TD error
         """
         with torch.no_grad():
-            next_mean, next_log_std = self.model.forward_policy(torch.as_tensor(transition.next_obs, dtype=torch.float32))
-            
-            next_std = next_log_std.exp()
-            next_actions = torch.normal(next_mean, next_std)  # TODO: revisit action dimensionsa
+            next_mean, next_log_std = self.model.forward_policy(
+                torch.as_tensor(transition.next_obs, dtype=torch.float32)
+            )
 
-            next_log_probs = (-0.5 * (((next_actions - next_mean) / (next_std + 1e-6))**2 + 2 * next_log_std + torch.log(torch.as_tensor(2.0) * torch.pi))).sum(dim=-1, keepdim=True)
-            
-            next_q1 = self.model.forward_q1(torch.cat([torch.as_tensor(transition.next_obs, dtype=torch.float32), next_actions], dim=-1))
-            next_q2 = self.model.forward_q2(torch.cat([torch.as_tensor(transition.next_obs, dtype=torch.float32), next_actions], dim=-1))
+            next_std = next_log_std.exp()
+            next_actions = torch.normal(
+                next_mean, next_std
+            )  # TODO: revisit action dimensionsa
+
+            next_log_probs = (
+                -0.5
+                * (
+                    ((next_actions - next_mean) / (next_std + 1e-6)) ** 2
+                    + 2 * next_log_std
+                    + torch.log(torch.as_tensor(2.0) * torch.pi)
+                )
+            ).sum(dim=-1, keepdim=True)
+
+            next_q1 = self.model.forward_q1(
+                torch.cat(
+                    [
+                        torch.as_tensor(transition.next_obs, dtype=torch.float32),
+                        next_actions,
+                    ],
+                    dim=-1,
+                )
+            )
+            next_q2 = self.model.forward_q2(
+                torch.cat(
+                    [
+                        torch.as_tensor(transition.next_obs, dtype=torch.float32),
+                        next_actions,
+                    ],
+                    dim=-1,
+                )
+            )
             next_q = torch.min(next_q1, next_q2)
 
-            target_q = transition.rewards.unsqueeze(-1) + (1 - transition.dones.unsqueeze(-1)) * self.gamma * (next_q - self.alpha * next_log_probs)
+            target_q = transition.rewards.unsqueeze(-1) + (
+                1 - transition.dones.unsqueeze(-1)
+            ) * self.gamma * (next_q - self.alpha * next_log_probs)
 
-        current_q1 = self.model.forward_q1(torch.cat([torch.as_tensor(transition.observations, dtype=torch.float32), torch.as_tensor(transition.actions, dtype=torch.float32)], dim=-1))
-        current_q2 = self.model.forward_q2(torch.cat([torch.as_tensor(transition.observations, dtype=torch.float32), torch.as_tensor(transition.actions, dtype=torch.float32)], dim=-1))
+        current_q1 = self.model.forward_q1(
+            torch.cat(
+                [
+                    torch.as_tensor(transition.observations, dtype=torch.float32),
+                    torch.as_tensor(transition.actions, dtype=torch.float32),
+                ],
+                dim=-1,
+            )
+        )
+        current_q2 = self.model.forward_q2(
+            torch.cat(
+                [
+                    torch.as_tensor(transition.observations, dtype=torch.float32),
+                    torch.as_tensor(transition.actions, dtype=torch.float32),
+                ],
+                dim=-1,
+            )
+        )
 
         td_error1 = current_q1 - target_q
         td_error2 = current_q2 - target_q
@@ -73,12 +122,14 @@ class SACUpdate:
         states = batch.observations
         actions = batch.actions
         rewards = batch.rewards
-        next_states = batch.next_obs
+        # next_states = batch.next_obs
         dones = batch.dones
 
         # Compute target values for the Q-function using the target policy
         td_error1, td_error2 = self.calculate_td_error(batch)
-        target_q = rewards.unsqueeze(-1) + (1 - dones.unsqueeze(-1)) * self.gamma * torch.min(td_error1, td_error2)
+        target_q = rewards.unsqueeze(-1) + (
+            1 - dones.unsqueeze(-1)
+        ) * self.gamma * torch.min(td_error1, td_error2)
 
         # Compute Q-function loss
         with torch.autograd.set_detect_anomaly(True):
@@ -88,18 +139,22 @@ class SACUpdate:
             q_loss2 = F.mse_loss(q2, target_q)
             q_loss = q_loss1 + q_loss2
 
-           
         # Compute policy loss
         new_mean, new_log_std = self.model.forward_policy(states)
         new_std = new_log_std.exp()
         new_actions = torch.normal(new_mean, new_std)
-        log_probs = (-0.5 * (((new_actions - new_mean) / (new_std + 1e-6))**2 + 2 * new_log_std + torch.log(torch.tensor(2) * torch.pi))).sum(dim=-1, keepdim=True)
-        
-       
-        
+        log_probs = (
+            -0.5
+            * (
+                ((new_actions - new_mean) / (new_std + 1e-6)) ** 2
+                + 2 * new_log_std
+                + torch.log(torch.tensor(2) * torch.pi)
+            )
+        ).sum(dim=-1, keepdim=True)
+
         q_new_actions = torch.min(
             self.model.forward_q1(torch.cat([states, new_actions], dim=-1)),
-            self.model.forward_q2(torch.cat([states, new_actions], dim=-1))
+            self.model.forward_q2(torch.cat([states, new_actions], dim=-1)),
         )
         policy_loss = (self.alpha * log_probs - q_new_actions).mean()
 
@@ -121,18 +176,23 @@ class SACUpdate:
         self.policy_optimizer.step()
         self.value_optimizer.step()
 
-        
-        
-         # Soft update Q-networks' target parameters
-        if hasattr(self.model, 'target_q_net1'):
-            polyak_update(self.model.q_net1.parameters(), self.model.target_q_net1.parameters(), self.tau)
-        if hasattr(self.model, 'target_q_net2'):
-            polyak_update(self.model.q_net2.parameters(), self.model.target_q_net2.parameters(), self.tau)
-
+        # Soft update Q-networks' target parameters
+        if hasattr(self.model, "target_q_net1"):
+            polyak_update(
+                self.model.q_net1.parameters(),
+                self.model.target_q_net1.parameters(),
+                self.tau,
+            )
+        if hasattr(self.model, "target_q_net2"):
+            polyak_update(
+                self.model.q_net2.parameters(),
+                self.model.target_q_net2.parameters(),
+                self.tau,
+            )
 
         return {
             "q_loss1": q_loss1.item(),
             "q_loss2": q_loss2.item(),
             "policy_loss": policy_loss.item(),
-            "value_loss": value_loss.item()
+            "value_loss": value_loss.item(),
         }

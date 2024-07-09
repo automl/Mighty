@@ -1,20 +1,13 @@
 from __future__ import annotations
 
 import torch
-import torch.nn.functional as F
 from mighty.mighty_exploration.mighty_exploration_policy import MightyExplorationPolicy
 
 
 class StochasticPolicy(MightyExplorationPolicy):
     """Entropy Based Exploration."""
 
-    def __init__(
-        self,
-        algo,
-        model,
-        entropy_coefficient=0.2,
-        discrete=True
-    ):
+    def __init__(self, algo, model, entropy_coefficient=0.2, discrete=True):
         """Initialize Entropy Based Exploration.
 
         :param algo: algorithm name
@@ -42,13 +35,11 @@ class StochasticPolicy(MightyExplorationPolicy):
                 log_prob = dist.log_prob(action).sum(dim=-1, keepdim=True)
                 entropy = dist.entropy().sum(dim=-1, keepdim=True)
                 weighted_log_prob = log_prob * entropy
-                
 
             return action.detach().numpy(), weighted_log_prob.detach().numpy()
 
-
         self.explore_func = explore_func
-        
+
     def __call__(self, state, return_logp=False, metrics=None, evaluate=False):
         """Get action.
 
@@ -61,7 +52,6 @@ class StochasticPolicy(MightyExplorationPolicy):
         if metrics is None:
             metrics = {}
         if evaluate:
-            
             action, logprobs = self.sample_action(state)
             action = action.detach().numpy()
             output = (action, logprobs.detach.numpy()) if return_logp else action

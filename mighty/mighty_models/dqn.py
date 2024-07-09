@@ -196,6 +196,10 @@ class SPRQN(nn.Module):
         x = encoding.reshape(-1)
         return self.projection(x)
 
+    @property
+    def agent_type(self):
+        return "DQN"
+
 
 def make_q_head(in_size, num_actions, hidden_sizes=None):
     """Make Q head network."""

@@ -10,6 +10,7 @@ import torch
 
 from mighty.mighty_replay.buffer import MightyBuffer
 
+
 def flatten_infos(xs):
     """Transform info dict to flat list.
 

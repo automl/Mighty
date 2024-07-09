@@ -64,9 +64,9 @@ def main(cfg: DictConfig) -> float:
 
     # Update args_agent with obs_shape and action_dim
     if cfg.algorithm == "PPO":
-        args_agent["rollout_buffer_kwargs"][
-            "obs_shape"
-        ] = env.single_observation_space.shape
+        args_agent["rollout_buffer_kwargs"]["obs_shape"] = (
+            env.single_observation_space.shape
+        )
         args_agent["rollout_buffer_kwargs"]["act_dim"] = int(env.single_action_space.n)
         args_agent["rollout_buffer_kwargs"]["n_envs"] = cfg.num_envs
 

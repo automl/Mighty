@@ -1,22 +1,22 @@
 from pathlib import Path
 from typing import Optional, Dict, List, Type, Union
 
-import dill
 import numpy as np
 import torch
-import torch.optim as optim
 from mighty.mighty_agents.base_agent import MightyAgent, retrieve_class
 from mighty.mighty_exploration import StochasticPolicy, MightyExplorationPolicy
 from mighty.mighty_models.ppo import PPOModel
 from mighty.mighty_update.ppo_update import PPOUpdate
-from mighty.mighty_replay.mighty_rollout_buffer import MightyRolloutBuffer  # Import the correct buffer and batch classes
+from mighty.mighty_replay.mighty_rollout_buffer import (
+    MightyRolloutBuffer,
+)  # Import the correct buffer and batch classes
 from mighty.utils.logger import Logger
-from mighty.utils.types import TypeKwargs
 
 from omegaconf import DictConfig
 
+
 class MightyPPOAgent(MightyAgent):
-    def __init__(   
+    def __init__(
         self,
         env,
         logger: Logger,
@@ -37,7 +37,9 @@ class MightyPPOAgent(MightyAgent):
         n_policy_units: int = 8,
         n_critic_units: int = 8,
         soft_update_weight: float = 0.01,
-        policy_class: Optional[Union[str, DictConfig, Type[MightyExplorationPolicy]]] = None,
+        policy_class: Optional[
+            Union[str, DictConfig, Type[MightyExplorationPolicy]]
+        ] = None,
         policy_kwargs: Optional[Dict] = None,
         ppo_clip: float = 0.2,
         value_loss_coef: float = 0.5,
@@ -87,11 +89,21 @@ class MightyPPOAgent(MightyAgent):
     def _initialize_agent(self):
         """Initialize PPO specific components."""
         self.model = PPOModel(
-            obs_size= self.env.single_observation_space.shape[0],
+            obs_size=self.env.single_observation_space.shape[0],
             action_size=self.env.single_action_space.n,
         )
-        self.policy = self.policy_class(algo=self, model=self.model, **self.policy_kwargs)
-        self.update_fn = PPOUpdate(model=self.model, policy_lr=self.learning_rate, value_lr=self.learning_rate, epsilon=self.ppo_clip, ent_coef=self.entropy_coef, vf_coef=self.value_loss_coef, max_grad_norm=self.max_grad_norm)
+        self.policy = self.policy_class(
+            algo=self, model=self.model, **self.policy_kwargs
+        )
+        self.update_fn = PPOUpdate(
+            model=self.model,
+            policy_lr=self.learning_rate,
+            value_lr=self.learning_rate,
+            epsilon=self.ppo_clip,
+            ent_coef=self.entropy_coef,
+            vf_coef=self.value_loss_coef,
+            max_grad_norm=self.max_grad_norm,
+        )
 
     @property
     def value_function(self):
@@ -99,7 +111,6 @@ class MightyPPOAgent(MightyAgent):
         return self.model.value_net
 
     def update_agent(self) -> Dict[str, float]:
-        
         if len(self.buffer) < self._learning_starts:
             return {}
 
@@ -109,38 +120,54 @@ class MightyPPOAgent(MightyAgent):
                 metrics.update(self.update_fn.update(batch))
         return metrics
 
-    def get_transition_metrics(self, transition, metrics: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    def get_transition_metrics(
+        self, transition, metrics: Dict[str, np.ndarray]
+    ) -> Dict[str, np.ndarray]:
         if "rollout_values" not in metrics:
             metrics["rollout_values"] = np.empty((0,))
 
         values = (
             self.value_function(
-                torch.as_tensor(transition['observations'], dtype=torch.float32)
+                torch.as_tensor(transition["observations"], dtype=torch.float32)
             )
             .detach()
             .numpy()
-            .reshape((transition['observations'].shape[0],))
+            .reshape((transition["observations"].shape[0],))
         )
 
         metrics["rollout_values"] = np.append(metrics["rollout_values"], values, axis=0)
-       
+
         return metrics
 
     def save(self, t: int):
         """Save current agent state."""
         super().make_checkpoint_dir(t)
-        torch.save(self.model.policy_net.state_dict(), self.checkpoint_dir / "policy_net.pt")
-        torch.save(self.model.value_net.state_dict(), self.checkpoint_dir / "value_net.pt")
-        torch.save(self.update_fn.policy_optimizer.state_dict(), self.checkpoint_dir / "policy_optimizer.pt")
-        torch.save(self.update_fn.value_optimizer.state_dict(), self.checkpoint_dir / "value_optimizer.pt")
+        torch.save(
+            self.model.policy_net.state_dict(), self.checkpoint_dir / "policy_net.pt"
+        )
+        torch.save(
+            self.model.value_net.state_dict(), self.checkpoint_dir / "value_net.pt"
+        )
+        torch.save(
+            self.update_fn.policy_optimizer.state_dict(),
+            self.checkpoint_dir / "policy_optimizer.pt",
+        )
+        torch.save(
+            self.update_fn.value_optimizer.state_dict(),
+            self.checkpoint_dir / "value_optimizer.pt",
+        )
 
     def load(self, path: str):
         """Load the internal state of the agent."""
         base_path = Path(path)
         self.model.policy_net.load_state_dict(torch.load(base_path / "policy_net.pt"))
         self.model.value_net.load_state_dict(torch.load(base_path / "value_net.pt"))
-        self.update_fn.policy_optimizer.load_state_dict(torch.load(base_path / "policy_optimizer.pt"))
-        self.update_fn.value_optimizer.load_state_dict(torch.load(base_path / "value_optimizer.pt"))
+        self.update_fn.policy_optimizer.load_state_dict(
+            torch.load(base_path / "policy_optimizer.pt")
+        )
+        self.update_fn.value_optimizer.load_state_dict(
+            torch.load(base_path / "value_optimizer.pt")
+        )
 
     @property
     def agent_type(self):
