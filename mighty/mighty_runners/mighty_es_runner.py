@@ -8,6 +8,7 @@ from mighty.mighty_agents.base_agent import retrieve_class
 
 # TODO: check if installed and exit if not
 import importlib.util as iutil
+
 spec = iutil.find_spec("evosax")
 found = spec is not None
 if found:
@@ -16,6 +17,7 @@ if found:
     from jax import numpy as jnp
 else:
     import warnings
+
     warnings.warn("evosax not found, to use NES runners please install mighty[es].")
 
 if TYPE_CHECKING:
@@ -33,12 +35,12 @@ class MightyESRunner(MightyRunner):
             self.total_n_params = sum([len(p.flatten()) for p in self.agent.parameters])
             num_dims -= 1
             num_dims += self.total_n_params
-        
+
         es_cls = retrieve_class(cfg.es, default_cls=xNES)
         es_kwargs = {}
         if "es_kwargs" in cfg.keys():
             es_kwargs = cfg.es_kwargs
-        
+
         self.es = es_cls(popsize=cfg.popsize, num_dims=num_dims, **es_kwargs)
         self.rng = jax.random.PRNGKey(0)
         self.fit_shaper = FitnessShaper(centered_rank=True, w_decay=0.0, maximize=True)
@@ -51,15 +53,15 @@ class MightyESRunner(MightyRunner):
         # 1. Make tensor from x
         individual = np.asarray(individual)
         individual = torch.tensor(individual, dtype=torch.float32)
-        
+
         # 2. Shape it to match the model's parameters
         param_shapes = [p.shape for p in self.agent.parameters]
         reshaped_individual = []
         for shape in param_shapes:
-                    new_individual = individual[: shape.numel()]
-                    new_individual = new_individual.reshape(shape)
-                    reshaped_individual.append(new_individual)
-                    individual = individual[shape.numel() :]
+            new_individual = individual[: shape.numel()]
+            new_individual = new_individual.reshape(shape)
+            reshaped_individual.append(new_individual)
+            individual = individual[shape.numel() :]
         # 3. Set the model's parameters to the shaped tensor
         for p, x_ in zip(self.agent.parameters, reshaped_individual):
             p.data = x_
@@ -72,8 +74,8 @@ class MightyESRunner(MightyRunner):
             eval_rewards = []
             for individual in x:
                 if self.search_params:
-                    self.apply_parameters(individual[:self.total_n_params])
-                    individual = individual[self.total_n_params:]
+                    self.apply_parameters(individual[: self.total_n_params])
+                    individual = individual[self.total_n_params :]
                 for i, target in enumerate(self.search_targets):
                     if target == "parameters":
                         continue

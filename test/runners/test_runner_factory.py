@@ -16,7 +16,9 @@ class TestFactory:
     def test_create_agent(self):
         for runner_type in VALID_RUNNER_TYPES:
             runner_class = get_runner_class(runner_type)
-            assert runner_class == RUNNER_CLASSES[runner_type], f"Runner class should be {RUNNER_CLASSES[runner_type]}"
+            assert (
+                runner_class == RUNNER_CLASSES[runner_type]
+            ), f"Runner class should be {RUNNER_CLASSES[runner_type]}"
 
     def test_create_agent_with_invalid_type(self):
         with pytest.raises(ValueError):
