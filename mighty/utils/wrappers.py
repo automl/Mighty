@@ -190,6 +190,10 @@ class ContextualVecEnv(gym.vector.SyncVectorEnv):
             for i, ps in enumerate(parallel_sets):
                 self.envs[i].set_instance_set(ps)
 
+    def close(self):
+        for env in self.envs:
+            env.close()
+
 
 class ProcgenVecEnv(gym.vector.SyncVectorEnv):
     def __init__(

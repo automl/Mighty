@@ -2,10 +2,7 @@ from __future__ import annotations
 
 import pytest
 from mighty.mighty_agents.factory import get_agent_class
-from mighty.mighty_agents.dqn import MightyDQNAgent
-
-VALID_AGENT_TYPES = ["DQN", "DDQN"]
-AGENT_CLASSES = {"DQN": MightyDQNAgent, "DDQN": MightyDQNAgent}
+from mighty.mighty_agents import VALID_AGENT_TYPES, AGENT_CLASSES
 
 
 class TestFactory:

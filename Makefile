@@ -38,10 +38,9 @@ INDEX_HTML := file://${DOCDIR}/html/build/index.html
 
 install-dev:
 	$(PIP) install -e ".[dev, docs, all, examples]"
-	pre-commit install
 
 install:
-	$(PIP) install -e ".[all, examples]"
+	$(PIP) install ".[all, examples]"
 
 
 # pydocstyle does not have easy ignore rules, instead, we include as they are covered

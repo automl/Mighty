@@ -246,7 +246,6 @@ class MightyAgent(ABC):
     def run(  # noqa: PLR0915
         self,
         n_steps: int,
-        n_episodes_eval: int,
         eval_every_n_steps: int = 1_000,
         human_log_every_n_steps: int = 5000,
         save_model_every_n_steps: int | None = 5000,
@@ -462,7 +461,7 @@ class MightyAgent(ABC):
         terminated, truncated = False, False
         options = {}
         if eval_env is None:
-            eval_env = self.eval_env()
+            eval_env = self.eval_env
 
         state, _ = eval_env.reset(options=options)
         rewards = np.zeros(eval_env.num_envs)

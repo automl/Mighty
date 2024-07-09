@@ -62,7 +62,7 @@ class TestDQNAgent:
         target_pred = dqn.q_target(test_obs)
         assert torch.allclose(q_pred, target_pred), "Q and Q_target should be equal"
         assert isinstance(
-            dqn.replay_buffer, PrioritizedReplay
+            dqn.buffer, PrioritizedReplay
         ), "Replay buffer should be an instance of PrioritizedReplay"
         assert isinstance(
             dqn.qlearning, DoubleQLearning
@@ -104,7 +104,7 @@ class TestDQNAgent:
                 old * (1 - 0.01) + new * 0.01, new_target
             ), "Target model parameters should be scaled correctly"
 
-        batch = dqn.replay_buffer.sample(2)
+        batch = dqn.buffer.sample(2)
         preds, targets = dqn.qlearning.get_targets(batch, dqn.q, dqn.q_target)
         assert (
             np.mean(targets.detach().numpy() - metrics["Q-Update/td_targets"]) < 0.1

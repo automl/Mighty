@@ -3,12 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-
-from mighty.mighty_runners.mighty_online_runner import MightyOnlineRunner
-from mighty.mighty_runners.mighty_maml_runner import (
-    MightyMAMLRunner,
-    MightyTRPOMAMLRunner,
-)
+from mighty.mighty_runners import VALID_RUNNER_TYPES, RUNNER_CLASSES
 
 if TYPE_CHECKING:
     from mighty.mighty_agents.mighty_agent import MightyAgent
@@ -17,12 +12,8 @@ if TYPE_CHECKING:
 def get_runner_class(agent_type: str) -> type(MightyAgent):
     """Transforms config keyword for agents to class."""
     agent_class = None
-    if agent_type in ("default", "standard", "online"):
-        agent_class = MightyOnlineRunner
-    elif agent_type in ("maml", "MAML"):
-        agent_class = MightyMAMLRunner
-    elif agent_type in ("trpo_maml", "TRPO_MAML"):
-        agent_class = MightyTRPOMAMLRunner
+    if agent_type in VALID_RUNNER_TYPES:
+        agent_class = RUNNER_CLASSES[agent_type]
     else:
         raise ValueError(f"Unknown agent_type {agent_type}.")
 

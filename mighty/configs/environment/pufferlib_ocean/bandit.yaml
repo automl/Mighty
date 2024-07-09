@@ -4,4 +4,4 @@ num_steps: 50_000
 env: pufferlib.environments.ocean.bandit
 env_kwargs: {}
 env_wrappers: []
-num_envs: 1
+num_envs: 64
