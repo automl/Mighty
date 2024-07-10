@@ -226,6 +226,31 @@ class ComboNet(jit.ScriptModule):
         return self.module2(x)
 
 
+class TorchHubModel(jit.ScriptModule):
+    def __init__(
+        self,
+        obs_shape,
+        model_name: str,
+        repo: str = "pytorch/vision:v0.9.0",
+        pretrained: bool = False,
+    ):
+        super().__init__()
+        # Project obs to model input dims
+        # TODO: make dims fit model
+        self.projection_layer = nn.Conv2d(obs_shape[0], 3, kernel_size=1)
+        self.projection_layer.to(device)
+        self.projection_layer = torch.jit.script(self.projection_layer)
+
+        # Load model from torch hub
+        self.model = torch.hub.load(repo, model_name, pretrained=True)
+        self.model.to(device)
+        self.model = torch.jit.script(self.model)
+
+    def forward(self, x):
+        x = self.projection_layer(x)
+        return self.model(x)
+
+
 def make_feature_extractor(
     architecture="mlp",
     n_layers=3,
@@ -240,6 +265,9 @@ def make_feature_extractor(
     flatten_cnn=True,
     conv_dim=None,
     planes=None,
+    model_name: str = "resnet18",
+    repo: str = "pytorch/vision:v0.9.0",
+    pretrained: bool = False,
 ):
     """Make a feature extractor network."""
     if planes is None:
@@ -268,6 +296,11 @@ def make_feature_extractor(
         output_size = list(fe(torch.rand((1, *obs_shape))).shape[1:])
     elif architecture == "resnet":
         fe = ResNet(obs_shape, planes, activation=activation)
+        output_size = list(fe(torch.rand((1, *obs_shape))).shape[1:])
+    elif architecture == "torchhub":
+        fe = TorchHubModel(
+            obs_shape, model_name=model_name, repo=repo, pretrained=pretrained
+        )
         output_size = list(fe(torch.rand((1, *obs_shape))).shape[1:])
     elif isinstance(architecture, list | omegaconf.listconfig.ListConfig):
         modules = []

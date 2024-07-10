@@ -95,6 +95,16 @@ def test_make_combo():
     assert isinstance(combo, torch.jit.ScriptModule), "ComboNet is not a ScriptModule."
 
 
+def test_make_torchhub():
+    hub, outsize = make_feature_extractor(
+        "torchhub", model_name="resnet18", obs_shape=(64, 64, 3)
+    )
+    assert isinstance(hub, torch.jit.ScriptModule), "TorchHub is not a ScriptModule."
+    test_input = torch.rand(1, 64, 64, 3)
+    output = hub(test_input)
+    assert output.shape == (1, outsize[0]), "Output shape is not correct."
+
+
 class TestMLP:
     @pytest.mark.parametrize(
         ("input_size", "n_layers", "hidden_sizes", "activation"), test_mlps
