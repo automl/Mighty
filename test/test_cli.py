@@ -9,3 +9,4 @@ class TestMightCLI:
         )
         assert exit_status == 0
         shutil.rmtree("test_cli")
+        shutil.rmtree("outputs")

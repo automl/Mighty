@@ -26,24 +26,27 @@ class EpsilonGreedy(MightyExplorationPolicy):
         super().__init__(algo, model)
         self.epsilon = epsilon
 
-        def explore_func(s):
-            greedy_actions, qvals = self.sample_action(s)
-            if isinstance(epsilon, float):
-                exploration_flags = [
-                    self.rng.random() < self.epsilon for _ in range(len(greedy_actions))
-                ]
-            else:
-                index = 0
-                exploration_flags = []
-                while len(exploration_flags) < len(greedy_actions):
-                    exploration_flags.append(self.rng.random() < self.epsilon[index])
-                    index += 1
-                    if index >= len(self.epsilon):
-                        index = 0
+    def get_random_actions(self, n_actions, action_length):
+        if isinstance(self.epsilon, float):
+            exploration_flags = [
+                self.rng.random() < self.epsilon for _ in range(n_actions)
+            ]
+        else:
+            index = 0
+            exploration_flags = []
+            while len(exploration_flags) < n_actions:
+                exploration_flags.append(self.rng.random() < self.epsilon[index])
+                index += 1
+                if index >= len(self.epsilon):
+                    index = 0
+        exploration_flags = np.array(exploration_flags)
+        random_actions = self.rng.integers(action_length, size=n_actions)
+        return exploration_flags, random_actions
 
-            exploration_flags = np.array(exploration_flags)
-            random_actions = self.rng.integers(len(qvals[0]), size=len(greedy_actions))
-            actions = np.where(exploration_flags, random_actions, greedy_actions)
-            return actions.astype(int), qvals
-
-        self.explore_func = explore_func
+    def explore_func(self, s):
+        greedy_actions, qvals = self.sample_action(s)
+        exploration_flags, random_actions = self.get_random_actions(
+            len(greedy_actions), len(qvals[0])
+        )
+        actions = np.where(exploration_flags, random_actions, greedy_actions)
+        return actions.astype(int), qvals

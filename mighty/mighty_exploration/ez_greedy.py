@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import numpy as np
-from mighty.mighty_exploration.mighty_exploration_policy import MightyExplorationPolicy
+from mighty.mighty_exploration import EpsilonGreedy
 
 
-class EZGreedy(MightyExplorationPolicy):
+class EZGreedy(EpsilonGreedy):
     """Epsilon Greedy Exploration."""
 
     def __init__(
@@ -31,49 +31,38 @@ class EZGreedy(MightyExplorationPolicy):
         self.skipped = None
         self.frozen_actions = None
 
-        def explore_func(s):
-            # Epsilon Greedy Step
-            greedy_actions, qvals = self.sample_action(s)
-            if self.skipped is None:
-                self.skipped = np.zeros(len(greedy_actions))
-                self.frozen_actions = np.zeros(greedy_actions.shape)
+    def explore_func(self, s):
+        # Epsilon Greedy Step
+        greedy_actions, qvals = self.sample_action(s)
 
-            if isinstance(epsilon, float):
-                exploration_flags = [
-                    self.rng.random() < self.epsilon for _ in range(len(greedy_actions))
-                ]
-            else:
-                index = 0
-                exploration_flags = []
-                while len(exploration_flags) < len(greedy_actions):
-                    exploration_flags.append(self.rng.random() < self.epsilon[index])
-                    index += 1
-                    if index >= len(self.epsilon):
-                        index = 0
+        # Initialize Skips
+        if self.skipped is None:
+            self.skipped = np.zeros(len(greedy_actions))
+            self.frozen_actions = np.zeros(greedy_actions.shape)
 
-            exploration_flags = np.array(exploration_flags)
-            random_actions = self.rng.integers(len(qvals[0]), size=greedy_actions.shape)
-            actions = np.where(exploration_flags, random_actions, greedy_actions)
+        # Do epsilon greedy exploration
+        exploration_flags, random_actions = self.get_random_actions(
+            len(greedy_actions), len(qvals[0])
+        )
+        actions = np.where(exploration_flags, random_actions, greedy_actions)
 
-            # Decay Skips
-            self.skipped = np.maximum(0, self.skipped - 1)
+        # Decay Skips
+        self.skipped = np.maximum(0, self.skipped - 1)
 
-            # Sample skip lengths for new exploration steps
-            new_skips = np.where(
-                exploration_flags,
-                [self.rng.zipf(self.zipf_param) for _ in range(len(exploration_flags))],
-                [0] * len(exploration_flags),
-            )
-            for i in range(len(self.skipped)):
-                if self.skipped[i] == 0:
-                    self.frozen_actions[i] = actions[i]
+        # Sample skip lengths for new exploration steps
+        new_skips = np.where(
+            exploration_flags,
+            [self.rng.zipf(self.zipf_param) for _ in range(len(exploration_flags))],
+            [0] * len(exploration_flags),
+        )
+        for i in range(len(self.skipped)):
+            if self.skipped[i] == 0:
+                self.frozen_actions[i] = actions[i]
 
-                if exploration_flags[i] and self.skipped[i] == 0:
-                    self.skipped[i] = new_skips[i]
+            if exploration_flags[i] and self.skipped[i] == 0:
+                self.skipped[i] = new_skips[i]
 
-            # Apply skip
-            skips = [self.skipped[i] > 0 for i in range(len(self.skipped))]
-            actions = np.where(skips, self.frozen_actions, actions)
-            return actions.astype(int), qvals
-
-        self.explore_func = explore_func
+        # Apply skip
+        skips = [self.skipped[i] > 0 for i in range(len(self.skipped))]
+        actions = np.where(skips, self.frozen_actions, actions)
+        return actions.astype(int), qvals

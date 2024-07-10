@@ -153,11 +153,14 @@ class TestDQNAgent:
         assert dqn._batch_size == 32, "Batch size should be 32"
         assert dqn._learning_starts == 15, "Learning starts should be 15"
 
-    def test_save(self):
-        pass
-
-    def test_load(self):
-        pass
+    def test_save_load(self):
+        env = gym.vector.SyncVectorEnv([DummyEnv for _ in range(1)])
+        logger = Logger("test_dqn_agent", "test_dqn_agent")
+        dqn = MightyDQNAgent(env, logger)
+        dqn.save(5)
+        assert dqn.checkpoint_dir.exists(), "Model should be saved"
+        dqn.load(dqn.checkpoint_dir)
+        clean(logger)
 
     def test_get_transition_metrics(self):
         torch.manual_seed(0)
@@ -194,6 +197,3 @@ class TestDQNAgent:
         ), "New value prediction should be added"
         assert len(metrics["td_error"]) == 1, "TD error is overwritten"
         clean(logger)
-
-    def test_act(self):
-        pass

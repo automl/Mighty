@@ -1,7 +1,7 @@
 import gymnasium as gym
 import torch
 import numpy as np
-import os
+import shutil
 
 
 class DummyEnv(gym.Env):
@@ -43,9 +43,4 @@ class DummyModel:
 
 def clean(logger):
     logger.close()
-    os.remove(logger.log_file.name)
-    if (logger.log_dir / "rewards.jsonl").exists():
-        os.remove(logger.log_dir / "rewards.jsonl")
-    if (logger.log_dir / "eval.jsonl").exists():
-        os.remove(logger.log_dir / "eval.jsonl")
-    os.removedirs(logger.log_dir)
+    shutil.rmtree(logger.log_dir.parents[0], ignore_errors=False, onerror=None)

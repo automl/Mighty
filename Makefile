@@ -57,7 +57,7 @@ format:
 	ruff check --fix mighty test --exit-zero
 
 test:
-	$(PYTEST) -v --cov=mighty test --durations=20
+	$(PYTEST) -v --cov=mighty test --durations=20 --cov-report html
 
 clean-doc:
 	$(MAKE) -C ${DOCDIR} clean
