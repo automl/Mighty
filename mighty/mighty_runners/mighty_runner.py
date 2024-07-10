@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 
 from hydra.utils import get_class
 from mighty.mighty_agents.factory import get_agent_class
-from mighty.utils.envs import make_mighty_env
-from mighty.utils.logger import Logger
+from mighty.mighty_utils.envs import make_mighty_env
+from mighty.mighty_utils.logger import Logger
 
 warnings.filterwarnings("ignore")
 

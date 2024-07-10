@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from mighty.mighty_meta import SPaCE
 from utils import DummyEnv, clean, DummyModel
-from mighty.utils.logger import Logger
+from mighty.mighty_utils.logger import Logger
 from mighty.mighty_agents.dqn import MightyDQNAgent
-from mighty.utils.wrappers import ContextualVecEnv
+from mighty.mighty_utils.wrappers import ContextualVecEnv
 
 
 class TestSPaCE:

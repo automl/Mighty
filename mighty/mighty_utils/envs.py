@@ -7,7 +7,7 @@ from functools import partial
 
 import gymnasium as gym
 from omegaconf import OmegaConf
-from mighty.utils.wrappers import (
+from mighty.mighty_utils.wrappers import (
     PufferlibToGymAdapter,
     ContextualVecEnv,
     CARLVectorEnvSimulator,

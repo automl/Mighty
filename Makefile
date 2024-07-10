@@ -40,7 +40,7 @@ install-dev:
 	$(PIP) install -e ".[dev, docs, all, examples]"
 
 install:
-	$(PIP) install ".[all, examples]"
+	$(PIP) install -e ".[all, examples]"
 
 
 # pydocstyle does not have easy ignore rules, instead, we include as they are covered

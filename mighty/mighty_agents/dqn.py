@@ -16,11 +16,11 @@ from omegaconf import OmegaConf
 
 if TYPE_CHECKING:
     from mighty.mighty_replay import MightyReplay
-    from mighty.utils.logger import Logger
-    from mighty.utils.types import TypeKwargs
+    from mighty.mighty_utils.logger import Logger
+    from mighty.mighty_utils.types import TypeKwargs
     from omegaconf import DictConfig
 
-    from bbf_e.mighty.utils.env_handling import MIGHTYENV
+    from mighty.mighty_utils.env_handling import MIGHTYENV
 
 
 class MightyDQNAgent(MightyAgent):

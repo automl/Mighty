@@ -12,7 +12,7 @@ from mighty.mighty_exploration.epsilon_greedy import EpsilonGreedy
 from mighty.mighty_models.dqn import DQN
 from mighty.mighty_replay import PrioritizedReplay, TransitionBatch
 from mighty.mighty_update.q_learning import DoubleQLearning, QLearning
-from mighty.utils.logger import Logger
+from mighty.mighty_utils.logger import Logger
 
 
 class TestDQNAgent:

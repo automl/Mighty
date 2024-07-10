@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 from mighty.mighty_runners.mighty_runner import MightyRunner
 from mighty.mighty_agents.base_agent import retrieve_class
 
-# TODO: check if installed and exit if not
 import importlib.util as iutil
 
 spec = iutil.find_spec("evosax")

@@ -14,14 +14,14 @@ from mighty.mighty_replay import (
     TransitionBatch,
     RolloutBatch,
 )
-from mighty.utils.env_handling import CARLENV, DACENV, MIGHTYENV
+from mighty.mighty_utils.env_handling import CARLENV, DACENV, MIGHTYENV
 from omegaconf import DictConfig
 from rich import print
 from rich.progress import BarColumn, Progress, TimeElapsedColumn, TimeRemainingColumn
 
 if TYPE_CHECKING:
-    from mighty.utils.logger import Logger
-    from mighty.utils.types import TypeKwargs
+    from mighty.mighty_utils.logger import Logger
+    from mighty.mighty_utils.types import TypeKwargs
 
 
 def retrieve_class(cls: str | DictConfig | type, default_cls: type) -> type:

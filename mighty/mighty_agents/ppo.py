@@ -10,7 +10,7 @@ from mighty.mighty_update.ppo_update import PPOUpdate
 from mighty.mighty_replay.mighty_rollout_buffer import (
     MightyRolloutBuffer,
 )  # Import the correct buffer and batch classes
-from mighty.utils.logger import Logger
+from mighty.mighty_utils.logger import Logger
 
 from omegaconf import DictConfig
 

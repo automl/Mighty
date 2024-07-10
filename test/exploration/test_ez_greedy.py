@@ -1,7 +1,7 @@
 import numpy as np
 import gymnasium as gym
 from utils import DummyEnv, clean
-from mighty.utils.logger import Logger
+from mighty.mighty_utils.logger import Logger
 from mighty.mighty_agents.dqn import MightyDQNAgent
 from mighty.mighty_exploration.ez_greedy import EZGreedy
 

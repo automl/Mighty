@@ -15,5 +15,4 @@ setup(
     test_suite="nose.collector",
     tests_require=["mock", "nose"],
     long_description_content_type="text/markdown",
-    entry_points = {"console_scripts": ["mighty=mighty.run_mighty:run_mighty"]}
 )

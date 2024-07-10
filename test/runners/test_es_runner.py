@@ -4,8 +4,8 @@ from omegaconf import OmegaConf
 from copy import deepcopy
 from mighty.mighty_runners import MightyRunner, MightyESRunner
 from mighty.mighty_agents import MightyAgent
-from mighty.utils.logger import Logger
-from mighty.utils.wrappers import PufferlibToGymAdapter
+from mighty.mighty_utils.logger import Logger
+from mighty.mighty_utils.wrappers import PufferlibToGymAdapter
 
 
 class TestMightyNESRunner:

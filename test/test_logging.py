@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import logging
 from omegaconf import OmegaConf
-from mighty.utils.logger import Logger, load_logs, to_dataframe
+from mighty.mighty_utils.logger import Logger, load_logs, to_dataframe
 
 
 class TestLogging:

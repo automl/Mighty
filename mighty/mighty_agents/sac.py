@@ -9,7 +9,7 @@ from mighty.mighty_update import SACUpdate
 from mighty.mighty_models.sac import SACModel
 from omegaconf import DictConfig
 from mighty.mighty_replay import MightyReplay
-from mighty.utils.logger import Logger
+from mighty.mighty_utils.logger import Logger
 
 
 class MightySACAgent(MightyAgent):
