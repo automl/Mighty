@@ -33,8 +33,6 @@ class PPOUpdate:
 
         states = batch.observations.squeeze(0)
         actions = batch.actions.squeeze(0)
-        # rewards = batch.rewards.squeeze(0)
-        # episode_starts = batch.episode_starts.squeeze(0)
         old_log_probs = batch.log_probs.squeeze(0)
         advantages = batch.advantages.squeeze(0)
         returns = batch.returns.squeeze(0)
@@ -67,14 +65,6 @@ class PPOUpdate:
             self.model.policy_net.parameters(), self.max_grad_norm
         )
         self.policy_optimizer.step()
-
-        # # Update the value network
-        # self.value_optimizer.zero_grad()
-        # value_loss.backward(retain_graph=True)
-        # torch.nn.utils.clip_grad_norm_(
-        #     self.model.value_net.parameters(), self.max_grad_norm
-        # )
-        # self.value_optimizer.step()
 
         return {
             "policy_loss": policy_loss.item(),

@@ -66,6 +66,7 @@ class MightyDQNAgent(MightyAgent):
         td_update_kwargs: TypeKwargs | None = None,
         save_replay: bool = False,
     ):
+        # FIXME: the arguments are not complete. Double check all classes.
         """DQN initialization.
 
         Creates all relevant class variables and calls agent-specific init function
@@ -153,6 +154,8 @@ class MightyDQNAgent(MightyAgent):
         """Q-function."""
         return self.q
 
+    # FIXME: these were introduced to enable ES for parameters and only exist for DQN currently
+    # If we want to keep the functionality, we should replicate the property in the other algorithms
     @property
     def parameters(self):
         """Q-function parameters."""
@@ -187,7 +190,10 @@ class MightyDQNAgent(MightyAgent):
 
         # specify how to update value function
         self.qlearning = self.td_update_class(model=self.q, **self.td_update_kwargs)
-
+        # FIXME: I think we might want to replace all normal if statements:
+        # 1. richt print in base agent + runners
+        # 2. loggers everywhere else with configurable verbosity
+        # Then we won't need to have verbose checks
         print("Initialized agent.")
 
     def update_agent(self):
@@ -309,6 +315,13 @@ class MightyDQNAgent(MightyAgent):
         for g in self.qlearning.optimizer.param_groups:
             g["lr"] = self.learning_rate
 
+    # FIXME: what exactly do we use this for?
+    # I know it was in the base agent ifs, but I think that's fundamentally not a good idea
+    # I can see how something like on-policy vs off-policy would make sense though
+    # Not sure whether we want to put this in the agent itself or in init
+    # Pro agent: each class tells us what algo it is
+    # Pro init: we can import a list of agents of a certain kind
+    # Of course we could do it in the agent itself as a static attribute and check for it in init
     @property
     def agent_type(self):
         return "DQN"

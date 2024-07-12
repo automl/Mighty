@@ -7,6 +7,8 @@ from ConfigSpace import ConfigurationSpace
 from ConfigSpace.read_and_write import json as csjson
 from omegaconf import DictConfig, ListConfig, OmegaConf, open_dict
 
+# FIXME: what is this even doing? I don't think we need this at all
+
 
 class JSONCfgEncoder(json.JSONEncoder):
     """Encode DictConfigs.

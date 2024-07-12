@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from mighty.mighty_utils.types import TypeKwargs
 
 
+# FIXME: This probably should be moved to a more general place - utils?
 def retrieve_class(cls: str | DictConfig | type, default_cls: type) -> type:
     """Get coax or mighty class."""
     if cls is None:
@@ -171,6 +172,11 @@ class MightyAgent(ABC):
         are done in _initialize_agent
         """
 
+        # FIXME: This is really hacky, doesn't this mess up all buffers?!
+        # I understand that this needs to come before the buffer initialization, but like this it's really weird for DQN and SAC (and breaks them if you set the buffer size)
+        # Why not just switch the order then? In this case you can set the buffer kwargs in PPO.init and make the buffer later
+        # For DQN this isn't an issue, maybe check with SAC and PPO. Either way, this should be fixed!
+
         # Set buffer size in PPO to be the total experiences collected per update step
         if "buffer_size" in self.buffer_kwargs:
             self.buffer_kwargs["buffer_size"] = self._batch_size
@@ -258,6 +264,7 @@ class MightyAgent(ABC):
         episodes = 0
         if env is not None:
             self.env = env
+        # FIXME: can we add the eval result here? Else the evals spam the command line in a pretty ugly way
         with Progress(
             "[progress.description]{task.description}",
             BarColumn(),
@@ -276,6 +283,8 @@ class MightyAgent(ABC):
             )
             steps_since_eval = 0
             progress.start_task(steps_task)
+            # FIXME: this is more of a question: are there cases where we don't want to reset this completely?
+            # I can't think of any, can you? If yes, we should maybe add this as an optional argument
             metrics = {
                 "env": self.env,
                 "vf": self.value_function,
@@ -286,16 +295,24 @@ class MightyAgent(ABC):
                 "hp/batch_size": self._batch_size,
                 "hp/learning_starts": self._learning_starts,
             }
+
+            # Reset env and initialize reward sum
             curr_s, _ = self.env.reset()
             if len(curr_s.squeeze().shape) == 0:
                 episode_reward = [0]
             else:
                 episode_reward = np.zeros(curr_s.squeeze().shape[0])
+
             last_episode_reward = episode_reward
             progress.update(steps_task, visible=True)
+
+            # Main loop: rollouts, training and evaluation
             while self.steps < n_steps:
                 metrics["episode_reward"] = episode_reward
 
+                # FIXME: This is a pretty bad way of doing this imo - why is this necessary?
+                # DQN works with the same function signature, we don't need to differentiate here
+                # Also: why is return_logp not set here? If that's false but still returns the logprob, there's a bug
                 if self.agent_type == "DQN":
                     action = self.step(curr_s, metrics)
                 else:
@@ -304,6 +321,10 @@ class MightyAgent(ABC):
                 next_s, reward, terminated, truncated, _ = self.env.step(action)
                 dones = np.logical_or(terminated, truncated)
 
+                # FIXME: again, not a great solution imo, I think we should avoid being so algorithm specific if we can
+                # Issue 1: differentiating between algorithms - why would the logprobs belong in the batch?
+                # Issue 2: transition metrics are missing in the PPO version - this is where you can get your values from
+                # Proposed fix: put values and logprobs in the metrics instead, this will fix all these issues. The buffer gets both anyway.
                 if self.agent_type in ["DQN", "SAC"]:
                     transition = TransitionBatch(curr_s, action, reward, next_s, dones)
                     transition_metrics = self.get_transition_metrics(
@@ -370,6 +391,10 @@ class MightyAgent(ABC):
                     len(self.buffer) >= self._batch_size
                     and self.steps >= self._learning_starts
                 ):
+                    # FIXME: why is this here and not in PPO? PPO has access to the buffer as well
+                    # Is it because you need next_s and dones? That could be solved by providing them to the update function
+                    # That would still require checking for PPO (though, but at least the value computation would not be here)
+                    # Proposed fix: if PPO -> update_kwargs = {"next_s": next_s, "dones": dones}, else -> update_kwargs = {}
                     if self.agent_type == "PPO":
                         # Compute returns and advantages for PPO
                         last_values = self.value_function(
@@ -380,6 +405,7 @@ class MightyAgent(ABC):
 
                     metrics = self.update(metrics)
 
+                    # FIXME: again, this should be in PPO
                     if self.agent_type == "PPO":
                         self.buffer.reset()
 
@@ -430,6 +456,9 @@ class MightyAgent(ABC):
 
                     # Remove rollout data from last episode
                     # TODO: only do this for finished envs
+                    # FIXME: open todo, I think we need to use dones as a mask here
+                    # Proposed fix: metrics[k][:, dones] = 0
+                    # I don't think this is correct masking and I think we have to check the size of zeros
                     for k in list(metrics.keys()):
                         if "rollout" in k:
                             del metrics[k]
@@ -452,6 +481,7 @@ class MightyAgent(ABC):
             else:
                 print(f"Trying to set hyperparameter {algo_name} which does not exist.")
 
+    # FIXME: as above, logging down here is ugly and we should add it to the progress bar instead
     def evaluate(self, eval_env: MIGHTYENV | None = None):
         """Eval agent on an environment. (Full rollouts).
 
@@ -497,6 +527,7 @@ class MightyAgent(ABC):
         if instance is not None:
             eval_metrics["instance"] = instance
 
+        # FIXME: this is the ugly I'm talking about
         if self.verbose:
             print("")
             print(

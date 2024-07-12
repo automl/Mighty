@@ -16,6 +16,9 @@ import pandas as pd
 from omegaconf import OmegaConf
 from rich.logging import RichHandler
 
+# FIXME: we need to test if this thing actually produces readable logs
+# If not, we might want to simplify it a lot and/or rely on tb's logging
+
 
 def get_standard_logger(
     identifier: str,

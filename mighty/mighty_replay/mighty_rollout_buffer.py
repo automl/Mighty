@@ -9,6 +9,10 @@ import torch
 from mighty.mighty_replay.buffer import MightyBuffer
 
 
+# FIXME: the only difference here is that there are more values, no?
+# There are two options which make for simpler code:
+# 1. make log_probs and values optional arguments
+# 2. move those to the transition metrics since they aren't in the transition anyway
 class RolloutBatch:
     def __init__(
         self,
@@ -55,6 +59,7 @@ class RolloutBatch:
         )
 
 
+# FIXME: loads of missing docstrings in this class
 class MightyRolloutBuffer(MightyBuffer):
     """
     Rollout buffer used in on-policy algorithms like A2C/PPO.
@@ -79,6 +84,7 @@ class MightyRolloutBuffer(MightyBuffer):
         self.n_envs = n_envs
         self.reset()
 
+    # FIXME: loads of code duplication here, just call super().reset() first
     def reset(self) -> None:
         self.observations = []
         self.actions = []
@@ -97,6 +103,7 @@ class MightyRolloutBuffer(MightyBuffer):
         last_values = last_values.clone().cpu().squeeze(1)
         last_gae_lam = 0
 
+        # FIXME: remove debug statements - ideally search for them
         # import pdb; pdb.set_trace()
 
         for step in reversed(range(self.observations.shape[0])):
@@ -145,6 +152,8 @@ class MightyRolloutBuffer(MightyBuffer):
             )
             self.log_probs = torch.cat((self.log_probs, rollout_batch.log_probs))
             self.values = torch.cat((self.values, rollout_batch.values))
+
+        # FIXME: remove deprecated code blocks
         # if len(self) > self.buffer_size:
 
         #     import pdb; pdb.set_trace()
@@ -162,6 +171,8 @@ class MightyRolloutBuffer(MightyBuffer):
         indices = np.random.permutation(len(self.observations))
         start_idx = 0
         samples = []
+        # FIXME: this seems like a very inefficient way to do this
+        # Can't you just do this in one go? Fetch the whole buffer, then reshape the lsit of transitions into a list of batches?
         while start_idx < len(self.observations):
             batch_inds = indices[start_idx : start_idx + batch_size]
             samples.append(self._get_samples(batch_inds))

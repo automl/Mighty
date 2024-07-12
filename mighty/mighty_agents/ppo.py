@@ -7,9 +7,7 @@ from mighty.mighty_agents.base_agent import MightyAgent, retrieve_class
 from mighty.mighty_exploration import StochasticPolicy, MightyExplorationPolicy
 from mighty.mighty_models.ppo import PPOModel
 from mighty.mighty_update.ppo_update import PPOUpdate
-from mighty.mighty_replay.mighty_rollout_buffer import (
-    MightyRolloutBuffer,
-)  # Import the correct buffer and batch classes
+from mighty.mighty_replay.mighty_rollout_buffer import MightyRolloutBuffer
 from mighty.mighty_utils.logger import Logger
 
 from omegaconf import DictConfig
@@ -47,6 +45,7 @@ class MightyPPOAgent(MightyAgent):
         max_grad_norm: float = 0.5,
         n_gradient_steps: int = 10,
     ):
+        # FIXME: missing docstring
         self.gamma = gamma
         self.n_policy_units = n_policy_units
         self.n_critic_units = n_critic_units
@@ -126,6 +125,7 @@ class MightyPPOAgent(MightyAgent):
         if "rollout_values" not in metrics:
             metrics["rollout_values"] = np.empty((0,))
 
+        # FIXME: they were here all along?! Why did you compute them again in the base agent?
         values = (
             self.value_function(
                 torch.as_tensor(transition["observations"], dtype=torch.float32)
@@ -139,6 +139,7 @@ class MightyPPOAgent(MightyAgent):
 
         return metrics
 
+    # FIXME: both of these don't have any log messages, we should add them for a verbose mode
     def save(self, t: int):
         """Save current agent state."""
         super().make_checkpoint_dir(t)

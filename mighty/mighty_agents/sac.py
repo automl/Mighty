@@ -42,6 +42,7 @@ class MightySACAgent(MightyAgent):
         alpha: float = 0.2,
         n_gradient_steps: int = 1,
     ):
+        # FIXME: missing docstring
         self.gamma = gamma
         self.n_policy_units = n_policy_units
         self.n_critic_units = n_critic_units
@@ -108,6 +109,7 @@ class MightySACAgent(MightyAgent):
         if len(self.buffer) < self._learning_starts:
             return {}
 
+        # FIXME: why is there a q here? Seems like weird naming
         metrics_q = {}
 
         for _ in range(self.n_gradient_steps):

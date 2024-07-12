@@ -56,15 +56,18 @@ class SACModel(nn.Module):
             nn.Linear(hidden_sizes[-1], 1),
         )
 
+    # FIXME: lots of missing docstrings
     def forward(self, state):
         return self.forward_policy(state)
 
     def forward_policy(self, state):
         x = self.policy_net(state)
         mean, log_std = x.chunk(2, dim=-1)
+        # FIXME: this should probably be a hyperparameter
         log_std = log_std.clamp(-20, 2)
         return mean, log_std.exp()
 
+    # FIXME: do all of these really need to be separate functions?
     def forward_q1(self, state_action):
         return self.q_net1(state_action)
 

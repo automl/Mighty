@@ -35,6 +35,10 @@ class PPOModel(nn.Module):
             activation=activation,
         )
 
+        # FIXME: is this really always what we want, only single output layer for the policy and value?
+        # I feel like I've often seen at least one more layer for the policy
+        # Should be fairly easy to implement, see "make_q_head"
+
         # Policy network
         if self.continuous_action:
             self.policy_net = nn.Sequential(
@@ -50,6 +54,8 @@ class PPOModel(nn.Module):
             self.feature_extractor, nn.Linear(self.output_size, 1)
         )
 
+    # FIXME: duplicated docstring which doesn't tell me why both exist
+    # And actually: why do both exist? You could just return the raw logits in the continous case as well, no?
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """Default Forward as the forward pass through the policy network."""
 
@@ -65,6 +71,7 @@ class PPOModel(nn.Module):
         if self.continuous_action:
             mean, log_std = x.chunk(2, dim=-1)
             mean = mean.squeeze(-1)  # Remove the extra dimension
+            # FIXME: the clamping is hardcoded here, should be a probabyl be a hyperparameter
             log_std = log_std.clamp(-20, 2).squeeze(-1)  # Remove the extra dimension
             return mean, log_std.exp()
         else:

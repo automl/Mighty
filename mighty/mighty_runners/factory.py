@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 from mighty.mighty_runners import VALID_RUNNER_TYPES, RUNNER_CLASSES
 
 if TYPE_CHECKING:
-    from mighty.mighty_agents.mighty_agent import MightyAgent
+    from mighty.mighty_runners.mighty_runner import MightyRunner
 
 
-def get_runner_class(agent_type: str) -> type(MightyAgent):
+def get_runner_class(agent_type: str) -> type(MightyRunner):
     """Transforms config keyword for agents to class."""
     agent_class = None
     if agent_type in VALID_RUNNER_TYPES:

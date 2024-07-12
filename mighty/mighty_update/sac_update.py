@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from mighty.mighty_models.sac import SACModel
 
 
+# FIXME: we might want to move this to a general update utils module
 def polyak_update(source_params, target_params, tau):
     for target_param, param in zip(target_params, source_params):
         target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
@@ -54,6 +55,7 @@ class SACUpdate:
             next_actions = torch.normal(
                 next_mean, next_std
             )  # TODO: revisit action dimensionsa
+            # FIXME: is this still open?
 
             next_log_probs = (
                 -0.5

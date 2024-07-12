@@ -206,10 +206,12 @@ class ResNet(jit.ScriptModule):
         self.layer1, self.layer2, self.layer3, self.flatten, self.activ = state
 
 
+# FIXME: we should probably implement or remove
 class LSTM(jit.ScriptModule):
     """LSTM network."""
 
 
+# FIXME: this is pretty ugly - do you think this is useful? If no, we could simly remove it
 class ComboNet(jit.ScriptModule):
     """Combination of several network architectures network."""
 

@@ -75,6 +75,7 @@ class MightyReplay(MightyBuffer):
     """Simple replay buffer."""
 
     # TODO: add device
+    # FIXME: we should actually send as much as possible to the device, both buffers and models
     def __init__(self, capacity, keep_infos=False, flatten_infos=False):
         """Initialize Buffer.
 
@@ -163,6 +164,7 @@ class MightyReplay(MightyBuffer):
             pickle.dump(self, f)
 
 
+# FIXME: I feel like this should move to a separate file
 class PrioritizedReplay(MightyReplay):
     """Prioritized Replay Buffer."""
 
