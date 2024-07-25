@@ -13,6 +13,7 @@ from mighty.mighty_exploration import EpsilonGreedy, MightyExplorationPolicy
 from mighty.mighty_models import DQN
 from mighty.mighty_update import DoubleQLearning, QLearning
 from omegaconf import OmegaConf
+from mighty.mighty_replay import TransitionBatch
 
 if TYPE_CHECKING:
     from mighty.mighty_replay import MightyReplay
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
     from omegaconf import DictConfig
 
     from mighty.mighty_utils.env_handling import MIGHTYENV
+
 
 
 class MightyDQNAgent(MightyAgent):
@@ -166,6 +168,7 @@ class MightyDQNAgent(MightyAgent):
 
     def _initialize_agent(self):
         """Initialize DQN specific things like q-function."""
+
         if not isinstance(self.q_kwargs, dict):
             self.q_kwargs = OmegaConf.to_container(self.q_kwargs)
 
@@ -196,12 +199,13 @@ class MightyDQNAgent(MightyAgent):
         # Then we won't need to have verbose checks
         print("Initialized agent.")
 
-    def update_agent(self):
+    def update_agent(self, **kwargs):
         """Compute and apply TD update.
 
         :param step: Current training step
         :return:
         """
+        
         transition_batch = self.buffer.sample(batch_size=self._batch_size)
         preds, targets = self.qlearning.get_targets(
             transition_batch, self.q, self.q_target
@@ -225,21 +229,23 @@ class MightyDQNAgent(MightyAgent):
                     self.soft_update_weight * param.data
                     + (1 - self.soft_update_weight) * target_param.data
                 )
+        
         return metrics_q
-
-    def get_transition_metrics(self, transition, metrics: Dict):
-        """Get metrics per transition.
-
-        :param transition: Current transition
-        :param metrics: Current metrics dict
-        :return:
-        """
+    
+    def process_transition(self, curr_s, action, reward, next_s, dones, log_prob=None, metrics=None):
+        
+        # convert into a transition object
+        transition = TransitionBatch(curr_s, action, reward, next_s, dones)
+        
         if "rollout_values" not in metrics:
             metrics["rollout_values"] = np.empty((0, self.env.single_action_space.n))
 
+        # Add Td-error to metrics
         metrics["td_error"] = (
             self.qlearning.td_error(transition, self.q, self.q_target).detach().numpy()
         )
+        
+        # Compute and add rollout values to metrics
         values = (
             self.value_function(
                 torch.as_tensor(transition.observations, dtype=torch.float32)
@@ -250,6 +256,10 @@ class MightyDQNAgent(MightyAgent):
         )
 
         metrics["rollout_values"] = np.append(metrics["rollout_values"], values, axis=0)
+        
+        # Add the transition to the buffer
+        self.buffer.add(transition, metrics)
+        
         return metrics
 
     def save(self, t: int):

@@ -11,6 +11,7 @@ from omegaconf import DictConfig
 from mighty.mighty_replay import MightyReplay
 from mighty.mighty_utils.logger import Logger
 
+from mighty.mighty_replay import TransitionBatch
 
 class MightySACAgent(MightyAgent):
     def __init__(
@@ -133,7 +134,7 @@ class MightySACAgent(MightyAgent):
         """Return the value function model."""
         return self.model.value_net
 
-    def update_agent(self) -> Dict[str, float]:
+    def update_agent(self, **kwargs) -> Dict[str, float]:
         """Update the agent using SAC.
 
         :return: Dictionary containing the update metrics.
@@ -154,26 +155,20 @@ class MightySACAgent(MightyAgent):
 
         return metrics_sac
 
-    def get_transition_metrics(
-        self, transition, metrics: Dict[str, np.ndarray]
-    ) -> Dict[str, np.ndarray]:
-        """Get metrics per transition.
-
-        :param transition: Current transition
-        :param metrics: Current metrics dict
-        :return: Updated metrics dict
-        """
+    def process_transition(self, curr_s, action, reward, next_s, dones, log_prob=None, metrics=None):
+        
+        # convert into a transition object
+        transition = TransitionBatch(curr_s, action, reward, next_s, dones)
+        
         if "rollout_values" not in metrics:
-            metrics["rollout_values"] = np.empty(
-                (0, self.env.single_action_space.shape[0])
-            )
+            metrics["rollout_values"] = np.empty((0, self.env.single_action_space.n))
 
-        # Calculate TD error using the method from SACUpdate class
-        td_error1, td_error2 = self.update_fn.calculate_td_error(transition)
-        td_error = (td_error1 + td_error2).detach().numpy()
-        metrics["td_error"] = td_error
-
-        # Calculate values using the value function
+        # Add Td-error to metrics
+        metrics["td_error"] = (
+            self.qlearning.td_error(transition, self.q, self.q_target).detach().numpy()
+        )
+        
+        # Compute and add rollout values to metrics
         values = (
             self.value_function(
                 torch.as_tensor(transition.observations, dtype=torch.float32)
@@ -184,6 +179,10 @@ class MightySACAgent(MightyAgent):
         )
 
         metrics["rollout_values"] = np.append(metrics["rollout_values"], values, axis=0)
+        
+        # Add the transition to the buffer
+        self.buffer.add(transition, metrics)
+        
         return metrics
 
     def save(self, t: int):

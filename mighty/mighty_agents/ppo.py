@@ -9,6 +9,7 @@ from mighty.mighty_models.ppo import PPOModel
 from mighty.mighty_update.ppo_update import PPOUpdate
 from mighty.mighty_replay.mighty_rollout_buffer import MightyRolloutBuffer
 from mighty.mighty_utils.logger import Logger
+from mighty.mighty_replay import RolloutBatch
 
 from omegaconf import DictConfig
 
@@ -118,6 +119,13 @@ class MightyPPOAgent(MightyAgent):
 
     def _initialize_agent(self):
         """Initialize PPO specific components."""
+        
+        
+        self.buffer_kwargs["buffer_size"] = self._batch_size
+        self.buffer_kwargs["obs_shape"] = self.env.single_observation_space.shape[0]
+        self.buffer_kwargs["act_dim"] = int(self.env.single_action_space.n)
+        self.buffer_kwargs["n_envs"] = self.env.observation_space.shape[0]
+        
         self.model = PPOModel(
             obs_size=self.env.single_observation_space.shape[0],
             action_size=self.env.single_action_space.n,
@@ -140,47 +148,56 @@ class MightyPPOAgent(MightyAgent):
         """Return the value function model."""
         return self.model.value_net
 
-    def update_agent(self) -> Dict[str, float]:
+    def update_agent(self, next_s, dones, **kwargs) -> Dict[str, float]:
         """Update the agent using PPO.
 
         :return: Dictionary containing the update metrics.
         """
         if len(self.buffer) < self._learning_starts:
             return {}
+        
+        # Compute returns and advantages for PPO
+        last_values = self.value_function(
+            torch.as_tensor(next_s, dtype=torch.float32)
+        ).detach()
+
+        self.buffer.compute_returns_and_advantage(last_values, dones)
 
         metrics = {}
         for _ in range(self.n_gradient_steps):
             for batch in self.buffer.sample(self._batch_size):
                 metrics.update(self.update_fn.update(batch))
+            
+        self.buffer.reset()
+        
         return metrics
 
-    def get_transition_metrics(
-        self, transition, metrics: Dict[str, np.ndarray]
-    ) -> Dict[str, np.ndarray]:
-        """Get transition metrics for the given transition.
-
-        :param transition: The transition to get metrics for.
-        :param metrics: Dictionary to store metrics.
-        :return: Updated metrics dictionary.
-        """
-        
-        if "rollout_values" not in metrics:
-            metrics["rollout_values"] = np.empty((0,))
-
-        # FIXME: they were here all along?! Why did you compute them again in the base agent?
+    def process_transition(self, curr_s, action, reward, next_s, dones, log_prob=None, metrics=None):
         values = (
             self.value_function(
-                torch.as_tensor(transition["observations"], dtype=torch.float32)
+                torch.as_tensor(curr_s, dtype=torch.float32)
             )
             .detach()
             .numpy()
-            .reshape((transition["observations"].shape[0],))
+            .reshape((curr_s.shape[0],))
         )
 
-        metrics["rollout_values"] = np.append(metrics["rollout_values"], values, axis=0)
+        rollout_batch = RolloutBatch(
+            observations=curr_s,
+            actions=action,
+            rewards=reward,
+            advantages=np.zeros_like(reward),  # Placeholder, compute later
+            returns=np.zeros_like(reward),  # Placeholder, compute later
+            episode_starts=dones,
+            log_probs=log_prob,
+            values=values,
+        )
+
+        self.buffer.add(rollout_batch, metrics)
 
         return metrics
-
+    
+    
     def save(self, t: int):
         """Save current agent state."""
         super().make_checkpoint_dir(t)

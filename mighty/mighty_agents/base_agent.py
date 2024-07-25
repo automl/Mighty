@@ -24,8 +24,10 @@ if TYPE_CHECKING:
     from mighty.mighty_utils.logger import Logger
     from mighty.mighty_utils.types import TypeKwargs
 
+import pdb
+import os
 class MightyAgent(ABC):
-    """Base agent for Coax RL implementations."""
+    """Base agent for RL implementations."""
 
     def __init__(  # noqa: PLR0915, PLR0912
         self,
@@ -153,28 +155,18 @@ class MightyAgent(ABC):
         """Agent/algorithm specific initializations."""
         raise NotImplementedError
 
+    def process_transition(self, curr_s, action, reward, next_s, dones, log_prob=None, metrics=None):
+        """Agent/algorithm specific transition operations."""
+        raise NotImplementedError
+    
     def initialize_agent(self):
         """General initialization of tracer and buffer for all agents.
 
         Algorithm specific initialization like policies etc.
         are done in _initialize_agent
         """
-
-        # FIXME: This is really hacky, doesn't this mess up all buffers?!
-        # I understand that this needs to come before the buffer initialization, but like this it's really weird for DQN and SAC (and breaks them if you set the buffer size)
-        # Why not just switch the order then? In this case you can set the buffer kwargs in PPO.init and make the buffer later
-        # For DQN this isn't an issue, maybe check with SAC and PPO. Either way, this should be fixed!
-
-        # Set buffer size in PPO to be the total experiences collected per update step
-        if "buffer_size" in self.buffer_kwargs:
-            self.buffer_kwargs["buffer_size"] = self._batch_size
-            self.buffer_kwargs["obs_shape"] = self.env.single_observation_space.shape[0]
-            self.buffer_kwargs["act_dim"] = int(self.env.single_action_space.n)
-            self.buffer_kwargs["n_envs"] = self.env.observation_space.shape[0]
-
-        self.buffer = self.buffer_class(**self.buffer_kwargs)
-
         self._initialize_agent()
+        self.buffer = self.buffer_class(**self.buffer_kwargs)        
 
     def update_agent(self):
         """Policy/value function update."""
@@ -213,16 +205,16 @@ class MightyAgent(ABC):
             self.meta_modules[k].pre_step(metrics)
 
         metrics = self.adapt_hps(metrics)
-        return self.policy(
-            observation, metrics=metrics, return_logp=(self.agent_type != "DQN")
-        )
+        return self.policy(observation, metrics=metrics, return_logp=True)
 
-    def update(self, metrics):
+             
+
+    def update(self, metrics, update_kwargs):
         """Update agent."""
         for k in self.meta_modules:
             self.meta_modules[k].pre_update(metrics)
 
-        agent_update_metrics = self.update_agent()
+        agent_update_metrics = self.update_agent(**update_kwargs)
         metrics.update(agent_update_metrics)
         metrics = {k: np.array(v) for k, v in metrics.items()}
         metrics["step"] = self.steps
@@ -297,51 +289,20 @@ class MightyAgent(ABC):
             # Main loop: rollouts, training and evaluation
             while self.steps < n_steps:
                 metrics["episode_reward"] = episode_reward
-
-                # FIXME: This is a pretty bad way of doing this imo - why is this necessary?
-                # DQN works with the same function signature, we don't need to differentiate here
-                # Also: why is return_logp not set here? If that's false but still returns the logprob, there's a bug
-                if self.agent_type == "DQN":
-                    action = self.step(curr_s, metrics)
-                else:
-                    action, log_prob = self.step(curr_s, metrics)
+                
+                # TODO Remove
+                progress.stop()
+    
+                action, log_prob = self.step(curr_s, metrics)
 
                 next_s, reward, terminated, truncated, _ = self.env.step(action)
                 dones = np.logical_or(terminated, truncated)
-
-                # FIXME: again, not a great solution imo, I think we should avoid being so algorithm specific if we can
-                # Issue 1: differentiating between algorithms - why would the logprobs belong in the batch?
-                # Issue 2: transition metrics are missing in the PPO version - this is where you can get your values from
-                # Proposed fix: put values and logprobs in the metrics instead, this will fix all these issues. The buffer gets both anyway.
-                if self.agent_type in ["DQN", "SAC"]:
-                    transition = TransitionBatch(curr_s, action, reward, next_s, dones)
-                    transition_metrics = self.get_transition_metrics(
-                        transition, metrics
-                    )
-                    metrics.update(transition_metrics)
-                    self.buffer.add(transition, metrics)
-                else:
-                    values = (
-                        self.value_function(
-                            torch.as_tensor(curr_s, dtype=torch.float32)
-                        )
-                        .detach()
-                        .numpy()
-                        .reshape((curr_s.shape[0],))
-                    )
-
-                    rollout_batch = RolloutBatch(
-                        observations=curr_s,
-                        actions=action,
-                        rewards=reward,
-                        advantages=np.zeros_like(reward),  # Placeholder, compute later
-                        returns=np.zeros_like(reward),  # Placeholder, compute later
-                        episode_starts=dones,
-                        log_probs=log_prob,
-                        values=values,
-                    )
-
-                    self.buffer.add(rollout_batch, metrics)
+                
+                transition_metrics = self.process_transition(
+                    curr_s, action, reward, next_s, dones, log_prob, metrics
+                )
+                
+                metrics.update(transition_metrics)
 
                 episode_reward += reward
 
@@ -379,23 +340,10 @@ class MightyAgent(ABC):
                     len(self.buffer) >= self._batch_size
                     and self.steps >= self._learning_starts
                 ):
-                    # FIXME: why is this here and not in PPO? PPO has access to the buffer as well
-                    # Is it because you need next_s and dones? That could be solved by providing them to the update function
-                    # That would still require checking for PPO (though, but at least the value computation would not be here)
-                    # Proposed fix: if PPO -> update_kwargs = {"next_s": next_s, "dones": dones}, else -> update_kwargs = {}
-                    if self.agent_type == "PPO":
-                        # Compute returns and advantages for PPO
-                        last_values = self.value_function(
-                            torch.as_tensor(next_s, dtype=torch.float32)
-                        ).detach()
+                    
+                    update_kwargs = {"next_s": next_s, "dones": dones}
 
-                        self.buffer.compute_returns_and_advantage(last_values, dones)
-
-                    metrics = self.update(metrics)
-
-                    # FIXME: again, this should be in PPO
-                    if self.agent_type == "PPO":
-                        self.buffer.reset()
+                    metrics = self.update(metrics, update_kwargs)
 
                 # End step
                 self.last_state = curr_s
