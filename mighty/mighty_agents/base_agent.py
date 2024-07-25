@@ -15,6 +15,7 @@ from mighty.mighty_replay import (
     RolloutBatch,
 )
 from mighty.mighty_utils.env_handling import CARLENV, DACENV, MIGHTYENV
+from mighty.mighty_utils.agent_handling import retrieve_class
 from omegaconf import DictConfig
 from rich import print
 from rich.progress import BarColumn, Progress, TimeElapsedColumn, TimeRemainingColumn
@@ -22,19 +23,6 @@ from rich.progress import BarColumn, Progress, TimeElapsedColumn, TimeRemainingC
 if TYPE_CHECKING:
     from mighty.mighty_utils.logger import Logger
     from mighty.mighty_utils.types import TypeKwargs
-
-
-# FIXME: This probably should be moved to a more general place - utils?
-def retrieve_class(cls: str | DictConfig | type, default_cls: type) -> type:
-    """Get coax or mighty class."""
-    if cls is None:
-        cls = default_cls
-    elif isinstance(cls, DictConfig):
-        cls = hydra.utils.get_class(cls._target_)
-    elif isinstance(cls, str):
-        cls = hydra.utils.get_class(cls)
-    return cls
-
 
 class MightyAgent(ABC):
     """Base agent for Coax RL implementations."""
