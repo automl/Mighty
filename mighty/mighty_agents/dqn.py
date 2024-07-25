@@ -283,7 +283,9 @@ class MightyDQNAgent(MightyAgent):
         if self.save_replay:
             replay_path = self.checkpoint_dir / "replay.pkl"
             self.buffer.save(replay_path)
-        print(f"Saved checkpoint at {self.checkpoint_dir}")
+            
+        if self.verbose:
+            print(f"Saved checkpoint at {self.checkpoint_dir}")
 
     def load(self, path):
         """Set the internal state of the agent, e.g. after loading."""

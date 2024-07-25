@@ -45,7 +45,38 @@ class MightyPPOAgent(MightyAgent):
         max_grad_norm: float = 0.5,
         n_gradient_steps: int = 10,
     ):
-        # FIXME: missing docstring
+        """Initialize the PPO agent.
+
+        Creates all relevant class variables and calls the agent-specific init function.
+
+        :param env: Train environment
+        :param logger: Mighty logger
+        :param eval_env: Evaluation environment
+        :param seed: Seed for random number generators
+        :param learning_rate: Learning rate for training
+        :param gamma: Discount factor
+        :param batch_size: Batch size for training
+        :param learning_starts: Number of steps before learning starts
+        :param render_progress: Whether to render progress
+        :param log_tensorboard: Log to TensorBoard as well as to file
+        :param log_wandb: Log to Weights and Biases
+        :param wandb_kwargs: Arguments for Weights and Biases logging
+        :param rollout_buffer_class: Rollout buffer class
+        :param rollout_buffer_kwargs: Arguments for the rollout buffer
+        :param meta_methods: Meta methods for the agent
+        :param meta_kwargs: Arguments for meta methods
+        :param n_policy_units: Number of units for the policy network
+        :param n_critic_units: Number of units for the critic network
+        :param soft_update_weight: Size of soft updates for the target network
+        :param policy_class: Policy class
+        :param policy_kwargs: Arguments for the policy
+        :param ppo_clip: Clipping parameter for PPO
+        :param value_loss_coef: Coefficient for the value loss
+        :param entropy_coef: Coefficient for the entropy loss
+        :param max_grad_norm: Maximum gradient norm
+        :param n_gradient_steps: Number of gradient steps per update
+        """
+        
         self.gamma = gamma
         self.n_policy_units = n_policy_units
         self.n_critic_units = n_critic_units
@@ -110,6 +141,10 @@ class MightyPPOAgent(MightyAgent):
         return self.model.value_net
 
     def update_agent(self) -> Dict[str, float]:
+        """Update the agent using PPO.
+
+        :return: Dictionary containing the update metrics.
+        """
         if len(self.buffer) < self._learning_starts:
             return {}
 
@@ -122,6 +157,13 @@ class MightyPPOAgent(MightyAgent):
     def get_transition_metrics(
         self, transition, metrics: Dict[str, np.ndarray]
     ) -> Dict[str, np.ndarray]:
+        """Get transition metrics for the given transition.
+
+        :param transition: The transition to get metrics for.
+        :param metrics: Dictionary to store metrics.
+        :return: Updated metrics dictionary.
+        """
+        
         if "rollout_values" not in metrics:
             metrics["rollout_values"] = np.empty((0,))
 
@@ -139,7 +181,6 @@ class MightyPPOAgent(MightyAgent):
 
         return metrics
 
-    # FIXME: both of these don't have any log messages, we should add them for a verbose mode
     def save(self, t: int):
         """Save current agent state."""
         super().make_checkpoint_dir(t)
@@ -157,6 +198,9 @@ class MightyPPOAgent(MightyAgent):
             self.update_fn.value_optimizer.state_dict(),
             self.checkpoint_dir / "value_optimizer.pt",
         )
+        
+        if self.verbose:
+            print(f"Saved checkpoint at {self.checkpoint_dir}")
 
     def load(self, path: str):
         """Load the internal state of the agent."""
@@ -169,7 +213,11 @@ class MightyPPOAgent(MightyAgent):
         self.update_fn.value_optimizer.load_state_dict(
             torch.load(base_path / "value_optimizer.pt")
         )
+        
+        if self.verbose:
+            print(f"Loaded checkpoint at {path}")
 
     @property
     def agent_type(self):
+        """Return the type of the agent."""
         return "PPO"

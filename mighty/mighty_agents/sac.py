@@ -42,7 +42,35 @@ class MightySACAgent(MightyAgent):
         alpha: float = 0.2,
         n_gradient_steps: int = 1,
     ):
-        # FIXME: missing docstring
+        """Initialize the SAC agent.
+
+        Creates all relevant class variables and calls the agent-specific init function.
+
+        :param env: Train environment
+        :param logger: Mighty logger
+        :param eval_env: Evaluation environment
+        :param seed: Seed for random number generators
+        :param learning_rate: Learning rate for training
+        :param gamma: Discount factor
+        :param batch_size: Batch size for training
+        :param learning_starts: Number of steps before learning starts
+        :param render_progress: Whether to render progress
+        :param log_tensorboard: Log to TensorBoard as well as to file
+        :param log_wandb: Log to Weights and Biases
+        :param wandb_kwargs: Arguments for Weights and Biases logging
+        :param replay_buffer_class: Replay buffer class
+        :param replay_buffer_kwargs: Arguments for the replay buffer
+        :param meta_methods: Meta methods for the agent
+        :param meta_kwargs: Arguments for meta methods
+        :param n_policy_units: Number of units for the policy network
+        :param n_critic_units: Number of units for the critic network
+        :param soft_update_weight: Size of soft updates for the target network
+        :param policy_class: Policy class
+        :param policy_kwargs: Arguments for the policy
+        :param tau: Soft update parameter
+        :param alpha: Entropy coefficient
+        :param n_gradient_steps: Number of gradient steps per update
+        """
         self.gamma = gamma
         self.n_policy_units = n_policy_units
         self.n_critic_units = n_critic_units
@@ -106,22 +134,25 @@ class MightySACAgent(MightyAgent):
         return self.model.value_net
 
     def update_agent(self) -> Dict[str, float]:
+        """Update the agent using SAC.
+
+        :return: Dictionary containing the update metrics.
+        """
         if len(self.buffer) < self._learning_starts:
             return {}
 
-        # FIXME: why is there a q here? Seems like weird naming
-        metrics_q = {}
+        metrics_sac = {}
 
         for _ in range(self.n_gradient_steps):
             transition_batch = self.buffer.sample(batch_size=self._batch_size)
-            metrics_q.update(self.update_fn.update(transition_batch))
+            metrics_sac.update(self.update_fn.update(transition_batch))
 
         # Log metrics
-        self.logger.log("Update/q_loss1", metrics_q["q_loss1"])
-        self.logger.log("Update/q_loss2", metrics_q["q_loss2"])
-        self.logger.log("Update/policy_loss", metrics_q["policy_loss"])
+        self.logger.log("Update/q_loss1", metrics_sac["q_loss1"])
+        self.logger.log("Update/q_loss2", metrics_sac["q_loss2"])
+        self.logger.log("Update/policy_loss", metrics_sac["policy_loss"])
 
-        return metrics_q
+        return metrics_sac
 
     def get_transition_metrics(
         self, transition, metrics: Dict[str, np.ndarray]
@@ -182,6 +213,9 @@ class MightySACAgent(MightyAgent):
             self.update_fn.value_optimizer.state_dict(),
             self.checkpoint_dir / "value_optimizer.pt",
         )
+        
+        if self.verbose:
+            print(f"Saved checkpoint at {self.checkpoint_dir}")
 
     def load(self, path: str):
         """Load the internal state of the agent."""
@@ -202,6 +236,9 @@ class MightySACAgent(MightyAgent):
         self.update_fn.value_optimizer.load_state_dict(
             torch.load(base_path / "value_optimizer.pt")
         )
+        
+        if self.verbose:
+            print(f"Loaded checkpoint at {path}")
 
     @property
     def agent_type(self):
