@@ -56,11 +56,7 @@ class SACModel(nn.Module):
             nn.Linear(hidden_sizes[-1], 1),
         )
 
-    # FIXME: lots of missing docstrings
     def forward(self, state):
-        return self.forward_policy(state)
-
-    def forward_policy(self, state):
         x = self.policy_net(state)
         mean, log_std = x.chunk(2, dim=-1)
         # FIXME: this should probably be a hyperparameter

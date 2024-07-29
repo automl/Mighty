@@ -45,12 +45,21 @@ class PPOUpdate:
         advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
         # Compute the policy loss
-        logits = self.model(states)
-        dist = torch.distributions.Categorical(logits=logits)
-        log_probs = dist.log_prob(actions).sum(dim=-1, keepdim=True)
-        entropy = dist.entropy().sum(dim=-1, keepdim=True)
+        if self.model.continuous_action:
+            means, stds = self.model(states)
+            dist = torch.distributions.Normal(means, stds)
+            log_probs = dist.log_prob(actions).sum(dim=-1, keepdim=True)
+            entropy = dist.entropy().sum(dim=-1, keepdim=True)
+        else:
+            logits = self.model(states)
+            dist = torch.distributions.Categorical(logits=logits)
+            log_probs = dist.log_prob(actions).sum(dim=-1, keepdim=True)
+            entropy = dist.entropy().sum(dim=-1, keepdim=True)
 
         ratios = torch.exp(log_probs - old_log_probs)
+        if len(ratios.shape) > 2:
+            ratios = ratios.squeeze(-1)
+
         surr1 = ratios * advantages
         surr2 = torch.clamp(ratios, 1.0 - self.epsilon, 1.0 + self.epsilon) * advantages
         policy_loss = -torch.min(surr1, surr2).mean()

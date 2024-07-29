@@ -35,44 +35,32 @@ class PPOModel(nn.Module):
             activation=activation,
         )
 
-        # FIXME: is this really always what we want, only single output layer for the policy and value?
-        # I feel like I've often seen at least one more layer for the policy
-        # Should be fairly easy to implement, see "make_q_head"
+        # (Architecture based on
+        # https://github.com/DLR-RM/stable-baselines3/blob/master/stable_baselines3/common/policies.py)
 
         # Policy network
-        if self.continuous_action:
-            self.policy_net = nn.Sequential(
-                self.feature_extractor, nn.Linear(self.output_size, 2)
-            )
-        else:
-            self.policy_net = nn.Sequential(
-                self.feature_extractor, nn.Linear(self.output_size, self.action_size)
-            )
+        self.policy_net = nn.Sequential(
+            self.feature_extractor,
+            nn.Linear(self.output_size, 64),
+            nn.Linear(64, 2) if self.continuous_action else nn.Linear(64, action_size),
+        )
 
         # Value network
         self.value_net = nn.Sequential(
-            self.feature_extractor, nn.Linear(self.output_size, 1)
+            self.feature_extractor,
+            nn.Linear(self.output_size, 64),
+            nn.Linear(64, 1),
         )
 
-    # FIXME: duplicated docstring which doesn't tell me why both exist
-    # And actually: why do both exist? You could just return the raw logits in the continous case as well, no?
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Default Forward as the forward pass through the policy network."""
-
-        return self.forward_policy(x)
-
-    def forward_policy(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """Forward pass through the policy network."""
-
-        # pdb.set_trace()
 
         x = self.policy_net(x)
 
         if self.continuous_action:
             mean, log_std = x.chunk(2, dim=-1)
-            mean = mean.squeeze(-1)  # Remove the extra dimension
             # FIXME: the clamping is hardcoded here, should be a probabyl be a hyperparameter
-            log_std = log_std.clamp(-20, 2).squeeze(-1)  # Remove the extra dimension
+            log_std = log_std.clamp(-20, 2)  # Remove the extra dimension
             return mean, log_std.exp()
         else:
             return x  # return logits

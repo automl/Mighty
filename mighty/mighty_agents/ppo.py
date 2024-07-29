@@ -77,7 +77,7 @@ class MightyPPOAgent(MightyAgent):
         :param max_grad_norm: Maximum gradient norm
         :param n_gradient_steps: Number of gradient steps per update
         """
-        
+
         self.gamma = gamma
         self.n_policy_units = n_policy_units
         self.n_critic_units = n_critic_units
@@ -119,19 +119,33 @@ class MightyPPOAgent(MightyAgent):
 
     def _initialize_agent(self):
         """Initialize PPO specific components."""
-        
-        
+
         self.buffer_kwargs["buffer_size"] = self._batch_size
         self.buffer_kwargs["obs_shape"] = self.env.single_observation_space.shape[0]
-        self.buffer_kwargs["act_dim"] = int(self.env.single_action_space.n)
+
+        if self.env.single_action_space.__class__.__name__ == "Discrete":
+            self.buffer_kwargs["act_dim"] = int(self.env.single_action_space.n)
+            self.discrete_action = True
+        else:
+            self.buffer_kwargs["act_dim"] = int(self.env.single_action_space.shape[0])
+            self.discrete_action = False
+
         self.buffer_kwargs["n_envs"] = self.env.observation_space.shape[0]
-        
+
         self.model = PPOModel(
             obs_size=self.env.single_observation_space.shape[0],
-            action_size=self.env.single_action_space.n,
+            action_size=(
+                self.env.single_action_space.n
+                if self.discrete_action
+                else self.env.single_action_space.shape[0]
+            ),
+            continuous_action=not self.discrete_action,
         )
         self.policy = self.policy_class(
-            algo=self, model=self.model, **self.policy_kwargs
+            algo=self,
+            model=self.model,
+            discrete=self.discrete_action,
+            **self.policy_kwargs,
         )
         self.update_fn = PPOUpdate(
             model=self.model,
@@ -155,7 +169,7 @@ class MightyPPOAgent(MightyAgent):
         """
         if len(self.buffer) < self._learning_starts:
             return {}
-        
+
         # Compute returns and advantages for PPO
         last_values = self.value_function(
             torch.as_tensor(next_s, dtype=torch.float32)
@@ -167,16 +181,16 @@ class MightyPPOAgent(MightyAgent):
         for _ in range(self.n_gradient_steps):
             for batch in self.buffer.sample(self._batch_size):
                 metrics.update(self.update_fn.update(batch))
-            
+
         self.buffer.reset()
-        
+
         return metrics
 
-    def process_transition(self, curr_s, action, reward, next_s, dones, log_prob=None, metrics=None):
+    def process_transition(
+        self, curr_s, action, reward, next_s, dones, log_prob=None, metrics=None
+    ):
         values = (
-            self.value_function(
-                torch.as_tensor(curr_s, dtype=torch.float32)
-            )
+            self.value_function(torch.as_tensor(curr_s, dtype=torch.float32))
             .detach()
             .numpy()
             .reshape((curr_s.shape[0],))
@@ -196,8 +210,7 @@ class MightyPPOAgent(MightyAgent):
         self.buffer.add(rollout_batch, metrics)
 
         return metrics
-    
-    
+
     def save(self, t: int):
         """Save current agent state."""
         super().make_checkpoint_dir(t)
@@ -215,7 +228,7 @@ class MightyPPOAgent(MightyAgent):
             self.update_fn.value_optimizer.state_dict(),
             self.checkpoint_dir / "value_optimizer.pt",
         )
-        
+
         if self.verbose:
             print(f"Saved checkpoint at {self.checkpoint_dir}")
 
@@ -230,7 +243,7 @@ class MightyPPOAgent(MightyAgent):
         self.update_fn.value_optimizer.load_state_dict(
             torch.load(base_path / "value_optimizer.pt")
         )
-        
+
         if self.verbose:
             print(f"Loaded checkpoint at {path}")
 

@@ -24,8 +24,7 @@ if TYPE_CHECKING:
     from mighty.mighty_utils.logger import Logger
     from mighty.mighty_utils.types import TypeKwargs
 
-import pdb
-import os
+
 class MightyAgent(ABC):
     """Base agent for RL implementations."""
 
@@ -155,10 +154,12 @@ class MightyAgent(ABC):
         """Agent/algorithm specific initializations."""
         raise NotImplementedError
 
-    def process_transition(self, curr_s, action, reward, next_s, dones, log_prob=None, metrics=None):
+    def process_transition(
+        self, curr_s, action, reward, next_s, dones, log_prob=None, metrics=None
+    ):
         """Agent/algorithm specific transition operations."""
         raise NotImplementedError
-    
+
     def initialize_agent(self):
         """General initialization of tracer and buffer for all agents.
 
@@ -166,7 +167,7 @@ class MightyAgent(ABC):
         are done in _initialize_agent
         """
         self._initialize_agent()
-        self.buffer = self.buffer_class(**self.buffer_kwargs)        
+        self.buffer = self.buffer_class(**self.buffer_kwargs)
 
     def update_agent(self):
         """Policy/value function update."""
@@ -206,8 +207,6 @@ class MightyAgent(ABC):
 
         metrics = self.adapt_hps(metrics)
         return self.policy(observation, metrics=metrics, return_logp=True)
-
-             
 
     def update(self, metrics, update_kwargs):
         """Update agent."""
@@ -289,19 +288,19 @@ class MightyAgent(ABC):
             # Main loop: rollouts, training and evaluation
             while self.steps < n_steps:
                 metrics["episode_reward"] = episode_reward
-                
+
                 # TODO Remove
                 progress.stop()
-    
+
                 action, log_prob = self.step(curr_s, metrics)
 
                 next_s, reward, terminated, truncated, _ = self.env.step(action)
                 dones = np.logical_or(terminated, truncated)
-                
+
                 transition_metrics = self.process_transition(
                     curr_s, action, reward, next_s, dones, log_prob, metrics
                 )
-                
+
                 metrics.update(transition_metrics)
 
                 episode_reward += reward
@@ -340,7 +339,7 @@ class MightyAgent(ABC):
                     len(self.buffer) >= self._batch_size
                     and self.steps >= self._learning_starts
                 ):
-                    
+
                     update_kwargs = {"next_s": next_s, "dones": dones}
 
                     metrics = self.update(metrics, update_kwargs)
