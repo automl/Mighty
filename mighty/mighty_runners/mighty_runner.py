@@ -78,7 +78,7 @@ class MightyRunner(ABC):
         self.logger.info("#" * 80)
 
     def train(self, num_steps: int, env=None) -> dict:
-        return self.agent.run(n_steps=num_steps, env=env)
+        return self.agent.run(n_steps=num_steps, env=env, eval_every_n_steps=self.eval_every_n_steps)
 
     def evaluate(self, eval_env=None) -> dict:
         return self.agent.evaluate(eval_env)
