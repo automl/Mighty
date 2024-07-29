@@ -25,6 +25,7 @@ except ImportError:
 def make_dacbench_env(cfg):
     """Make dacbench environment."""
     from dacbench import benchmarks
+    import ConfigSpace as CS
 
     bench = getattr(benchmarks, cfg.env)()
 
@@ -35,10 +36,32 @@ def make_dacbench_env(cfg):
     if use_benchmark:
         benchmark_kwargs = OmegaConf.to_container(cfg.env_kwargs, resolve=True)
         del benchmark_kwargs["benchmark"]
+        if "config_space" in benchmark_kwargs:
+            del benchmark_kwargs["config_space"]
         make_env = partial(bench.get_benchmark, **benchmark_kwargs)
     else:
         for k in cfg.env_kwargs:
-            bench.config[k] = cfg.env_kwargs[k]
+            if k == "config_space":
+                space = CS.ConfigurationSpace()
+                for (name, desc) in cfg.env_kwargs[k].items():
+                    if desc["type"] == "int":
+                        hp = CS.UniformIntegerHyperparameter(
+                            name, lower=desc["lower"], upper=desc["upper"]
+                        )
+                    elif desc["type"] == "float":
+                        hp = CS.UniformFloatHyperparameter(
+                            name, lower=desc["lower"], upper=desc["upper"]
+                        )
+                    elif desc["type"] == "cat":
+                        hp = CS.CategoricalHyperparameter(name, desc["choices"])
+                    space.add_hyperparameter(hp)
+                print(bench.config)
+                print(space)
+                bench.config.config_space = space
+            else:
+                bench.config[k] = cfg.env_kwargs[k]
+        print(bench.config)
+        print(bench.config.keys())
         make_env = bench.get_environment
 
     def make_eval_env(make_env):
