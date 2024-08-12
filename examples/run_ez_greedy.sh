@@ -1,1 +1,0 @@
-python mighty/run_mighty.py algorithm=dqn environment=gymnasium/mountaincar +algorithm_kwargs.policy_class=mighty.mighty_exploration.EZGreedy

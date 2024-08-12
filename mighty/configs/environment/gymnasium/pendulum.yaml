@@ -1,7 +1,0 @@
-# @package _global_
-
-num_steps: 100_000 
-env: Pendulum-v1
-env_kwargs: {}
-env_wrappers: []
-num_envs: 32

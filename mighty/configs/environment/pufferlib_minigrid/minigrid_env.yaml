@@ -1,8 +1,0 @@
-# @package _global_
-
-num_steps: 2e5
-env_name: MiniGrid-DoorKey-8x8-v0    # Overide with names z.B MiniGrid-LavaGapS5-v0, MiniGrid-DoorKey-8x8-v0, MiniGrid-ObstructedMaze-1Dl-v0, MiniGrid-KeyCorridorS3R2-v0, MiniGrid-UnlockPickup-v0
-env: pufferlib.environments.minigrid.${env_name}
-env_kwargs: {}
-env_wrappers: []
-num_envs: 64

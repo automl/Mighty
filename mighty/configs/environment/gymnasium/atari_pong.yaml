@@ -1,7 +1,0 @@
-# @package _global_
-
-num_steps: 1e6
-env: ALE/Pong-v5
-env_kwargs: {}
-env_wrappers: []
-num_envs: 64
