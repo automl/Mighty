@@ -227,7 +227,7 @@ class AbstractLogger(metaclass=ABCMeta):
         experiment_name: str,
         output_path: str,
         step_write_frequency: int | None = None,
-        episode_write_frequency: int = 1,
+        episode_write_frequency: int | None = 1,
     ):
         """Initialize.
 
@@ -359,7 +359,7 @@ class Logger(AbstractLogger, logging.Logger):
         experiment_name: str,
         output_path: str,
         step_write_frequency: int | None = None,
-        episode_write_frequency: int = 1,
+        episode_write_frequency: int | None = 1,
         hydra_config=None,
         cli_log_lvl=logging.NOTSET,
     ) -> None:

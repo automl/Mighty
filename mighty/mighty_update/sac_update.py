@@ -3,9 +3,12 @@ import torch.optim as optim
 import torch.nn.functional as F
 from mighty.mighty_models.sac import SACModel
 
+from typing import Dict, Tuple
+from mighty.mighty_replay.mighty_replay_buffer import TransitionBatch
+
 
 # FIXME: we might want to move this to a general update utils module
-def polyak_update(source_params, target_params, tau):
+def polyak_update(source_params, target_params, tau: float):  # type: ignore
     for target_param, param in zip(target_params, source_params):
         target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
 
@@ -40,7 +43,7 @@ class SACUpdate:
         self.alpha = alpha
         self.gamma = gamma
 
-    def calculate_td_error(self, transition):
+    def calculate_td_error(self, transition: TransitionBatch) -> Tuple:
         """Calculate the TD error for a given transition.
 
         :param transition: Current transition
@@ -114,7 +117,7 @@ class SACUpdate:
 
         return td_error1, td_error2
 
-    def update(self, batch):
+    def update(self, batch: TransitionBatch) -> Dict:
         """
         Perform an update of the SAC model using a batch of experience.
 

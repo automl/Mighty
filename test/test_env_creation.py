@@ -47,7 +47,11 @@ class TestEnvCreation:
     dacbench_config_benchmark = OmegaConf.create(
         {
             "env": "SigmoidBenchmark",
-            "env_kwargs": {"benchmark": True, "dimension": 1, "config_space": {"x": {"type": "float", "lower": -10, "upper": 10}}},
+            "env_kwargs": {
+                "benchmark": True,
+                "dimension": 1,
+                "config_space": {"x": {"type": "float", "lower": -10, "upper": 10}},
+            },
             "env_wrappers": ["mighty.utils.wrappers.MultiDiscreteActionWrapper"],
             "num_envs": 16,
             "n_episodes_eval": 2,

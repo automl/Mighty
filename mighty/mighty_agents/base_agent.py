@@ -3,18 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 from abc import ABC
-import hydra
 import numpy as np
 import torch
 import wandb
-from mighty.mighty_replay import (
-    MightyReplay,
-    TransitionBatch,
-    RolloutBatch,
-)
+
+from mighty.mighty_replay import MightyReplay, MightyRolloutBuffer
 from mighty.mighty_utils.env_handling import CARLENV, DACENV, MIGHTYENV
+from mighty.mighty_exploration import MightyExplorationPolicy
 from mighty.mighty_utils.agent_handling import retrieve_class
 from omegaconf import DictConfig
 from rich import print
@@ -23,6 +20,7 @@ from rich.progress import BarColumn, Progress, TimeElapsedColumn, TimeRemainingC
 if TYPE_CHECKING:
     from mighty.mighty_utils.logger import Logger
     from mighty.mighty_utils.types import TypeKwargs
+    
 
 
 class MightyAgent(ABC):
@@ -30,10 +28,10 @@ class MightyAgent(ABC):
 
     def __init__(  # noqa: PLR0915, PLR0912
         self,
-        env: MIGHTYENV,
+        env: MIGHTYENV,  # type: ignore
         logger: Logger,
         seed: int | None = None,
-        eval_env: MIGHTYENV | None = None,
+        eval_env: MIGHTYENV | None = None,  # type: ignore
         learning_rate: float = 0.01,
         epsilon: float = 0.1,
         batch_size: int = 64,
@@ -42,7 +40,11 @@ class MightyAgent(ABC):
         log_tensorboard: bool = False,
         log_wandb: bool = False,
         wandb_kwargs: dict | None = None,
-        replay_buffer_class: str | DictConfig | type[MightyReplay] | None = None,
+        replay_buffer_class: str
+        | DictConfig
+        | type[MightyReplay]
+        | type[MightyRolloutBuffer]
+        | None = None,
         replay_buffer_kwargs: TypeKwargs | None = None,
         meta_methods: list[str | type] | None = None,
         meta_kwargs: list[TypeKwargs] | None = None,
@@ -82,7 +84,7 @@ class MightyAgent(ABC):
         self._learning_starts = learning_starts
 
         self.buffer: MightyReplay | None = None
-        self.policy = None
+        self.policy: MightyExplorationPolicy | None = None
 
         self.seed = seed
         if self.seed is not None:
@@ -93,10 +95,11 @@ class MightyAgent(ABC):
 
         # Replay Buffer
         replay_buffer_class = retrieve_class(
-            cls=replay_buffer_class, default_cls=MightyReplay
+            cls=replay_buffer_class,
+            default_cls=MightyReplay,  # type: ignore
         )
         if replay_buffer_kwargs is None:
-            replay_buffer_kwargs = {
+            replay_buffer_kwargs = {  # type: ignore
                 "capacity": 1_000_000,
             }
         self.buffer_class = replay_buffer_class
@@ -120,11 +123,11 @@ class MightyAgent(ABC):
         # Create meta modules
         self.meta_modules = {}
         for i, m in enumerate(meta_methods):
-            meta_class = retrieve_class(cls=m, default_cls=None)
+            meta_class = retrieve_class(cls=m, default_cls=None)  # type: ignore
             assert (
                 meta_class is not None
             ), f"Class {m} not found, did you specify the correct loading path?"
-            kwargs = {}
+            kwargs: Dict = {}
             if len(meta_kwargs) > i:
                 kwargs = meta_kwargs[i]
             self.meta_modules[meta_class.__name__] = meta_class(**kwargs)
@@ -150,38 +153,37 @@ class MightyAgent(ABC):
         self.initialize_agent()
         self.steps = 0
 
-    def _initialize_agent(self):
+    def _initialize_agent(self) -> None:
         """Agent/algorithm specific initializations."""
         raise NotImplementedError
 
-    def process_transition(
+    def process_transition(  # type: ignore
         self, curr_s, action, reward, next_s, dones, log_prob=None, metrics=None
-    ):
+    ) -> Dict:
         """Agent/algorithm specific transition operations."""
         raise NotImplementedError
 
-    def initialize_agent(self):
+    def initialize_agent(self) -> None:
         """General initialization of tracer and buffer for all agents.
 
         Algorithm specific initialization like policies etc.
         are done in _initialize_agent
         """
         self._initialize_agent()
-        self.buffer = self.buffer_class(**self.buffer_kwargs)
+        self.buffer = self.buffer_class(**self.buffer_kwargs)  # type: ignore
 
-    def update_agent(self):
+    def update_agent(self) -> Dict:
         """Policy/value function update."""
         raise NotImplementedError
 
-    def adapt_hps(self, metrics):
+    def adapt_hps(self, metrics: Dict) -> None:
         """Set hyperparameters."""
         self.learning_rate = metrics["hp/lr"]
         self._epsilon = metrics["hp/pi_epsilon"]
         self._batch_size = metrics["hp/batch_size"]
         self._learning_starts = metrics["hp/learning_starts"]
-        return metrics
 
-    def make_checkpoint_dir(self, t):
+    def make_checkpoint_dir(self, t: int) -> None:
         """Checkpoint model.
 
         :param T: Current timestep
@@ -195,20 +197,20 @@ class MightyAgent(ABC):
         if not self.checkpoint_dir.exists():
             Path(self.checkpoint_dir).mkdir()
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Close wandb upon deletion."""
-        self.env.close()
+        self.env.close()  # type: ignore
         if self.log_wandb:
             wandb.finish()
 
-    def step(self, observation, metrics):
+    def step(self, observation: torch.Tensor, metrics: Dict) -> torch.Tensor:
         for k in self.meta_modules.keys():
             self.meta_modules[k].pre_step(metrics)
 
-        metrics = self.adapt_hps(metrics)
-        return self.policy(observation, metrics=metrics, return_logp=True)
+        self.adapt_hps(metrics)
+        return self.policy(observation, metrics=metrics, return_logp=True)  # type: ignore
 
-    def update(self, metrics, update_kwargs):
+    def update(self, metrics: Dict, update_kwargs: Dict) -> Dict:
         """Update agent."""
         for k in self.meta_modules:
             self.meta_modules[k].pre_update(metrics)
@@ -225,7 +227,7 @@ class MightyAgent(ABC):
             wandb.log(metrics)
 
         metrics["env"] = self.env
-        metrics["vf"] = self.value_function
+        metrics["vf"] = self.value_function  # type: ignore
         metrics["policy"] = self.policy
         for k in self.meta_modules:
             self.meta_modules[k].post_update(metrics)
@@ -237,8 +239,8 @@ class MightyAgent(ABC):
         eval_every_n_steps: int = 1_000,
         human_log_every_n_steps: int = 5000,
         save_model_every_n_steps: int | None = 5000,
-        env=None,
-    ):
+        env: MIGHTYENV = None,  # type: ignore
+    ) -> Dict:
         """Run agent."""
         episodes = 0
         if env is not None:
@@ -266,7 +268,7 @@ class MightyAgent(ABC):
             # I can't think of any, can you? If yes, we should maybe add this as an optional argument
             metrics = {
                 "env": self.env,
-                "vf": self.value_function,
+                "vf": self.value_function,  # type: ignore
                 "policy": self.policy,
                 "step": self.steps,
                 "hp/lr": self.learning_rate,
@@ -276,11 +278,11 @@ class MightyAgent(ABC):
             }
 
             # Reset env and initialize reward sum
-            curr_s, _ = self.env.reset()
+            curr_s, _ = self.env.reset()  # type: ignore
             if len(curr_s.squeeze().shape) == 0:
                 episode_reward = [0]
             else:
-                episode_reward = np.zeros(curr_s.squeeze().shape[0])
+                episode_reward = np.zeros(curr_s.squeeze().shape[0])  # type: ignore
 
             last_episode_reward = episode_reward
             progress.update(steps_task, visible=True)
@@ -294,7 +296,7 @@ class MightyAgent(ABC):
 
                 action, log_prob = self.step(curr_s, metrics)
 
-                next_s, reward, terminated, truncated, _ = self.env.step(action)
+                next_s, reward, terminated, truncated, _ = self.env.step(action)  # type: ignore
                 dones = np.logical_or(terminated, truncated)
 
                 transition_metrics = self.process_transition(
@@ -336,10 +338,9 @@ class MightyAgent(ABC):
 
                 # Update agent
                 if (
-                    len(self.buffer) >= self._batch_size
+                    len(self.buffer) >= self._batch_size  # type: ignore
                     and self.steps >= self._learning_starts
                 ):
-
                     update_kwargs = {"next_s": next_s, "dones": dones}
 
                     metrics = self.update(metrics, update_kwargs)
@@ -375,13 +376,13 @@ class MightyAgent(ABC):
                     self.save(self.steps)
 
                 if np.any(dones):
-                    last_episode_reward = np.where(
+                    last_episode_reward = np.where(  # type: ignore
                         dones, episode_reward, last_episode_reward
                     )
-                    episode_reward = np.where(dones, 0, episode_reward)
+                    episode_reward = np.where(dones, 0, episode_reward)  # type: ignore
                     # End episode
                     if isinstance(self.env, DACENV) or isinstance(self.env, CARLENV):
-                        instance = self.env.instance
+                        instance = self.env.instance  # type: ignore
                     else:
                         instance = None
                     self.logger.next_episode(instance)
@@ -403,7 +404,7 @@ class MightyAgent(ABC):
                         self.meta_modules[k].pre_episode(metrics)
         return metrics
 
-    def apply_config(self, config):
+    def apply_config(self, config: Dict) -> None:
         """Apply config to agent."""
         for n in config:
             algo_name = n.split(".")[-1]
@@ -417,7 +418,7 @@ class MightyAgent(ABC):
                 print(f"Trying to set hyperparameter {algo_name} which does not exist.")
 
     # FIXME: as above, logging down here is ugly and we should add it to the progress bar instead
-    def evaluate(self, eval_env: MIGHTYENV | None = None):
+    def evaluate(self, eval_env: MIGHTYENV | None = None) -> Dict:  # type: ignore
         """Eval agent on an environment. (Full rollouts).
 
         :param env: The environment to evaluate on
@@ -427,27 +428,27 @@ class MightyAgent(ABC):
 
         self.logger.set_eval(True)
         terminated, truncated = False, False
-        options = {}
+        options: Dict = {}
         if eval_env is None:
             eval_env = self.eval_env
 
-        state, _ = eval_env.reset(options=options)
-        rewards = np.zeros(eval_env.num_envs)
-        steps = np.zeros(eval_env.num_envs)
-        mask = np.zeros(eval_env.num_envs)
+        state, _ = eval_env.reset(options=options)  # type: ignore
+        rewards = np.zeros(eval_env.num_envs)  # type: ignore
+        steps = np.zeros(eval_env.num_envs)  # type: ignore
+        mask = np.zeros(eval_env.num_envs)  # type: ignore
         while not np.all(mask):
-            action = self.policy(state, evaluate=True)
-            state, reward, terminated, truncated, _ = eval_env.step(action)
+            action = self.policy(state, evaluate=True)  # type: ignore
+            state, reward, terminated, truncated, _ = eval_env.step(action)  # type: ignore
             rewards += reward * (1 - mask)
             steps += 1 * (1 - mask)
             dones = np.logical_or(terminated, truncated)
             mask = np.where(dones, 1, mask)
             self.logger.next_step()
 
-        eval_env.close()
+        eval_env.close()  # type: ignore
 
         if isinstance(self.eval_env, DACENV) or isinstance(self.env, CARLENV):
-            instance = eval_env.instance
+            instance = eval_env.instance  # type: ignore
         else:
             instance = None
         self.logger.next_episode(instance)
@@ -491,3 +492,9 @@ class MightyAgent(ABC):
 
         self.logger.set_eval(False)
         return eval_metrics
+
+    def save(self, t: int) -> None:
+        raise NotImplementedError
+
+    def load(self, path: str) -> None:
+        raise NotImplementedError

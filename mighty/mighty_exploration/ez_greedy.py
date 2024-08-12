@@ -5,16 +5,21 @@ from __future__ import annotations
 import numpy as np
 from mighty.mighty_exploration import EpsilonGreedy
 
+from typing import TYPE_CHECKING, Tuple
+
+if TYPE_CHECKING:
+    import torch
+
 
 class EZGreedy(EpsilonGreedy):
     """Epsilon Greedy Exploration."""
 
     def __init__(
         self,
-        algo,
-        model,
-        epsilon=0.1,
-        zipf_param=2,
+        algo: str,
+        model: torch.nn.Module,
+        epsilon: float = 0.1,
+        zipf_param: int = 2,
     ):
         """Initialize EZ Greedy.
 
@@ -31,14 +36,14 @@ class EZGreedy(EpsilonGreedy):
         self.skipped = None
         self.frozen_actions = None
 
-    def explore_func(self, s):
+    def explore_func(self, s: torch.Tensor) -> Tuple:
         # Epsilon Greedy Step
         greedy_actions, qvals = self.sample_action(s)
 
         # Initialize Skips
         if self.skipped is None:
-            self.skipped = np.zeros(len(greedy_actions))
-            self.frozen_actions = np.zeros(greedy_actions.shape)
+            self.skipped = np.zeros(len(greedy_actions))  # type: ignore
+            self.frozen_actions = np.zeros(greedy_actions.shape)  # type: ignore
 
         # Do epsilon greedy exploration
         exploration_flags, random_actions = self.get_random_actions(
@@ -47,7 +52,7 @@ class EZGreedy(EpsilonGreedy):
         actions = np.where(exploration_flags, random_actions, greedy_actions)
 
         # Decay Skips
-        self.skipped = np.maximum(0, self.skipped - 1)
+        self.skipped = np.maximum(0, self.skipped - 1)  # type: ignore
 
         # Sample skip lengths for new exploration steps
         new_skips = np.where(
@@ -55,14 +60,14 @@ class EZGreedy(EpsilonGreedy):
             [self.rng.zipf(self.zipf_param) for _ in range(len(exploration_flags))],
             [0] * len(exploration_flags),
         )
-        for i in range(len(self.skipped)):
-            if self.skipped[i] == 0:
-                self.frozen_actions[i] = actions[i]
+        for i in range(len(self.skipped)):  # type: ignore
+            if self.skipped[i] == 0:  # type: ignore
+                self.frozen_actions[i] = actions[i]  # type: ignore
 
-            if exploration_flags[i] and self.skipped[i] == 0:
-                self.skipped[i] = new_skips[i]
+            if exploration_flags[i] and self.skipped[i] == 0:  # type: ignore
+                self.skipped[i] = new_skips[i]  # type: ignore
 
         # Apply skip
-        skips = [self.skipped[i] > 0 for i in range(len(self.skipped))]
-        actions = np.where(skips, self.frozen_actions, actions)
+        skips = [self.skipped[i] > 0 for i in range(len(self.skipped))]  # type: ignore
+        actions = np.where(skips, self.frozen_actions, actions)  # type: ignore
         return actions.astype(int), qvals

@@ -2,6 +2,7 @@ import torch
 import torch.optim as optim
 from typing import Dict
 from mighty.mighty_models.ppo import PPOModel
+from mighty.mighty_replay.mighty_rollout_buffer import RolloutBatch
 
 
 class PPOUpdate:
@@ -28,7 +29,7 @@ class PPOUpdate:
         self.vf_coef = vf_coef
         self.max_grad_norm = max_grad_norm
 
-    def update(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def update(self, batch: RolloutBatch) -> Dict[str, float]:
         """Update the PPO model."""
 
         states = batch.observations.squeeze(0)
@@ -52,7 +53,7 @@ class PPOUpdate:
             entropy = dist.entropy().sum(dim=-1, keepdim=True)
         else:
             logits = self.model(states)
-            dist = torch.distributions.Categorical(logits=logits)
+            dist = torch.distributions.Categorical(logits=logits)  # type: ignore
             log_probs = dist.log_prob(actions).sum(dim=-1, keepdim=True)
             entropy = dist.entropy().sum(dim=-1, keepdim=True)
 

@@ -11,7 +11,8 @@ help:
 	@echo "Makefile Mighty"
 	@echo "* install-dev      to install all dev requirements and install pre-commit"
 	@echo "* check            to check the source code for issues"
-	@echo "* format           to format the code with black and isort"
+	@echo "* format           to format the code with ruff"
+	@echo "* typing           to type check the code with mypy"
 	@echo "* pre-commit       to run the pre-commit check"
 	@echo "* clean            to clean the dist and doc build files"
 	@echo "* build            to build a dist"
@@ -25,11 +26,9 @@ PYTEST ?= python -m pytest
 CTAGS ?= ctags
 PIP ?= python -m pip
 MAKE ?= make
-BLACK ?= python -m black
-ISORT ?= python -m isort --profile black
-PYDOCSTYLE ?= python -m pydocstyle
 PRECOMMIT ?= pre-commit
-FLAKE8 ?= python -m flake8
+RUFF ?= ruff
+MYPY ?= mypy
 
 DIR := ${CURDIR}
 DIST := ${CURDIR}/dist
@@ -52,9 +51,12 @@ pre-commit:
 	$(PRECOMMIT) run --all-files
 
 format: 
-	ruff format --silent mighty test
-	ruff check --fix --silent mighty test --exit-zero
-	ruff check --fix mighty test --exit-zero
+	$(RUFF) format --silent mighty test
+	$(RUFF) check --fix --silent mighty test --exit-zero
+	$(RUFF) check --fix mighty test --exit-zero
+
+typing:
+	$(MYPY) mighty
 
 test:
 	$(PYTEST) -v --cov=mighty test --durations=20 --cov-report html

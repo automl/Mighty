@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Dict, Any, List
 
-import dill
+import dill  # type: ignore
 import numpy as np
 import torch
 from mighty.mighty_agents.base_agent import MightyAgent, retrieve_class
@@ -24,7 +24,6 @@ if TYPE_CHECKING:
     from mighty.mighty_utils.env_handling import MIGHTYENV
 
 
-
 class MightyDQNAgent(MightyAgent):
     """Mighty DQN agent.
 
@@ -39,10 +38,10 @@ class MightyDQNAgent(MightyAgent):
     def __init__(
         self,
         # MightyAgent Args
-        env: MIGHTYENV,
+        env: MIGHTYENV,  # type: ignore
         logger: Logger,
         seed: int | None = None,
-        eval_env: MIGHTYENV = None,
+        eval_env: MIGHTYENV = None,  # type: ignore
         learning_rate: float = 0.01,
         gamma: float = 0.9,
         epsilon: float = 0.1,
@@ -64,7 +63,7 @@ class MightyDQNAgent(MightyAgent):
         policy_kwargs: TypeKwargs | None = None,
         q_class: str | DictConfig | type[DQN] | None = None,
         q_kwargs: TypeKwargs | None = None,
-        td_update_class: QLearning = QLearning,
+        td_update_class: type[QLearning] = QLearning,
         td_update_kwargs: TypeKwargs | None = None,
         save_replay: bool = False,
     ):
@@ -111,16 +110,16 @@ class MightyDQNAgent(MightyAgent):
         self.use_target = use_target
 
         # Q-function Class
-        q_class = retrieve_class(cls=q_class, default_cls=DQN)
+        q_class = retrieve_class(cls=q_class, default_cls=DQN)  # type: ignore
         if q_kwargs is None:
-            q_kwargs = {"n_layers": 0}
+            q_kwargs = {"n_layers": 0}  # type: ignore
         self.q_class = q_class
         self.q_kwargs = q_kwargs
 
         # Policy Class
-        policy_class = retrieve_class(cls=policy_class, default_cls=EpsilonGreedy)
+        policy_class = retrieve_class(cls=policy_class, default_cls=EpsilonGreedy)  # type: ignore
         if policy_kwargs is None:
-            policy_kwargs = {"epsilon": 0.1}
+            policy_kwargs = {"epsilon": 0.1}  # type: ignore
         self.policy_class = policy_class
         self.policy_kwargs = policy_kwargs
 
@@ -128,7 +127,7 @@ class MightyDQNAgent(MightyAgent):
             cls=td_update_class, default_cls=DoubleQLearning
         )
         if td_update_kwargs is None:
-            td_update_kwargs = {"gamma": gamma}
+            td_update_kwargs = {"gamma": gamma}  # type: ignore
         self.td_update_kwargs = td_update_kwargs
         self.save_replay = save_replay
 
@@ -152,32 +151,32 @@ class MightyDQNAgent(MightyAgent):
         )
 
     @property
-    def value_function(self):
+    def value_function(self) -> DQN:
         """Q-function."""
-        return self.q
+        return self.q  # type: ignore
 
     # FIXME: these were introduced to enable ES for parameters and only exist for DQN currently
     # If we want to keep the functionality, we should replicate the property in the other algorithms
     @property
-    def parameters(self):
+    def parameters(self) -> List:
         """Q-function parameters."""
         if self.use_target:
-            return list(self.q.parameters()) + list(self.q_target.parameters())
+            return list(self.q.parameters()) + list(self.q_target.parameters())  # type: ignore
         else:
-            return list(self.q.parameters())
+            return list(self.q.parameters())  # type: ignore
 
-    def _initialize_agent(self):
+    def _initialize_agent(self) -> None:
         """Initialize DQN specific things like q-function."""
 
         if not isinstance(self.q_kwargs, dict):
-            self.q_kwargs = OmegaConf.to_container(self.q_kwargs)
+            self.q_kwargs = OmegaConf.to_container(self.q_kwargs)  # type: ignore
 
-        self.q = self.q_class(
-            num_actions=self.env.single_action_space.n,
-            obs_size=self.env.single_observation_space.shape,
+        self.q = self.q_class(  # type: ignore
+            num_actions=self.env.single_action_space.n,  # type: ignore
+            obs_size=self.env.single_observation_space.shape,  # type: ignore
             **self.q_kwargs,
         )
-        self.policy = self.policy_class(algo="q", model=self.q, **self.policy_kwargs)
+        self.policy = self.policy_class(algo="q", model=self.q, **self.policy_kwargs)  # type: ignore
 
         # target network
         if not self.use_target:
@@ -185,33 +184,33 @@ class MightyDQNAgent(MightyAgent):
         else:
             q_state = self.q.state_dict()
             self.q_target = self.q_class(
-                num_actions=self.env.single_action_space.n,
-                obs_size=self.env.single_observation_space.shape,
+                num_actions=self.env.single_action_space.n,  # type: ignore
+                obs_size=self.env.single_observation_space.shape,  # type: ignore
                 **self.q_kwargs,
             )
             self.q_target.load_state_dict(q_state)
 
         # specify how to update value function
-        self.qlearning = self.td_update_class(model=self.q, **self.td_update_kwargs)
+        self.qlearning = self.td_update_class(model=self.q, **self.td_update_kwargs)  # type: ignore
         # FIXME: I think we might want to replace all normal if statements:
         # 1. richt print in base agent + runners
         # 2. loggers everywhere else with configurable verbosity
         # Then we won't need to have verbose checks
         print("Initialized agent.")
 
-    def update_agent(self, **kwargs):
+    def update_agent(self, **kwargs) -> Any:  # type: ignore
         """Compute and apply TD update.
 
         :param step: Current training step
         :return:
         """
-        
-        transition_batch = self.buffer.sample(batch_size=self._batch_size)
-        preds, targets = self.qlearning.get_targets(
+
+        transition_batch = self.buffer.sample(batch_size=self._batch_size)  # type: ignore
+        preds, targets = self.qlearning.get_targets(  # type: ignore
             transition_batch, self.q, self.q_target
         )
 
-        metrics_q = self.qlearning.apply_update(preds, targets)
+        metrics_q = self.qlearning.apply_update(preds, targets)  # type: ignore
         metrics_q["Q-Update/td_targets"] = targets.detach().numpy()
         metrics_q["Q-Update/td_errors"] = (targets - preds).detach().numpy()
         self.logger.log(
@@ -223,28 +222,38 @@ class MightyDQNAgent(MightyAgent):
         # sync target model
         if self.q_target is not None:
             for param, target_param in zip(
-                self.q.parameters(), self.q_target.parameters(), strict=False
+                self.q.parameters(),  # type: ignore
+                self.q_target.parameters(),
+                strict=False,
             ):
                 target_param.data.copy_(
                     self.soft_update_weight * param.data
                     + (1 - self.soft_update_weight) * target_param.data
                 )
-        
+
         return metrics_q
-    
-    def process_transition(self, curr_s, action, reward, next_s, dones, log_prob=None, metrics=None):
-        
+
+    def process_transition(  # type: ignore
+        self,
+        curr_s,
+        action,
+        reward,
+        next_s,
+        dones,
+        log_prob=None,
+        metrics: Dict = None,  # type: ignore
+    ) -> Dict:
         # convert into a transition object
         transition = TransitionBatch(curr_s, action, reward, next_s, dones)
-        
+
         if "rollout_values" not in metrics:
-            metrics["rollout_values"] = np.empty((0, self.env.single_action_space.n))
+            metrics["rollout_values"] = np.empty((0, self.env.single_action_space.n))  # type: ignore
 
         # Add Td-error to metrics
         metrics["td_error"] = (
-            self.qlearning.td_error(transition, self.q, self.q_target).detach().numpy()
+            self.qlearning.td_error(transition, self.q, self.q_target).detach().numpy()  # type: ignore
         )
-        
+
         # Compute and add rollout values to metrics
         values = (
             self.value_function(
@@ -256,13 +265,13 @@ class MightyDQNAgent(MightyAgent):
         )
 
         metrics["rollout_values"] = np.append(metrics["rollout_values"], values, axis=0)
-        
+
         # Add the transition to the buffer
-        self.buffer.add(transition, metrics)
-        
+        self.buffer.add(transition, metrics)  # type: ignore
+
         return metrics
 
-    def save(self, t: int):
+    def save(self, t: int) -> None:
         """Return current agent state, e.g. for saving.
 
         For DQN, this consists of:
@@ -276,7 +285,7 @@ class MightyDQNAgent(MightyAgent):
         super().make_checkpoint_dir(t)
         # Save q parameters
         q_path = self.checkpoint_dir / "q.pt"
-        torch.save(self.q.state_dict(), q_path)
+        torch.save(self.q.state_dict(), q_path)  # type: ignore
 
         # Save target parameters
         if self.q_target is not None:
@@ -286,23 +295,24 @@ class MightyDQNAgent(MightyAgent):
         # Save optimizer state
         optimizer_path = self.checkpoint_dir / "optimizer.pkl"
         torch.save(
-            {"optimizer_state": self.qlearning.optimizer.state_dict()}, optimizer_path
+            {"optimizer_state": self.qlearning.optimizer.state_dict()},  # type: ignore
+            optimizer_path,
         )
 
         # Save replay buffer
         if self.save_replay:
             replay_path = self.checkpoint_dir / "replay.pkl"
-            self.buffer.save(replay_path)
-            
+            self.buffer.save(replay_path)  # type: ignore
+
         if self.verbose:
             print(f"Saved checkpoint at {self.checkpoint_dir}")
 
-    def load(self, path):
+    def load(self, path: str) -> None:
         """Set the internal state of the agent, e.g. after loading."""
         base_path = Path(path)
         q_path = base_path / "q.pt"
         q_state = torch.load(q_path)
-        self.q.load_state_dict(q_state)
+        self.q.load_state_dict(q_state)  # type: ignore
 
         if self.q_target is not None:
             target_path = base_path / "q_target.pt"
@@ -311,7 +321,7 @@ class MightyDQNAgent(MightyAgent):
 
         optimizer_path = base_path / "optimizer.pkl"
         optimizer_state_dict = torch.load(optimizer_path)["optimizer_state"]
-        self.qlearning.optimizer.load_state_dict(optimizer_state_dict)
+        self.qlearning.optimizer.load_state_dict(optimizer_state_dict)  # type: ignore
 
         replay_path = base_path / "replay.pkl"
         if replay_path.exists():
@@ -319,12 +329,12 @@ class MightyDQNAgent(MightyAgent):
         if self.verbose:
             print(f"Loaded checkpoint at {path}")
 
-    def adapt_hps(self, metrics):
+    def adapt_hps(self, metrics: Dict) -> None:
         """Set hyperparameters."""
-        metrics = super().adapt_hps(metrics)
+        super().adapt_hps(metrics)
         if "hp/soft_update_weight" in metrics:
             self.soft_update_weight = metrics["hp/soft_update_weight"]
-        for g in self.qlearning.optimizer.param_groups:
+        for g in self.qlearning.optimizer.param_groups:  # type: ignore
             g["lr"] = self.learning_rate
 
     # FIXME: what exactly do we use this for?
@@ -335,5 +345,5 @@ class MightyDQNAgent(MightyAgent):
     # Pro init: we can import a list of agents of a certain kind
     # Of course we could do it in the agent itself as a static attribute and check for it in init
     @property
-    def agent_type(self):
+    def agent_type(self) -> str:
         return "DQN"

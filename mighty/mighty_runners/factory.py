@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from mighty.mighty_runners.mighty_runner import MightyRunner
 
 
-def get_runner_class(agent_type: str) -> type(MightyRunner):
+def get_runner_class(agent_type: str) -> type[MightyRunner]:
     """Transforms config keyword for agents to class."""
     agent_class = None
     if agent_type in VALID_RUNNER_TYPES:

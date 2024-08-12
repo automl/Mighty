@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import torch
 import numpy as np
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple, Dict
 from mighty.mighty_runners.mighty_runner import MightyRunner
 from mighty.mighty_agents.base_agent import retrieve_class
 
@@ -11,7 +11,7 @@ import importlib.util as iutil
 spec = iutil.find_spec("evosax")
 found = spec is not None
 if found:
-    from evosax import FitnessShaper, xNES
+    from evosax import FitnessShaper, xNES  # type: ignore
     import jax
     from jax import numpy as jnp
 else:
@@ -48,7 +48,7 @@ class MightyESRunner(MightyRunner):
         if self.train_agent:
             self.num_steps_per_iteration = cfg.num_steps_per_iteration
 
-    def apply_parameters(self, individual):
+    def apply_parameters(self, individual) -> None:  # type: ignore
         # 1. Make tensor from x
         individual = np.asarray(individual)
         individual = torch.tensor(individual, dtype=torch.float32)
@@ -65,7 +65,7 @@ class MightyESRunner(MightyRunner):
         for p, x_ in zip(self.agent.parameters, reshaped_individual):
             p.data = x_
 
-    def run(self):
+    def run(self) -> Tuple[Dict, Dict]:
         es_state = self.es.initialize(self.rng)
         for _ in range(self.iterations):
             rng_ask, _ = jax.random.split(self.rng, 2)

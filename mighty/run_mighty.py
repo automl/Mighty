@@ -2,10 +2,14 @@ from mighty.mighty_runners.factory import get_runner_class
 import hydra
 import time
 import numpy as np
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
 
 
 @hydra.main("./configs", "base", version_base=None)
-def run_mighty(cfg):
+def run_mighty(cfg: DictConfig) -> None:
     # Make runner
     runner_cls = get_runner_class(cfg.runner)
     runner = runner_cls(cfg)

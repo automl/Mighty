@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools"] 
+build-backend = "setuptools.build_meta" 
+
+[project]
+name = "Mighty"
+version = "0.0.1"
+description = "A modular, meta-learning-ready RL library."
+authors = [{ name = "AutoRL@LUHAI", email = "a.mohan@ai.uni-hannover.de" }]
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+keywords = [
+  "Reinforcement Learning",
+  "MetaRL",
+  "Generalization in RL"
+]
+classifiers = [
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3 :: Only",
+  "Development Status :: 3 - Alpha",
+  "Topic :: Utilities",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "License :: OSI Approved :: BSD License"
+]
+
+dependencies = [
+    "numpy~=1.21",
+    "gymnasium",
+    "matplotlib~=3.4",
+    "seaborn~=0.11",
+    "tensorboard.logger~=0.1",
+    "hydra-core~=1.2",
+    "hydra-colorlog~=1.2",
+    "hydra-submitit-launcher~=1.2",
+    "pandas~=1.4",
+    "scipy~=1.8",
+    "rich~=12.4",
+    "wandb~=0.12",
+    "torch",
+    "dill",
+    "imageio",
+    "evosax"
+]
+
+[project.optional-dependencies]
+dev = ["ruff", "mypy", "automl-sphinx-theme",]
+
+[tool.ruff]
+extend-exclude = []
+
+[tool.ruff.lint]
+ignore = [
+  # Conflicts with the formatter
+  "COM812", "ISC001"
+]
+
+[tool.mypy]
+python_version = "3.10"
+disallow_untyped_defs = true
+show_error_codes = true
+no_implicit_optional = true
+warn_return_any = true
+warn_unused_ignores = true
+exclude = ["scripts", "docs", "test"]

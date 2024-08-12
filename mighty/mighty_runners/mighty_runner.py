@@ -3,7 +3,7 @@ from abc import ABC
 
 import logging
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple, Dict, Any
 
 from hydra.utils import get_class
 from mighty.mighty_agents.factory import get_agent_class
@@ -44,7 +44,7 @@ class MightyRunner(ABC):
             env = cls(env, **wkwargs)
             wrapper_classes.append((cls, wkwargs))
 
-        def wrap_eval():
+        def wrap_eval():  # type: ignore
             wrapped_env = base_eval_env()
             for cls, wkwargs in wrapper_classes:
                 wrapped_env = cls(wrapped_env, **wkwargs)
@@ -55,7 +55,7 @@ class MightyRunner(ABC):
         # Setup agent
         agent_class = get_agent_class(cfg.algorithm)
         args_agent = dict(cfg.algorithm_kwargs)
-        self.agent = agent_class(
+        self.agent = agent_class(  # type: ignore
             env=env,
             eval_env=eval_env,
             logger=self.logger,
@@ -77,14 +77,16 @@ class MightyRunner(ABC):
         self.logger.info(f'Using agent type "{self.agent}" to learn')
         self.logger.info("#" * 80)
 
-    def train(self, num_steps: int, env=None) -> dict:
-        return self.agent.run(n_steps=num_steps, env=env, eval_every_n_steps=self.eval_every_n_steps)
+    def train(self, num_steps: int, env=None) -> Any:  # type: ignore
+        return self.agent.run(
+            n_steps=num_steps, env=env, eval_every_n_steps=self.eval_every_n_steps
+        )
 
-    def evaluate(self, eval_env=None) -> dict:
+    def evaluate(self, eval_env=None) -> Any:  # type: ignore
         return self.agent.evaluate(eval_env)
 
-    def close(self):
+    def close(self) -> None:
         self.logger.close()
 
-    def run(self):
+    def run(self) -> Tuple[Dict, Dict]:
         raise NotImplementedError

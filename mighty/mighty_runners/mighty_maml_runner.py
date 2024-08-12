@@ -5,7 +5,7 @@ from torch.autograd import grad
 from torch.distributions.kl import kl_divergence
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from copy import deepcopy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, List
 from mighty.mighty_runners.mighty_runner import MightyRunner
 
 if TYPE_CHECKING:
@@ -21,7 +21,7 @@ class MightyMAMLRunner(MightyRunner):
         # TODO: this should be a list of envs
         self.maml_tasks = cfg.maml_tasks
 
-    def run(self):
+    def run(self):  # type: ignore
         all_rewards = []
         for maml_epoch in self.maml_epochs:
             iteration_loss = 0.0
@@ -63,7 +63,7 @@ class MightyTRPOMAMLRunner(MightyRunner):
         # TODO: this should be a list of envs
         self.maml_tasks = cfg.maml_tasks
 
-    def maml_update(self, model, lr, grads=None):
+    def maml_update(self, model, lr, grads=None):  # type: ignore
         """
         [[Source]](https://github.com/learnables/learn2learn/blob/master/learn2learn/algorithms/maml.py)
 
@@ -102,7 +102,7 @@ class MightyTRPOMAMLRunner(MightyRunner):
                     p.update = -lr * g
         return self.update_module(model)
 
-    def update_module(self, module, updates=None, memo=None):
+    def update_module(self, module, updates=None, memo=None):  # type: ignore
         r"""
         [[Source]](https://github.com/learnables/learn2learn/blob/master/learn2learn/utils.py)
 
@@ -189,19 +189,21 @@ class MightyTRPOMAMLRunner(MightyRunner):
             module._apply(lambda x: x)
         return module
 
-    def meta_surrogate_loss(self, iteration_replays, iteration_policies, policy):
+    def meta_surrogate_loss(  # type: ignore
+        self, iteration_replays, iteration_policies: List, policy
+    ) -> tuple:
         mean_loss = 0.0
         mean_kl = 0.0
         for task_replays, old_policy in zip(iteration_replays, iteration_policies):
             train_replays = task_replays[:-1]
             valid_episodes = task_replays[-1]
-            self.agent.policy = self.clone_module(policy)
+            self.agent.policy = self.clone_module(policy)  # type: ignore
 
             # Fast Adapt
             for train_episodes in train_replays:
                 # TODO: this probably doesn't work out of the box
                 self.agent.update(train_episodes)
-            new_policy = self.clone_module(self.agent.policy)
+            new_policy = self.clone_module(self.agent.policy)  # type: ignore
 
             # Useful values
             states = valid_episodes.state()
@@ -211,7 +213,7 @@ class MightyTRPOMAMLRunner(MightyRunner):
             old_densities = old_policy.density(states)
             new_densities = new_policy.density(states)
             kl = kl_divergence(new_densities, old_densities).mean()
-            mean_kl += kl
+            mean_kl += kl  # type: ignore
 
             # Compute Surrogate Loss
             # TODO: probably wrong key
@@ -231,7 +233,7 @@ class MightyTRPOMAMLRunner(MightyRunner):
         mean_loss /= len(iteration_replays)
         return mean_loss, mean_kl
 
-    def hessian_vector_product(self, loss, parameters, damping=1e-5):
+    def hessian_vector_product(self, loss, parameters, damping=1e-5) -> Callable:  # type: ignore
         """
         [[Source]](https://github.com/seba-1511/cherry/blob/master/cherry/algorithms/trpo.py)
 
@@ -261,9 +263,9 @@ class MightyTRPOMAMLRunner(MightyRunner):
         if not isinstance(parameters, torch.Tensor):
             parameters = list(parameters)
         grad_loss = grad(loss, parameters, create_graph=True, retain_graph=True)
-        grad_loss = parameters_to_vector(grad_loss)
+        grad_loss = parameters_to_vector(grad_loss)  # type: ignore
 
-        def hvp(other):
+        def hvp(other):  # type: ignore
             """
             TODO: The reshaping (if arguments are lists) is not efficiently implemented.
                   (It requires a copy) A good idea would be to have
@@ -289,7 +291,9 @@ class MightyTRPOMAMLRunner(MightyRunner):
 
         return hvp
 
-    def conjugate_gradient(self, Ax, b, num_iterations=10, tol=1e-10, eps=1e-8):
+    def conjugate_gradient(  # type: ignore
+        self, Ax, b, num_iterations: int = 10, tol: float = 1e-10, eps: float = 1e-8
+    ) -> torch.Tensor:
         """
         [[Source]](https://github.com/seba-1511/cherry/blob/master/cherry/algorithms/trpo.py)
 
@@ -338,12 +342,12 @@ class MightyTRPOMAMLRunner(MightyRunner):
                 break
         if shape is not None:
             vector_to_parameters(x, shape)
-            x = shape
+            x = shape  # type: ignore
         return x
 
-    def run(self):
+    def run(self) -> tuple[dict, dict]:
         policy = deepcopy(self.agent.policy)
-        for maml_epoch in self.epochs:
+        for maml_epoch in self.maml_epochs:
             iteration_reward = 0.0
             iteration_replays = []
             iteration_policies = []
@@ -380,7 +384,7 @@ class MightyTRPOMAMLRunner(MightyRunner):
                     policy,
                 )
                 grad = grad(old_loss, policy.parameters(), retain_graph=True)
-                grad = parameters_to_vector([g.detach() for g in grad])
+                grad = parameters_to_vector([g.detach() for g in grad])  # type: ignore
                 Fvp = self.hessian_vector_product(old_kl, policy.parameters())
                 step = self.conjugate_gradient(Fvp, grad)
                 shs = 0.5 * torch.dot(step, Fvp(step))
@@ -388,7 +392,7 @@ class MightyTRPOMAMLRunner(MightyRunner):
                 step = step / lagrange_multiplier
                 step_ = [torch.zeros_like(p.data) for p in policy.parameters()]
                 vector_to_parameters(step, step_)
-                step = step_
+                step = step_  # type: ignore
                 del old_kl, Fvp, grad
                 old_loss.detach_()
 
@@ -410,5 +414,5 @@ class MightyTRPOMAMLRunner(MightyRunner):
         eval_results = self.evaluate()
         self.close()
         # TODO: make pretty results
-        train_results = {}
+        train_results = {}  # type: ignore
         return train_results, eval_results
