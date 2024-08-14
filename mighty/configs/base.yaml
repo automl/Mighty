@@ -1,33 +1,24 @@
 defaults:
   - _self_
   - algorithm: dqn
+  - environment: pufferlib_ocean/bandit
+  - search_space: dqn_gym_classic
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
   - override hydra/help: mighty_help
 
+runner: standard
 debug: false
 seed: 0
-output_dir: runs/training
+output_dir: runs
 wandb_project: null
 tensorboard_file: null
 experiment_name: mighty_experiment
 
 algorithm_kwargs: {}
 
-num_steps: ???  # Number of training steps
-env: ???
-env_kwargs: ???
-env_wrappers: ???
-
 # Training
-eval_every_n_steps: 1000  # After how many steps to evaluate.
-n_episodes_eval: null
+eval_every_n_steps: 1e4  # After how many steps to evaluate.
+n_episodes_eval: 10
 checkpoint: null  # Path to load model checkpoint
-save_model_every_n_steps: 5000
-
-
-hydra:
-  run:
-    dir: ${output_dir}/${experiment_name}_${seed}/${now:%Y-%m-%d}/${now:%H-%M-%S}
-  sweep:
-    dir: ${output_dir}/${experiment_name}_${seed}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+save_model_every_n_steps: 5e5

@@ -1,0 +1,55 @@
+defaults:
+  - _self_
+  - algorithm: dqn
+  - search_space: dqn_gym_classic
+  - override hydra/launcher: submitit_slurm
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
+  - override hydra/help: mighty_help
+  - override hydra/sweeper: SMAC
+
+hydra:
+  launcher:
+    partition: ai,tnt
+    cpus_per_task: 1
+    mem_gb: 10
+    timeout_min: 120
+  sweeper:
+    budget: 10
+    budget_variable: num_steps
+    loading_variable: load
+    saving_variable: save
+    search_space: ${search_space}
+    smac_kwargs:
+      max_parallelization: 10
+      min_budget: 1e3
+      max_budget: 1e5
+  run:
+    dir: ${output_dir}/hydra/smac_sweep_${algorithm}_${env}/${seed}
+  sweep:
+    dir: ${output_dir}/smac_sweep_${algorithm}_${env}/${seed}
+
+debug: false
+seed: 0
+output_dir: runs
+wandb_project: null
+tensorboard_file: null
+experiment_name: mighty_experiment
+
+algorithm_kwargs: {}
+
+num_steps: 1e5  # Number of training steps
+env: CartPole-v1
+env_kwargs: {}
+num_envs: 4
+#env_wrappers: ???
+
+# Training
+eval_every_n_steps: 1e4  # After how many steps to evaluate.
+n_episodes_eval: 10
+checkpoint: null  # Path to load model checkpoint
+save_model_every_n_steps: 5e5
+
+# dummy keys
+save: false
+load: false

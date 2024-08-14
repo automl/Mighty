@@ -1,0 +1,31 @@
+defaults:
+  - _self_
+  - algorithm: dqn
+  - environment: pufferlib_ocean/bandit
+  - search_space: dqn_gym_classic
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
+  - override hydra/help: mighty_help
+
+runner: es
+popsize: 5
+iterations: 100
+es: evosax.CMA_ES
+search_targets: ["learning_rate", "_batch_size"]
+rl_train_agent: true
+num_steps_per_iteration: 1000
+
+debug: false
+seed: 0
+output_dir: runs
+wandb_project: null
+tensorboard_file: null
+experiment_name: mighty_experiment
+
+algorithm_kwargs: {}
+
+# Training
+eval_every_n_steps: 1e4  # After how many steps to evaluate.
+n_episodes_eval: 10
+checkpoint: null  # Path to load model checkpoint
+save_model_every_n_steps: 5e5

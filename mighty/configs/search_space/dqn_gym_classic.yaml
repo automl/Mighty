@@ -1,4 +1,3 @@
-# @package hydra.sweeper.search_space
 hyperparameters:
   algorithm_kwargs.learning_rate:
     type: uniform_float
@@ -15,10 +14,6 @@ hyperparameters:
     type: categorical
     choices: [32, 64, 128, 256]
     default_value: 32
-  algorithm_kwargs.n_units:
-    type: categorical
-    choices: [25, 50, 75, 100]
-    default_value: 25
   algorithm_kwargs.soft_update_weight:
     type: uniform_float
     lower: 0.01
@@ -27,6 +22,6 @@ hyperparameters:
     default_value: 1.
   algorithm_kwargs.td_update_class:
     type: categorical
-    choices: [coax.td_learning.QLearning, coax.td_learning.DoubleQLearning, coax.td_learning.SoftQLearning] #, coax.td_learning.ClippedDoubleQLearning, coax.td_learning.SoftClippedDoubleQLearning]
-    default_value: coax.td_learning.DoubleQLearning
+    choices: [mighty.mighty_update.QLearning, mighty.mighty_update.DoubleQLearning] #, coax.td_learning.ClippedDoubleQLearning, coax.td_learning.SoftClippedDoubleQLearning]
+    default_value: mighty.mighty_update.DoubleQLearning
 

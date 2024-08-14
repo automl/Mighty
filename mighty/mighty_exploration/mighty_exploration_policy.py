@@ -1,65 +1,58 @@
-from coax import Policy
-from coax._core.value_based_policy import BaseValueBasedPolicy
-from coax.utils import batch_to_single
+"""Mighty Exploration Policy."""
+
+from __future__ import annotations
+
+import numpy as np
+import torch
 
 
-class MightyExplorationPolicy(Policy, BaseValueBasedPolicy):
+class MightyExplorationPolicy:
     """Generic Policy."""
 
     def __init__(
         self,
         algo,
-        func,
-        env=None,
-        observation_preprocessor=None,
-        proba_dist=None,
-        random_seed=None,
+        model,
+        discrete=False,
     ) -> None:
-        """
-        Initialize Exploration Strategy.
+        """Initialize Exploration Strategy.
 
         :param algo: algorithm name
         :param func: policy function
-        :param env: environment
-        :param observation_preprocessor: preprocessing for observation
-        :param proba_dist: probability distribution
-        :param random_seed: seed for sampling
         :return:
         """
-
+        self.rng = np.random.default_rng()
         self.algo = algo
-        if algo == "q":
-            BaseValueBasedPolicy.__init__(self, func)
+        self.model = model
+
+        # Undistorted action sampling
+        if self.algo == "q":
+
+            def sample_func(state):
+                state = torch.as_tensor(state, dtype=torch.float32)
+                qs = self.model(state)
+                return np.argmax(qs.detach(), axis=1), qs
+
         else:
-            assert (
-                env is not None
-            ), "Environment must be given in policy exploration methods."
-            Policy.__init__(
-                self,
-                func=func,
-                env=env,
-                observation_preprocessor=observation_preprocessor,
-                proba_dist=proba_dist,
-                random_seed=random_seed,
-            )
 
-    # This is the original call in coax
-    def sample_action(self, s):
-        """
-        Sample from policy.
+            def sample_func(state):
+                state = torch.FloatTensor(state)
 
-        :param s: state
-        :return: (action, logprobs)
-        """
+                if discrete:
+                    pred = self.model(state)
+                    dist = torch.distributions.Categorical(logits=pred)
+                else:
+                    pred, std = self.model(state)
+                    dist = torch.distributions.Normal(pred, std)
 
-        S = self.observation_preprocessor(self.rng, s)
-        X, logP = self.sample_func(self.params, self.function_state, self.rng, S)
-        x = self.proba_dist.postprocess_variate(self.rng, X)
-        return (x, batch_to_single(logP))
+                action = dist.sample()
+                log_prob = dist.log_prob(action)
+                return action, log_prob
 
-    def __call__(self, s, return_logp=False, metrics={}, eval=False):
-        """
-        Get action.
+        self.sample_action = sample_func
+
+    def __call__(self, s, return_logp=False, metrics=None, evaluate=False):
+        """Get action.
 
         :param s: state
         :param return_logp: return logprobs
@@ -67,22 +60,28 @@ class MightyExplorationPolicy(Policy, BaseValueBasedPolicy):
         :param eval: eval mode
         :return: action or (action, logprobs)
         """
-
-        if eval:
-            action = self.mode(s)
-            return (action, []) if return_logp else action
+        if metrics is None:
+            metrics = {}
+        if evaluate:
+            action, logprobs = self.sample_action(s)
+            action = action.detach().numpy()
+            output = (action, logprobs) if return_logp else action
         else:
-            return self.explore(s, return_logp, metrics)
+            output = self.explore(s, return_logp, metrics)
+
+        return output
 
     def explore(self, s, return_logp, _):
-        """
-        Explore.
+        """Explore.
 
         :param s: state
         :param return_logp: return logprobs
         :param _: not used
         :return: action or (action, logprobs)
         """
-
-        action, logprobs = self.sample_action(s)
+        action, logprobs = self.explore_func(s)
         return (action, logprobs) if return_logp else action
+
+    def explore_func(self, s):
+        """Explore function."""
+        raise NotImplementedError

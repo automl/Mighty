@@ -1,0 +1,7 @@
+# @package _global_
+
+num_steps: 50_000 
+env: pufferlib.environments.ocean.memory
+env_kwargs: {}
+env_wrappers: []
+num_envs: 1
