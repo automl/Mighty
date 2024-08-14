@@ -41,7 +41,9 @@ class TestDQNAgent:
             "hp/batch_size": dqn._batch_size,
             "hp/learning_starts": dqn._learning_starts,
         }
-        prediction = dqn.step(test_obs, metrics)
+
+        prediction = dqn.step(test_obs, metrics)[0]
+
         assert len(prediction) == 1, "Prediction should have shape (1, 1)"
         assert max(prediction) < 4, "Prediction should be less than 4"
 
@@ -106,6 +108,7 @@ class TestDQNAgent:
 
         batch = dqn.buffer.sample(2)
         preds, targets = dqn.qlearning.get_targets(batch, dqn.q, dqn.q_target)
+
         assert (
             np.mean(targets.detach().numpy() - metrics["Q-Update/td_targets"]) < 0.1
         ), "TD_targets should be equal"
@@ -162,24 +165,29 @@ class TestDQNAgent:
         dqn.load(dqn.checkpoint_dir)
         clean(logger)
 
-    def test_get_transition_metrics(self):
+    def process_transition(self):
         torch.manual_seed(0)
         env = gym.vector.SyncVectorEnv([DummyEnv for _ in range(1)])
         logger = Logger("test_dqn_agent", "test_dqn_agent")
         dqn = MightyDQNAgent(env, logger, batch_size=2)
         state, _ = env.reset()
-        action = dqn.policy([state])
+        action = dqn.policy(state, return_logp=False)
+
         next_state, reward, tr, te, _ = env.step(action)
-        next_action = dqn.policy([next_state])
+        next_action = dqn.policy(next_state, return_logp=False)
         ff_state, ff_reward, ff_tr, ff_te, _ = env.step(next_action)
-        transition = TransitionBatch(
+
+        # curr_s, action, reward, next_s, dones, log_prob, metrics
+        metrics = dqn.process_transition(
             np.array([state, next_state]),
             np.array([action[0], next_action[0]]),
             np.array([reward, ff_reward]),
             np.array([next_state, ff_state]),
             np.array([te or tr, ff_te or ff_tr]),
+            0,
+            {},
         )
-        metrics = dqn.get_transition_metrics(transition, {})
+
         assert (
             len(metrics["rollout_values"]) == 2
         ), f"One value prediction per state, got: {metrics['rollout_values']}"
@@ -188,10 +196,12 @@ class TestDQNAgent:
         ), f"TD error should be computed per transition, got: {metrics['td_errors']}"
 
         state, _ = env.reset()
-        action = dqn.policy(state)
+        action = dqn.policy(state, return_logp=False)
         next_state, reward, tr, te, _ = env.step(action)
-        transition = TransitionBatch(state, action, reward, next_state, te or tr)
-        metrics = dqn.get_transition_metrics(transition, metrics)
+
+        metrics = dqn.process_transition(
+            state, action, reward, next_state, te or tr, 0, metrics
+        )
         assert (
             len(metrics["rollout_values"]) == 3
         ), "New value prediction should be added"
