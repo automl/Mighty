@@ -25,6 +25,9 @@
 ---
 
 # Mighty
+
+**Warning: Mighty is still in development without an official release! Use at your own peril and check back frequently for updates!**
+
 Welcome to Mighty, hopefully your future one-stop shop for everything cRL.
 Currently Mighty is still in its early stages with support for normal gym envs, DACBench and CARL.
 The interface is controlled through hydra and we provide DQN, PPO and SAC algorithms.

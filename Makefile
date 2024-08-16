@@ -65,7 +65,6 @@ clean-doc:
 	$(MAKE) -C ${DOCDIR} clean
 
 clean-build:
-	$(PYTHON) setup.py clean
 	rm -rf ${DIST}
 
 # Clean up any builds in ./dist as well as doc
@@ -73,7 +72,7 @@ clean: clean-doc clean-build
 
 # Build a distribution in ./dist
 build:
-	$(PYTHON) setup.py sdist
+	$(PYTHON) -m build
 
 doc:
 	$(MAKE) -C ${DOCDIR} docs

@@ -45,7 +45,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["ruff", "mypy", "automl-sphinx-theme",]
+dev = ["ruff", "mypy", "automl-sphinx-theme", "build"]
 
 [tool.ruff]
 extend-exclude = []

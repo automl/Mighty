@@ -133,3 +133,6 @@ dmypy.json
 .pyre/
 
 runs
+docs/build/*
+docs/api/*
+docs/examples/*
