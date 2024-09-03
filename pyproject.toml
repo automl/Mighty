@@ -41,6 +41,8 @@ dependencies = [
     "torch",
     "dill",
     "imageio",
+    "jax=0.4.20",
+    "jaxlib=0.4.20",
     "evosax==0.1.6"
 ]
 
