@@ -30,7 +30,7 @@ dependencies = [
     "gymnasium",
     "matplotlib~=3.4",
     "seaborn~=0.11",
-    "tensorboard.logger~=0.1",
+    "tensorboard",
     "hydra-core~=1.2",
     "hydra-colorlog~=1.2",
     "hydra-submitit-launcher~=1.2",
@@ -48,6 +48,7 @@ dependencies = [
 dev = ["ruff", "mypy", "automl-sphinx-theme", "build", "pytest"]
 carl = ["carl_bench"]
 dacbench = ["dacbench"]
+pufferlib = ["pufferlib"]
 
 [tool.ruff]
 extend-exclude = []
