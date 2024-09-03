@@ -51,10 +51,9 @@ jobs:
         branch_name=${GITHUB_REF##*/}
         cd ../gh-pages
         rm -rf $branch_name
-        echo "pwd is: $(pwd)"
-        echo "ls is: $(ls)"
-        echo "ls .. is: $(ls ..)"
         echo "ls ../${{ env.name }} is: $(ls ../${{ env.name }})"
+        echo "ls ../${{ env.name }}/docs is: $(ls ../${{ env.name }}/docs)"
+        echo "ls ../${{ env.name }}/docs/build is: $(ls ../${{ env.name }}/docs/build)"
         cp -r ../${{ env.name }}/docs/build/html $branch_name
     - name: Push to gh-pages
       if: (contains(github.ref, 'version_0.2.0') || contains(github.ref, 'main')) && github.event_name == 'push'
