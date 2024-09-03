@@ -18,7 +18,7 @@ on:
 env:
   package-name: "mighty"
   test-dir: test
-  extra-requires: "[dev]"  # "" for no extra_requires
+  extra-requires: "[dev,carl,dacbench]"  # "" for no extra_requires
 
   # Arguments used for pytest
   pytest-args: >-
