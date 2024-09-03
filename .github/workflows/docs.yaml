@@ -19,7 +19,7 @@ on:
       - version_0.0.1
 
 env:
-  name: mighty
+  name: Mighty
 
 jobs:
   build-and-deploy:
