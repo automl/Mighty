@@ -35,7 +35,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install ".[dev,carl,dacbench]"
+        pip install ".[dev,carl]"
     - name: Make docs
       run: |
         make clean
