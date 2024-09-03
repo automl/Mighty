@@ -19,7 +19,7 @@ on:
       - version_0.0.1
 
 env:
-  name: Mighty
+  name: mighty
 
 jobs:
   build-and-deploy:
@@ -51,6 +51,7 @@ jobs:
         branch_name=${GITHUB_REF##*/}
         cd ../gh-pages
         rm -rf $branch_name
+        ls
         cp -r ../${{ env.name }}/docs/build/html $branch_name
     - name: Push to gh-pages
       if: (contains(github.ref, 'version_0.2.0') || contains(github.ref, 'main')) && github.event_name == 'push'
