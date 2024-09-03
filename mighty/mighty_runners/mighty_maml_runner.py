@@ -104,7 +104,7 @@ class MightyTRPOMAMLRunner(MightyRunner):
 
     def update_module(self, module, updates=None, memo=None):  # type: ignore
         r"""
-        [[Source]](https://github.com/learnables/learn2learn/blob/master/learn2learn/utils.py)
+        [[Source]](https://github.com/learnables/learn2learn/blob/meta-opt/learn2learn/utils.py)
 
         **Description**
 
