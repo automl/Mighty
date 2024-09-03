@@ -86,7 +86,7 @@ class TestEnvCreation:
             "env_kwargs": {
                 "num_contexts": 100,
                 "context_feature_args": {
-                    "target_distance": ["normal", 9.8, 1],
+                    "target_distance": ["normal", 0.1, 20, 9.8, 1],
                     "target_direction": ["categorical", [1, 2, 3, 4]],
                     "friction": ["uniform-float", 0, 10],
                     "gravity": ["uniform-int", -5, 5],

@@ -41,14 +41,14 @@ dependencies = [
     "torch",
     "dill",
     "imageio",
-    "evosax"
+    "evosax==0.1.6"
 ]
 
 [project.optional-dependencies]
 dev = ["ruff", "mypy", "automl-sphinx-theme", "build", "pytest"]
 carl = ["carl_bench"]
 dacbench = ["dacbench"]
-pufferlib = ["pufferlib"]
+pufferlib = ["pufferlib==1.0.0"]
 
 [tool.ruff]
 extend-exclude = []
