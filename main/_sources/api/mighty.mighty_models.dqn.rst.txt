@@ -1,0 +1,20 @@
+mighty.mighty\_models.dqn
+=========================
+
+.. automodule:: mighty.mighty_models.dqn
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      make_q_head
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      DQN
+      IQN
+      SPRQN
+   

@@ -1,0 +1,16 @@
+mighty.mighty\_exploration
+==========================
+
+.. automodule:: mighty.mighty_exploration
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   epsilon_greedy
+   ez_greedy
+   mighty_exploration_policy
+   stochastic_policy

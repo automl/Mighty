@@ -1,0 +1,12 @@
+mighty.mighty\_exploration.ez\_greedy
+=====================================
+
+.. automodule:: mighty.mighty_exploration.ez_greedy
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      EZGreedy
+   

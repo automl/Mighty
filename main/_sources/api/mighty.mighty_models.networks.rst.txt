@@ -1,0 +1,25 @@
+mighty.mighty\_models.networks
+==============================
+
+.. automodule:: mighty.mighty_models.networks
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      make_feature_extractor
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CNN
+      ComboNet
+      LSTM
+      MLP
+      ResNet
+      ResNetBlock
+      ResNetLayer
+      TorchHubModel
+   

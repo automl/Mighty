@@ -1,0 +1,12 @@
+mighty.mighty\_meta.mighty\_component
+=====================================
+
+.. automodule:: mighty.mighty_meta.mighty_component
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      MightyMetaComponent
+   

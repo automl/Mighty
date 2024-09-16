@@ -1,0 +1,12 @@
+mighty.mighty\_exploration.stochastic\_policy
+=============================================
+
+.. automodule:: mighty.mighty_exploration.stochastic_policy
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      StochasticPolicy
+   

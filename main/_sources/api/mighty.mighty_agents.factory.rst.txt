@@ -1,0 +1,12 @@
+mighty.mighty\_agents.factory
+=============================
+
+.. automodule:: mighty.mighty_agents.factory
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      get_agent_class
+   

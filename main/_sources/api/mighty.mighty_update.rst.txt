@@ -1,0 +1,15 @@
+mighty.mighty\_update
+=====================
+
+.. automodule:: mighty.mighty_update
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   ppo_update
+   q_learning
+   sac_update

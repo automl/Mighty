@@ -1,0 +1,18 @@
+mighty.mighty\_update.sac\_update
+=================================
+
+.. automodule:: mighty.mighty_update.sac_update
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      polyak_update
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      SACUpdate
+   

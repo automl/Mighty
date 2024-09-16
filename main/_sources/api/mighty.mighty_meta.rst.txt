@@ -1,0 +1,16 @@
+mighty.mighty\_meta
+===================
+
+.. automodule:: mighty.mighty_meta
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   cosine_lr_schedule
+   mighty_component
+   plr
+   space

@@ -1,0 +1,15 @@
+mighty.mighty\_update.q\_learning
+=================================
+
+.. automodule:: mighty.mighty_update.q_learning
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ClippedDoubleQLearning
+      DoubleQLearning
+      QLearning
+      SPRQLearning
+   

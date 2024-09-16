@@ -1,0 +1,12 @@
+mighty.mighty\_agents.dqn
+=========================
+
+.. automodule:: mighty.mighty_agents.dqn
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      MightyDQNAgent
+   

@@ -1,0 +1,12 @@
+mighty.mighty\_exploration.mighty\_exploration\_policy
+======================================================
+
+.. automodule:: mighty.mighty_exploration.mighty_exploration_policy
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      MightyExplorationPolicy
+   

@@ -1,0 +1,12 @@
+mighty.mighty\_meta.space
+=========================
+
+.. automodule:: mighty.mighty_meta.space
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      SPaCE
+   

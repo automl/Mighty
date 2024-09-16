@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>mighty.mighty_agents &#8212; Mighty Documentation 0.0.1 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet">
+  <link href="../_static/css/index.ac9c05f7c49ca1e1f876c6e36360ea26.css" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=2eb4fb78" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.9ea38e314b9e6d9dab77.js">
+
+    <script src="../_static/documentation_options.js?v=f539c95a"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="mighty.mighty_agents.base_agent" href="mighty.mighty_agents.base_agent.html" />
+    <link rel="prev" title="mighty" href="mighty.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+  <a class="navbar-brand" href="../index.html">
+  <!-- <p class="title">Mighty Documentation</p> -->
+  </a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/automl/Mighty" rel="noopener" target="_blank" title="GitHub">
+            <span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/automl_org?lang=de" rel="noopener" target="_blank" title="Twitter">
+            <span><i class="fab fa-twitter-square"></i></span>
+            <label class="sr-only">Twitter</label>
+          </a>
+        </li>
+      </ul>
+      </div>
+      
+      <div class="navbar-end-item">
+        <div class="dropdown mt-1">
+    <button type="button" class="btn btn-secondary btn-md navbar-btn dropdown-toggle" id="dLabelMore"
+        data-toggle="dropdown">
+        v0.0.1
+        <span class="caret"></span>
+    </button>
+    <div class="dropdown-menu list-group-flush py-0" aria-labelledby="dLabelMore">
+        <a class="list-group-item list-group-item-action" href="#">v0.0.1</a>
+    </div>
+</div>
+      </div>
+      
+      <div class="navbar-end-item">
+        <form class="bd-search align-items-center" action="../search.html" method="get" style="width: 100%;">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control btn btn-md" name="q" id="search-input"
+    placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off">
+</form>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><h4 class="mt-0 mb-0"><a href="../index.html">Mighty Documentation</a></h4>
+<div class="mb-3">v0.0.1</div><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../installation.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../basics.html">
+   Mighty on Standard Gym Environments
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../crl.html">
+   Contextual RL Environments in Mighty
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dac.html">
+   Dynamic Algorithm Configuration with Mighty
+  </a>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../api.html">
+   API References
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2 current active has-children">
+    <a class="reference internal" href="mighty.html">
+     mighty
+    </a>
+    <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul class="current">
+     <li class="toctree-l3 current active has-children">
+      <a class="current reference internal" href="#">
+       mighty.mighty_agents
+      </a>
+      <input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+      <label for="toctree-checkbox-3">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_agents.base_agent.html">
+         mighty.mighty_agents.base_agent
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_agents.dqn.html">
+         mighty.mighty_agents.dqn
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_agents.factory.html">
+         mighty.mighty_agents.factory
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_agents.ppo.html">
+         mighty.mighty_agents.ppo
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_agents.sac.html">
+         mighty.mighty_agents.sac
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="mighty.mighty_exploration.html">
+       mighty.mighty_exploration
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+      <label for="toctree-checkbox-4">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_exploration.epsilon_greedy.html">
+         mighty.mighty_exploration.epsilon_greedy
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_exploration.ez_greedy.html">
+         mighty.mighty_exploration.ez_greedy
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_exploration.mighty_exploration_policy.html">
+         mighty.mighty_exploration.mighty_exploration_policy
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_exploration.stochastic_policy.html">
+         mighty.mighty_exploration.stochastic_policy
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="mighty.mighty_meta.html">
+       mighty.mighty_meta
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+      <label for="toctree-checkbox-5">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_meta.cosine_lr_schedule.html">
+         mighty.mighty_meta.cosine_lr_schedule
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_meta.mighty_component.html">
+         mighty.mighty_meta.mighty_component
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_meta.plr.html">
+         mighty.mighty_meta.plr
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_meta.space.html">
+         mighty.mighty_meta.space
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="mighty.mighty_models.html">
+       mighty.mighty_models
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+      <label for="toctree-checkbox-6">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_models.dqn.html">
+         mighty.mighty_models.dqn
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_models.networks.html">
+         mighty.mighty_models.networks
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_models.ppo.html">
+         mighty.mighty_models.ppo
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_models.sac.html">
+         mighty.mighty_models.sac
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="mighty.mighty_replay.html">
+       mighty.mighty_replay
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+      <label for="toctree-checkbox-7">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_replay.buffer.html">
+         mighty.mighty_replay.buffer
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_replay.mighty_replay_buffer.html">
+         mighty.mighty_replay.mighty_replay_buffer
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_replay.mighty_rollout_buffer.html">
+         mighty.mighty_replay.mighty_rollout_buffer
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="mighty.mighty_runners.html">
+       mighty.mighty_runners
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+      <label for="toctree-checkbox-8">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_runners.factory.html">
+         mighty.mighty_runners.factory
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_runners.mighty_es_runner.html">
+         mighty.mighty_runners.mighty_es_runner
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_runners.mighty_maml_runner.html">
+         mighty.mighty_runners.mighty_maml_runner
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_runners.mighty_online_runner.html">
+         mighty.mighty_runners.mighty_online_runner
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_runners.mighty_runner.html">
+         mighty.mighty_runners.mighty_runner
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="mighty.mighty_update.html">
+       mighty.mighty_update
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+      <label for="toctree-checkbox-9">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_update.ppo_update.html">
+         mighty.mighty_update.ppo_update
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_update.q_learning.html">
+         mighty.mighty_update.q_learning
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="mighty.mighty_update.sac_update.html">
+         mighty.mighty_update.sac_update
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="mighty.run_mighty.html">
+       mighty.run_mighty
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../cite.html">
+   Cite Us
+  </a>
+ </li>
+</ul>
+
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyAgent">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     MightyAgent
+    </span>
+   </code>
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyAgent.__del__">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyAgent.__del__()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyAgent.adapt_hps">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyAgent.adapt_hps()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyAgent.apply_config">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyAgent.apply_config()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyAgent.evaluate">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyAgent.evaluate()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyAgent.initialize_agent">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyAgent.initialize_agent()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyAgent.make_checkpoint_dir">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyAgent.make_checkpoint_dir()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyAgent.process_transition">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyAgent.process_transition()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyAgent.run">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyAgent.run()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyAgent.update">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyAgent.update()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyAgent.update_agent">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyAgent.update_agent()
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyDQNAgent">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     MightyDQNAgent
+    </span>
+   </code>
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyDQNAgent.adapt_hps">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyDQNAgent.adapt_hps()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyDQNAgent.load">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyDQNAgent.load()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyDQNAgent.parameters">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyDQNAgent.parameters
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyDQNAgent.process_transition">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyDQNAgent.process_transition()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyDQNAgent.save">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyDQNAgent.save()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyDQNAgent.update_agent">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyDQNAgent.update_agent()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyDQNAgent.value_function">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyDQNAgent.value_function
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyPPOAgent">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     MightyPPOAgent
+    </span>
+   </code>
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyPPOAgent.agent_type">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyPPOAgent.agent_type
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyPPOAgent.load">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyPPOAgent.load()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyPPOAgent.process_transition">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyPPOAgent.process_transition()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyPPOAgent.save">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyPPOAgent.save()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyPPOAgent.update_agent">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyPPOAgent.update_agent()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightyPPOAgent.value_function">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightyPPOAgent.value_function
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mighty.mighty_agents.MightySACAgent">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     MightySACAgent
+    </span>
+   </code>
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightySACAgent.load">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightySACAgent.load()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightySACAgent.process_transition">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightySACAgent.process_transition()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightySACAgent.save">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightySACAgent.save()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightySACAgent.update_agent">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightySACAgent.update_agent()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mighty.mighty_agents.MightySACAgent.value_function">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MightySACAgent.value_function
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mighty.mighty_agents.get_agent_class">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     get_agent_class()
+    </span>
+   </code>
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="module-mighty.mighty_agents">
+<span id="mighty-mighty-agents"></span><h1>mighty.mighty_agents<a class="headerlink" href="#module-mighty.mighty_agents" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyAgent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mighty.mighty_agents.</span></span><span class="sig-name descname"><span class="pre">MightyAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_starts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">render_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_tensorboard</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_wandb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wandb_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replay_buffer_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replay_buffer_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_methods</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/base_agent.html#MightyAgent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyAgent" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Base agent for RL implementations.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyAgent.__del__">
+<span class="sig-name descname"><span class="pre">__del__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/base_agent.html#MightyAgent.__del__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyAgent.__del__" title="Link to this definition">¶</a></dt>
+<dd><p>Close wandb upon deletion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyAgent.adapt_hps">
+<span class="sig-name descname"><span class="pre">adapt_hps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/base_agent.html#MightyAgent.adapt_hps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyAgent.adapt_hps" title="Link to this definition">¶</a></dt>
+<dd><p>Set hyperparameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyAgent.apply_config">
+<span class="sig-name descname"><span class="pre">apply_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/base_agent.html#MightyAgent.apply_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyAgent.apply_config" title="Link to this definition">¶</a></dt>
+<dd><p>Apply config to agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyAgent.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/base_agent.html#MightyAgent.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyAgent.evaluate" title="Link to this definition">¶</a></dt>
+<dd><p>Eval agent on an environment. (Full rollouts).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> – The environment to evaluate on</p></li>
+<li><p><strong>episodes</strong> – The number of episodes to evaluate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyAgent.initialize_agent">
+<span class="sig-name descname"><span class="pre">initialize_agent</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/base_agent.html#MightyAgent.initialize_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyAgent.initialize_agent" title="Link to this definition">¶</a></dt>
+<dd><p>General initialization of tracer and buffer for all agents.</p>
+<p>Algorithm specific initialization like policies etc.
+are done in _initialize_agent</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyAgent.make_checkpoint_dir">
+<span class="sig-name descname"><span class="pre">make_checkpoint_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/base_agent.html#MightyAgent.make_checkpoint_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyAgent.make_checkpoint_dir" title="Link to this definition">¶</a></dt>
+<dd><p>Checkpoint model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>T</strong> – Current timestep</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyAgent.process_transition">
+<span class="sig-name descname"><span class="pre">process_transition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curr_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dones</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/base_agent.html#MightyAgent.process_transition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyAgent.process_transition" title="Link to this definition">¶</a></dt>
+<dd><p>Agent/algorithm specific transition operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyAgent.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_every_n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">human_log_every_n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_model_every_n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/base_agent.html#MightyAgent.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyAgent.run" title="Link to this definition">¶</a></dt>
+<dd><p>Run agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyAgent.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/base_agent.html#MightyAgent.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyAgent.update" title="Link to this definition">¶</a></dt>
+<dd><p>Update agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyAgent.update_agent">
+<span class="sig-name descname"><span class="pre">update_agent</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/base_agent.html#MightyAgent.update_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyAgent.update_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Policy/value function update.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyDQNAgent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mighty.mighty_agents.</span></span><span class="sig-name descname"><span class="pre">MightyDQNAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_env=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma=0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_starts=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">render_progress=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_tensorboard=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_wandb=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wandb_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replay_buffer_class=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replay_buffer_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_methods=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_target=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_units=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soft_update_weight=0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy_class=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_class=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">td_update_class=&lt;class</span> <span class="pre">'mighty.mighty_update.q_learning.QLearning'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">td_update_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_replay=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/dqn.html#MightyDQNAgent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyDQNAgent" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="mighty.mighty_agents.base_agent.html#mighty.mighty_agents.base_agent.MightyAgent" title="mighty.mighty_agents.base_agent.MightyAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">MightyAgent</span></code></a></p>
+<p>Mighty DQN agent.</p>
+<p>This agent implements the DQN algorithm and extension as first proposed in
+“Playing Atari with Deep Reinforcement Learning” by Mnih et al. in 2013.
+DDQN was proposed by van Hasselt et al. in 2016’s
+“Deep Reinforcement Learning with Double Q-learning”.
+Like all Mighty agents, it’s supposed to be called via the train method.
+By default, this agent uses an epsilon-greedy policy.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyDQNAgent.adapt_hps">
+<span class="sig-name descname"><span class="pre">adapt_hps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/dqn.html#MightyDQNAgent.adapt_hps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyDQNAgent.adapt_hps" title="Link to this definition">¶</a></dt>
+<dd><p>Set hyperparameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyDQNAgent.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/dqn.html#MightyDQNAgent.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyDQNAgent.load" title="Link to this definition">¶</a></dt>
+<dd><p>Set the internal state of the agent, e.g. after loading.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyDQNAgent.parameters">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span></em><a class="headerlink" href="#mighty.mighty_agents.MightyDQNAgent.parameters" title="Link to this definition">¶</a></dt>
+<dd><p>Q-function parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyDQNAgent.process_transition">
+<span class="sig-name descname"><span class="pre">process_transition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curr_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dones</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/dqn.html#MightyDQNAgent.process_transition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyDQNAgent.process_transition" title="Link to this definition">¶</a></dt>
+<dd><p>Agent/algorithm specific transition operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyDQNAgent.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/dqn.html#MightyDQNAgent.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyDQNAgent.save" title="Link to this definition">¶</a></dt>
+<dd><p>Return current agent state, e.g. for saving.</p>
+<p>For DQN, this consists of:
+- the Q network parameters
+- the Q network function state
+- the target network parameters
+- the target network function state</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Agent state</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyDQNAgent.update_agent">
+<span class="sig-name descname"><span class="pre">update_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/dqn.html#MightyDQNAgent.update_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyDQNAgent.update_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Compute and apply TD update.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>step</strong> – Current training step</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyDQNAgent.value_function">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value_function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mighty.mighty_models.dqn.html#mighty.mighty_models.dqn.DQN" title="mighty.mighty_models.dqn.DQN"><span class="pre">DQN</span></a></em><a class="headerlink" href="#mighty.mighty_agents.MightyDQNAgent.value_function" title="Link to this definition">¶</a></dt>
+<dd><p>Q-function.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyPPOAgent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mighty.mighty_agents.</span></span><span class="sig-name descname"><span class="pre">MightyPPOAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_env=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma=0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_starts=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">render_progress=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_tensorboard=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_wandb=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wandb_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rollout_buffer_class=&lt;class</span> <span class="pre">'mighty.mighty_replay.mighty_rollout_buffer.MightyRolloutBuffer'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rollout_buffer_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_methods=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_policy_units=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_critic_units=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soft_update_weight=0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy_class=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ppo_clip=0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_loss_coef=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entropy_coef=0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_gradient_steps=10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/ppo.html#MightyPPOAgent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyPPOAgent" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="mighty.mighty_agents.base_agent.html#mighty.mighty_agents.base_agent.MightyAgent" title="mighty.mighty_agents.base_agent.MightyAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">MightyAgent</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyPPOAgent.agent_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">agent_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#mighty.mighty_agents.MightyPPOAgent.agent_type" title="Link to this definition">¶</a></dt>
+<dd><p>Return the type of the agent.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyPPOAgent.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/ppo.html#MightyPPOAgent.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyPPOAgent.load" title="Link to this definition">¶</a></dt>
+<dd><p>Load the internal state of the agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyPPOAgent.process_transition">
+<span class="sig-name descname"><span class="pre">process_transition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curr_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dones</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/ppo.html#MightyPPOAgent.process_transition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyPPOAgent.process_transition" title="Link to this definition">¶</a></dt>
+<dd><p>Agent/algorithm specific transition operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyPPOAgent.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/ppo.html#MightyPPOAgent.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyPPOAgent.save" title="Link to this definition">¶</a></dt>
+<dd><p>Save current agent state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyPPOAgent.update_agent">
+<span class="sig-name descname"><span class="pre">update_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">next_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dones</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/ppo.html#MightyPPOAgent.update_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightyPPOAgent.update_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Update the agent using PPO.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing the update metrics.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightyPPOAgent.value_function">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value_function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Module</span></em><a class="headerlink" href="#mighty.mighty_agents.MightyPPOAgent.value_function" title="Link to this definition">¶</a></dt>
+<dd><p>Return the value function model.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightySACAgent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mighty.mighty_agents.</span></span><span class="sig-name descname"><span class="pre">MightySACAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_env=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma=0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_starts=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">render_progress=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_tensorboard=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_wandb=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wandb_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replay_buffer_class=&lt;class</span> <span class="pre">'mighty.mighty_replay.mighty_replay_buffer.MightyReplay'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replay_buffer_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_methods=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_policy_units=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_critic_units=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soft_update_weight=0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy_class=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau=0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha=0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_gradient_steps=1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/sac.html#MightySACAgent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightySACAgent" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="mighty.mighty_agents.base_agent.html#mighty.mighty_agents.base_agent.MightyAgent" title="mighty.mighty_agents.base_agent.MightyAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">MightyAgent</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightySACAgent.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/sac.html#MightySACAgent.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightySACAgent.load" title="Link to this definition">¶</a></dt>
+<dd><p>Load the internal state of the agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightySACAgent.process_transition">
+<span class="sig-name descname"><span class="pre">process_transition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curr_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dones</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/sac.html#MightySACAgent.process_transition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightySACAgent.process_transition" title="Link to this definition">¶</a></dt>
+<dd><p>Agent/algorithm specific transition operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightySACAgent.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/sac.html#MightySACAgent.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightySACAgent.save" title="Link to this definition">¶</a></dt>
+<dd><p>Save current agent state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightySACAgent.update_agent">
+<span class="sig-name descname"><span class="pre">update_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/sac.html#MightySACAgent.update_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.MightySACAgent.update_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Update the agent using SAC.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing the update metrics.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mighty.mighty_agents.MightySACAgent.value_function">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value_function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Module</span></em><a class="headerlink" href="#mighty.mighty_agents.MightySACAgent.value_function" title="Link to this definition">¶</a></dt>
+<dd><p>Return the value function model.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mighty.mighty_agents.get_agent_class">
+<span class="sig-prename descclassname"><span class="pre">mighty.mighty_agents.</span></span><span class="sig-name descname"><span class="pre">get_agent_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mighty/mighty_agents/factory.html#get_agent_class"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mighty.mighty_agents.get_agent_class" title="Link to this definition">¶</a></dt>
+<dd><p>Transforms config keyword for agents to class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="mighty.mighty_agents.base_agent.html#mighty.mighty_agents.base_agent.MightyAgent" title="mighty.mighty_agents.base_agent.MightyAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">MightyAgent</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Modules</p>
+<table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="mighty.mighty_agents.base_agent.html#module-mighty.mighty_agents.base_agent" title="mighty.mighty_agents.base_agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">base_agent</span></code></a></p></td>
+<td><p>Base agent template.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="mighty.mighty_agents.dqn.html#module-mighty.mighty_agents.dqn" title="mighty.mighty_agents.dqn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dqn</span></code></a></p></td>
+<td><p>DQN agent.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="mighty.mighty_agents.factory.html#module-mighty.mighty_agents.factory" title="mighty.mighty_agents.factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">factory</span></code></a></p></td>
+<td><p>Factory for creating agents based on config.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="mighty.mighty_agents.ppo.html#module-mighty.mighty_agents.ppo" title="mighty.mighty_agents.ppo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppo</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="mighty.mighty_agents.sac.html#module-mighty.mighty_agents.sac" title="mighty.mighty_agents.sac"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sac</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="mighty.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">mighty</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="mighty.mighty_agents.base_agent.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">mighty.mighty_agents.base_agent</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.9ea38e314b9e6d9dab77.js"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright Copyright 2024, AutoML.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a>
+8.0.2. Template is modified version of <a
+href="https://pydata-sphinx-theme.readthedocs.io">PyData Sphinx Theme</a>. <br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

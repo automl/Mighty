@@ -1,0 +1,12 @@
+mighty.mighty\_agents.base\_agent
+=================================
+
+.. automodule:: mighty.mighty_agents.base_agent
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      MightyAgent
+   

@@ -1,0 +1,17 @@
+mighty.mighty\_agents
+=====================
+
+.. automodule:: mighty.mighty_agents
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   base_agent
+   dqn
+   factory
+   ppo
+   sac

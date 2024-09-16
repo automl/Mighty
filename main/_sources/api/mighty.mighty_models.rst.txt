@@ -1,0 +1,16 @@
+mighty.mighty\_models
+=====================
+
+.. automodule:: mighty.mighty_models
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   dqn
+   networks
+   ppo
+   sac

@@ -1,0 +1,12 @@
+mighty.mighty\_meta.cosine\_lr\_schedule
+========================================
+
+.. automodule:: mighty.mighty_meta.cosine_lr_schedule
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CosineLRSchedule
+   

@@ -1,0 +1,20 @@
+﻿mighty
+======
+
+.. automodule:: mighty
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   mighty_agents
+   mighty_exploration
+   mighty_meta
+   mighty_models
+   mighty_replay
+   mighty_runners
+   mighty_update
+   run_mighty

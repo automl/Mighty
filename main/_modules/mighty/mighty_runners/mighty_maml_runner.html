@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mighty.mighty_runners.mighty_maml_runner &#8212; Mighty Documentation 0.0.1 documentation</title>
+    
+  <link href="../../../_static/css/theme.css" rel="stylesheet">
+  <link href="../../../_static/css/index.ac9c05f7c49ca1e1f876c6e36360ea26.css" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=2eb4fb78" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    
+  <link rel="preload" as="script" href="../../../_static/js/index.9ea38e314b9e6d9dab77.js">
+
+    <script src="../../../_static/documentation_options.js?v=f539c95a"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+  <a class="navbar-brand" href="../../../index.html">
+  <!-- <p class="title">Mighty Documentation</p> -->
+  </a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/automl/Mighty" rel="noopener" target="_blank" title="GitHub">
+            <span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/automl_org?lang=de" rel="noopener" target="_blank" title="Twitter">
+            <span><i class="fab fa-twitter-square"></i></span>
+            <label class="sr-only">Twitter</label>
+          </a>
+        </li>
+      </ul>
+      </div>
+      
+      <div class="navbar-end-item">
+        <div class="dropdown mt-1">
+    <button type="button" class="btn btn-secondary btn-md navbar-btn dropdown-toggle" id="dLabelMore"
+        data-toggle="dropdown">
+        v0.0.1
+        <span class="caret"></span>
+    </button>
+    <div class="dropdown-menu list-group-flush py-0" aria-labelledby="dLabelMore">
+        <a class="list-group-item list-group-item-action" href="#">v0.0.1</a>
+    </div>
+</div>
+      </div>
+      
+      <div class="navbar-end-item">
+        <form class="bd-search align-items-center" action="../../../search.html" method="get" style="width: 100%;">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control btn btn-md" name="q" id="search-input"
+    placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off">
+</form>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><h4 class="mt-0 mb-0"><a href="../../../index.html">Mighty Documentation</a></h4>
+<div class="mb-3">v0.0.1</div><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../../installation.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../../basics.html">
+   Mighty on Standard Gym Environments
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../../crl.html">
+   Contextual RL Environments in Mighty
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../../dac.html">
+   Dynamic Algorithm Configuration with Mighty
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../../api.html">
+   API References
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../api/mighty.html">
+     mighty
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../api/mighty.mighty_agents.html">
+       mighty.mighty_agents
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+      <label for="toctree-checkbox-3">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_agents.base_agent.html">
+         mighty.mighty_agents.base_agent
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_agents.dqn.html">
+         mighty.mighty_agents.dqn
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_agents.factory.html">
+         mighty.mighty_agents.factory
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_agents.ppo.html">
+         mighty.mighty_agents.ppo
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_agents.sac.html">
+         mighty.mighty_agents.sac
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../api/mighty.mighty_exploration.html">
+       mighty.mighty_exploration
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+      <label for="toctree-checkbox-4">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_exploration.epsilon_greedy.html">
+         mighty.mighty_exploration.epsilon_greedy
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_exploration.ez_greedy.html">
+         mighty.mighty_exploration.ez_greedy
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_exploration.mighty_exploration_policy.html">
+         mighty.mighty_exploration.mighty_exploration_policy
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_exploration.stochastic_policy.html">
+         mighty.mighty_exploration.stochastic_policy
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../api/mighty.mighty_meta.html">
+       mighty.mighty_meta
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+      <label for="toctree-checkbox-5">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_meta.cosine_lr_schedule.html">
+         mighty.mighty_meta.cosine_lr_schedule
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_meta.mighty_component.html">
+         mighty.mighty_meta.mighty_component
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_meta.plr.html">
+         mighty.mighty_meta.plr
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_meta.space.html">
+         mighty.mighty_meta.space
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../api/mighty.mighty_models.html">
+       mighty.mighty_models
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+      <label for="toctree-checkbox-6">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_models.dqn.html">
+         mighty.mighty_models.dqn
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_models.networks.html">
+         mighty.mighty_models.networks
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_models.ppo.html">
+         mighty.mighty_models.ppo
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_models.sac.html">
+         mighty.mighty_models.sac
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../api/mighty.mighty_replay.html">
+       mighty.mighty_replay
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+      <label for="toctree-checkbox-7">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_replay.buffer.html">
+         mighty.mighty_replay.buffer
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_replay.mighty_replay_buffer.html">
+         mighty.mighty_replay.mighty_replay_buffer
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_replay.mighty_rollout_buffer.html">
+         mighty.mighty_replay.mighty_rollout_buffer
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../api/mighty.mighty_runners.html">
+       mighty.mighty_runners
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+      <label for="toctree-checkbox-8">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_runners.factory.html">
+         mighty.mighty_runners.factory
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_runners.mighty_es_runner.html">
+         mighty.mighty_runners.mighty_es_runner
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_runners.mighty_maml_runner.html">
+         mighty.mighty_runners.mighty_maml_runner
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_runners.mighty_online_runner.html">
+         mighty.mighty_runners.mighty_online_runner
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_runners.mighty_runner.html">
+         mighty.mighty_runners.mighty_runner
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../api/mighty.mighty_update.html">
+       mighty.mighty_update
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+      <label for="toctree-checkbox-9">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_update.ppo_update.html">
+         mighty.mighty_update.ppo_update
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_update.q_learning.html">
+         mighty.mighty_update.q_learning
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../api/mighty.mighty_update.sac_update.html">
+         mighty.mighty_update.sac_update
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../api/mighty.run_mighty.html">
+       mighty.run_mighty
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../../cite.html">
+   Cite Us
+  </a>
+ </li>
+</ul>
+
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <h1>Source code for mighty.mighty_runners.mighty_maml_runner</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.autograd</span> <span class="kn">import</span> <span class="n">grad</span>
+<span class="kn">from</span> <span class="nn">torch.distributions.kl</span> <span class="kn">import</span> <span class="n">kl_divergence</span>
+<span class="kn">from</span> <span class="nn">torch.nn.utils</span> <span class="kn">import</span> <span class="n">parameters_to_vector</span><span class="p">,</span> <span class="n">vector_to_parameters</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">mighty.mighty_runners.mighty_runner</span> <span class="kn">import</span> <span class="n">MightyRunner</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">omegaconf</span> <span class="kn">import</span> <span class="n">DictConfig</span>
+
+
+<div class="viewcode-block" id="MightyMAMLRunner">
+<a class="viewcode-back" href="../../../api/mighty.mighty_runners.mighty_maml_runner.html#mighty.mighty_runners.MightyMAMLRunner">[docs]</a>
+<span class="k">class</span> <span class="nc">MightyMAMLRunner</span><span class="p">(</span><span class="n">MightyRunner</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_params</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">meta_lr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maml_epochs</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">maml_epochs</span>
+        <span class="c1"># TODO: this should be a list of envs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maml_tasks</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">maml_tasks</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
+        <span class="n">all_rewards</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">maml_epoch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">maml_epochs</span><span class="p">:</span>
+            <span class="n">iteration_loss</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">iteration_reward</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">maml_tasks</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_params</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+                <span class="c1"># TODO: adjust steps</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">task</span><span class="p">,</span> <span class="n">num_steps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span><span class="p">)</span>
+
+                <span class="c1"># Compute Validation Loss</span>
+                <span class="n">evaluation_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+                <span class="c1"># TODO: get loss from evaluation_results?</span>
+                <span class="c1"># TODO: make sure loss here is NOT detached!</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">policy_loss</span><span class="p">(</span><span class="n">evaluation_results</span><span class="p">)</span>
+                <span class="n">iteration_loss</span> <span class="o">+=</span> <span class="n">loss</span>
+                <span class="n">iteration_reward</span> <span class="o">+=</span> <span class="n">evaluation_results</span><span class="p">[</span><span class="s2">&quot;mean_eval_reward&quot;</span><span class="p">]</span>
+
+            <span class="c1"># Print statistics</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Iteration&quot;</span><span class="p">,</span> <span class="n">maml_epoch</span><span class="p">)</span>
+            <span class="n">adaptation_reward</span> <span class="o">=</span> <span class="n">iteration_reward</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maml_tasks</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;adaptation_reward&quot;</span><span class="p">,</span> <span class="n">adaptation_reward</span><span class="p">)</span>
+            <span class="n">all_rewards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">adaptation_reward</span><span class="p">)</span>
+
+            <span class="n">adaptation_loss</span> <span class="o">=</span> <span class="n">iteration_loss</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maml_tasks</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;adaptation_loss&quot;</span><span class="p">,</span> <span class="n">adaptation_loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">meta_optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="n">adaptation_loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">meta_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># Adapted from L2L library: https://github.com/learnables/learn2learn/tree/master</span>
+<div class="viewcode-block" id="MightyTRPOMAMLRunner">
+<a class="viewcode-back" href="../../../api/mighty.mighty_runners.mighty_maml_runner.html#mighty.mighty_runners.MightyTRPOMAMLRunner">[docs]</a>
+<span class="k">class</span> <span class="nc">MightyTRPOMAMLRunner</span><span class="p">(</span><span class="n">MightyRunner</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_lr</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">meta_lr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maml_epochs</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">maml_epochs</span>
+        <span class="c1"># TODO: this should be a list of envs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maml_tasks</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">maml_tasks</span>
+
+<div class="viewcode-block" id="MightyTRPOMAMLRunner.maml_update">
+<a class="viewcode-back" href="../../../api/mighty.mighty_runners.mighty_maml_runner.html#mighty.mighty_runners.MightyTRPOMAMLRunner.maml_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">maml_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">grads</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        [[Source]](https://github.com/learnables/learn2learn/blob/master/learn2learn/algorithms/maml.py)</span>
+
+<span class="sd">        **Description**</span>
+
+<span class="sd">        Performs a MAML update on model using grads and lr.</span>
+<span class="sd">        The function re-routes the Python object, thus avoiding in-place</span>
+<span class="sd">        operations.</span>
+
+<span class="sd">        NOTE: The model itself is updated in-place (no deepcopy), but the</span>
+<span class="sd">            parameters&#39; tensors are not.</span>
+
+<span class="sd">        **Arguments**</span>
+
+<span class="sd">        * **model** (Module) - The model to update.</span>
+<span class="sd">        * **lr** (float) - The learning rate used to update the model.</span>
+<span class="sd">        * **grads** (list, *optional*, default=None) - A list of gradients for each parameter</span>
+<span class="sd">            of the model. If None, will use the gradients in .grad attributes.</span>
+
+<span class="sd">        **Example**</span>
+<span class="sd">        ~~~python</span>
+<span class="sd">        maml = l2l.algorithms.MAML(Model(), lr=0.1)</span>
+<span class="sd">        model = maml.clone() # The next two lines essentially implement model.adapt(loss)</span>
+<span class="sd">        grads = autograd.grad(loss, model.parameters(), create_graph=True)</span>
+<span class="sd">        maml_update(model, lr=0.1, grads)</span>
+<span class="sd">        ~~~</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">grads</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">params</span><span class="p">)):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;WARNING:maml_update(): Parameters and gradients have different length. (&quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; vs &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">grads</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">grads</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">p</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="o">-</span><span class="n">lr</span> <span class="o">*</span> <span class="n">g</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_module</span><span class="p">(</span><span class="n">model</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MightyTRPOMAMLRunner.update_module">
+<a class="viewcode-back" href="../../../api/mighty.mighty_runners.mighty_maml_runner.html#mighty.mighty_runners.MightyTRPOMAMLRunner.update_module">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">updates</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">memo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        [[Source]](https://github.com/learnables/learn2learn/blob/meta-opt/learn2learn/utils.py)</span>
+
+<span class="sd">        **Description**</span>
+
+<span class="sd">        Updates the parameters of a module in-place, in a way that preserves differentiability.</span>
+
+<span class="sd">        The parameters of the module are swapped with their update values, according to:</span>
+<span class="sd">        \[</span>
+<span class="sd">        p \gets p + u,</span>
+<span class="sd">        \]</span>
+<span class="sd">        where \(p\) is the parameter, and \(u\) is its corresponding update.</span>
+
+
+<span class="sd">        **Arguments**</span>
+
+<span class="sd">        * **module** (Module) - The module to update.</span>
+<span class="sd">        * **updates** (list, *optional*, default=None) - A list of gradients for each parameter</span>
+<span class="sd">            of the model. If None, will use the tensors in .update attributes.</span>
+
+<span class="sd">        **Example**</span>
+<span class="sd">        ~~~python</span>
+<span class="sd">        error = loss(model(X), y)</span>
+<span class="sd">        grads = torch.autograd.grad(</span>
+<span class="sd">            error,</span>
+<span class="sd">            model.parameters(),</span>
+<span class="sd">            create_graph=True,</span>
+<span class="sd">        )</span>
+<span class="sd">        updates = [-lr * g for g in grads]</span>
+<span class="sd">        l2l.update_module(model, updates=updates)</span>
+<span class="sd">        ~~~</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">memo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">memo</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">updates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">updates</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">params</span><span class="p">)):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;WARNING:update_module(): Parameters and updates have different length. (&quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; vs &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">updates</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="n">g</span>
+
+        <span class="c1"># Update the params</span>
+        <span class="k">for</span> <span class="n">param_key</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">_parameters</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="n">param_key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">memo</span><span class="p">:</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="n">param_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">memo</span><span class="p">[</span><span class="n">p</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s2">&quot;update&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">update</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">updated</span> <span class="o">=</span> <span class="n">p</span> <span class="o">+</span> <span class="n">p</span><span class="o">.</span><span class="n">update</span>
+                    <span class="n">p</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="n">memo</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated</span>
+                    <span class="n">module</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="n">param_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated</span>
+
+        <span class="c1"># Second, handle the buffers if necessary</span>
+        <span class="k">for</span> <span class="n">buffer_key</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">_buffers</span><span class="p">:</span>
+            <span class="n">buff</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">_buffers</span><span class="p">[</span><span class="n">buffer_key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">buff</span> <span class="ow">in</span> <span class="n">memo</span><span class="p">:</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">_buffers</span><span class="p">[</span><span class="n">buffer_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">memo</span><span class="p">[</span><span class="n">buff</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">buff</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">buff</span><span class="p">,</span> <span class="s2">&quot;update&quot;</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="n">buff</span><span class="o">.</span><span class="n">update</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="p">):</span>
+                    <span class="n">updated</span> <span class="o">=</span> <span class="n">buff</span> <span class="o">+</span> <span class="n">buff</span><span class="o">.</span><span class="n">update</span>
+                    <span class="n">buff</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="n">memo</span><span class="p">[</span><span class="n">buff</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated</span>
+                    <span class="n">module</span><span class="o">.</span><span class="n">_buffers</span><span class="p">[</span><span class="n">buffer_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated</span>
+
+        <span class="c1"># Then, recurse for each submodule</span>
+        <span class="k">for</span> <span class="n">module_key</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">_modules</span><span class="p">:</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">_modules</span><span class="p">[</span><span class="n">module_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_module</span><span class="p">(</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">_modules</span><span class="p">[</span><span class="n">module_key</span><span class="p">],</span>
+                <span class="n">updates</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">memo</span><span class="o">=</span><span class="n">memo</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Finally, rebuild the flattened parameters for RNNs</span>
+        <span class="c1"># See this issue for more details:</span>
+        <span class="c1"># https://github.com/learnables/learn2learn/issues/139</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;flatten_parameters&quot;</span><span class="p">):</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">module</span></div>
+
+
+    <span class="k">def</span> <span class="nf">meta_surrogate_loss</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">iteration_replays</span><span class="p">,</span> <span class="n">iteration_policies</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span> <span class="n">policy</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="n">mean_loss</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">mean_kl</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">task_replays</span><span class="p">,</span> <span class="n">old_policy</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">iteration_replays</span><span class="p">,</span> <span class="n">iteration_policies</span><span class="p">):</span>
+            <span class="n">train_replays</span> <span class="o">=</span> <span class="n">task_replays</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">valid_episodes</span> <span class="o">=</span> <span class="n">task_replays</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clone_module</span><span class="p">(</span><span class="n">policy</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+
+            <span class="c1"># Fast Adapt</span>
+            <span class="k">for</span> <span class="n">train_episodes</span> <span class="ow">in</span> <span class="n">train_replays</span><span class="p">:</span>
+                <span class="c1"># TODO: this probably doesn&#39;t work out of the box</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">train_episodes</span><span class="p">)</span>
+            <span class="n">new_policy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clone_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">policy</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+
+            <span class="c1"># Useful values</span>
+            <span class="n">states</span> <span class="o">=</span> <span class="n">valid_episodes</span><span class="o">.</span><span class="n">state</span><span class="p">()</span>
+            <span class="n">actions</span> <span class="o">=</span> <span class="n">valid_episodes</span><span class="o">.</span><span class="n">action</span><span class="p">()</span>
+
+            <span class="c1"># Compute KL</span>
+            <span class="n">old_densities</span> <span class="o">=</span> <span class="n">old_policy</span><span class="o">.</span><span class="n">density</span><span class="p">(</span><span class="n">states</span><span class="p">)</span>
+            <span class="n">new_densities</span> <span class="o">=</span> <span class="n">new_policy</span><span class="o">.</span><span class="n">density</span><span class="p">(</span><span class="n">states</span><span class="p">)</span>
+            <span class="n">kl</span> <span class="o">=</span> <span class="n">kl_divergence</span><span class="p">(</span><span class="n">new_densities</span><span class="p">,</span> <span class="n">old_densities</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">mean_kl</span> <span class="o">+=</span> <span class="n">kl</span>  <span class="c1"># type: ignore</span>
+
+            <span class="c1"># Compute Surrogate Loss</span>
+            <span class="c1"># TODO: probably wrong key</span>
+            <span class="n">advantages</span> <span class="o">=</span> <span class="n">valid_episodes</span><span class="p">[</span><span class="s2">&quot;advantages&quot;</span><span class="p">]</span>
+            <span class="n">advantages</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">advantages</span> <span class="o">-</span> <span class="n">advantages</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">advantages</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">+</span> <span class="mf">1e-8</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+            <span class="n">old_log_probs</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">old_densities</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="n">new_log_probs</span> <span class="o">=</span> <span class="n">new_densities</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># TODO: is this accessible?</span>
+            <span class="n">mean_loss</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">policy_loss</span><span class="p">(</span>
+                <span class="n">new_log_probs</span><span class="p">,</span> <span class="n">old_log_probs</span><span class="p">,</span> <span class="n">advantages</span>
+            <span class="p">)</span>
+        <span class="n">mean_kl</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iteration_replays</span><span class="p">)</span>
+        <span class="n">mean_loss</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iteration_replays</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mean_loss</span><span class="p">,</span> <span class="n">mean_kl</span>
+
+<div class="viewcode-block" id="MightyTRPOMAMLRunner.hessian_vector_product">
+<a class="viewcode-back" href="../../../api/mighty.mighty_runners.mighty_maml_runner.html#mighty.mighty_runners.MightyTRPOMAMLRunner.hessian_vector_product">[docs]</a>
+    <span class="k">def</span> <span class="nf">hessian_vector_product</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">damping</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        [[Source]](https://github.com/seba-1511/cherry/blob/master/cherry/algorithms/trpo.py)</span>
+
+<span class="sd">        ## Description</span>
+
+<span class="sd">        Returns a callable that computes the product of the Hessian of loss</span>
+<span class="sd">        (w.r.t. parameters) with another vector, using Pearlmutter&#39;s trick.</span>
+
+<span class="sd">        Note that parameters and the argument of the callable can be tensors</span>
+<span class="sd">        or list of tensors.</span>
+
+<span class="sd">        ## References</span>
+
+<span class="sd">        1. Pearlmutter, B. A. 1994. “Fast Exact Multiplication by the Hessian.” Neural Computation.</span>
+
+<span class="sd">        ## Arguments</span>
+
+<span class="sd">        * `loss` (tensor) - The loss of which to compute the Hessian.</span>
+<span class="sd">        * `parameters` (tensor or list) - The tensors to take the gradient with respect to.</span>
+<span class="sd">        * `damping` (float, *optional*, default=1e-5) - Damping of the Hessian-vector product.</span>
+
+<span class="sd">        ## Returns</span>
+
+<span class="sd">        * `hvp(other)` (callable) - A function to compute the Hessian-vector product,</span>
+<span class="sd">            given a vector or list `other`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+            <span class="n">parameters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="n">grad_loss</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">create_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">retain_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">grad_loss</span> <span class="o">=</span> <span class="n">parameters_to_vector</span><span class="p">(</span><span class="n">grad_loss</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+
+        <span class="k">def</span> <span class="nf">hvp</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            TODO: The reshaping (if arguments are lists) is not efficiently implemented.</span>
+<span class="sd">                  (It requires a copy) A good idea would be to have</span>
+<span class="sd">                  vector_to_shapes(vec, shapes) or similar.</span>
+
+<span class="sd">            NOTE: We can not compute the grads with a vector version of the parameters,</span>
+<span class="sd">                  since that vector (created within the function) will be a different</span>
+<span class="sd">                  tree that is was not used in the computation of the loss.</span>
+<span class="sd">                  (i.e. you get &#39;One of the differentiated tensors was not used.&#39;)</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">other</span><span class="p">]</span>
+                <span class="n">other</span> <span class="o">=</span> <span class="n">parameters_to_vector</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="n">grad_prod</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">grad_loss</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+            <span class="n">hessian_prod</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">grad_prod</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">retain_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">hessian_prod</span> <span class="o">=</span> <span class="n">parameters_to_vector</span><span class="p">(</span><span class="n">hessian_prod</span><span class="p">)</span>
+            <span class="n">hessian_prod</span> <span class="o">=</span> <span class="n">hessian_prod</span> <span class="o">+</span> <span class="n">damping</span> <span class="o">*</span> <span class="n">other</span>
+            <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">vector_to_parameters</span><span class="p">(</span><span class="n">hessian_prod</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+                <span class="n">hessian_prod</span> <span class="o">=</span> <span class="n">shape</span>
+            <span class="k">return</span> <span class="n">hessian_prod</span>
+
+        <span class="k">return</span> <span class="n">hvp</span></div>
+
+
+<div class="viewcode-block" id="MightyTRPOMAMLRunner.conjugate_gradient">
+<a class="viewcode-back" href="../../../api/mighty.mighty_runners.mighty_maml_runner.html#mighty.mighty_runners.MightyTRPOMAMLRunner.conjugate_gradient">[docs]</a>
+    <span class="k">def</span> <span class="nf">conjugate_gradient</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">Ax</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">num_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span> <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        [[Source]](https://github.com/seba-1511/cherry/blob/master/cherry/algorithms/trpo.py)</span>
+
+<span class="sd">        ## Description</span>
+
+<span class="sd">        Computes \\(x = A^{-1}b\\) using the conjugate gradient algorithm.</span>
+
+<span class="sd">        ## Credit</span>
+
+<span class="sd">        Adapted from Kai Arulkumaran&#39;s implementation, with additions inspired from John Schulman&#39;s implementation.</span>
+
+<span class="sd">        ## References</span>
+
+<span class="sd">        1. Nocedal and Wright. 2006. &quot;Numerical Optimization, 2nd edition&quot;. Springer.</span>
+<span class="sd">        2. Shewchuk et al. 1994. “An Introduction to the Conjugate Gradient Method without the Agonizing Pain.” CMU.</span>
+
+<span class="sd">        ## Arguments</span>
+
+<span class="sd">        * `Ax` (callable) - Given a vector x, computes A@x.</span>
+<span class="sd">        * `b` (tensor or list) - The reference vector.</span>
+<span class="sd">        * `num_iterations` (int, *optional*, default=10) - Number of conjugate gradient iterations.</span>
+<span class="sd">        * `tol` (float, *optional*, default=1e-10) - Tolerance for proposed solution.</span>
+<span class="sd">        * `eps` (float, *optional*, default=1e-8) - Numerical stability constant.</span>
+
+<span class="sd">        ## Returns</span>
+
+<span class="sd">        * `x` (tensor or list) - The solution to Ax = b, as a list if b is a list else a tensor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">b_i</span><span class="p">)</span> <span class="k">for</span> <span class="n">b_i</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">parameters_to_vector</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">b</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">r</span>
+        <span class="n">r_dot_old</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_iterations</span><span class="p">):</span>
+            <span class="n">Ap</span> <span class="o">=</span> <span class="n">Ax</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="n">alpha</span> <span class="o">=</span> <span class="n">r_dot_old</span> <span class="o">/</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">Ap</span><span class="p">)</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">+=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">p</span>
+            <span class="n">r</span> <span class="o">-=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">Ap</span>
+            <span class="n">r_dot_new</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">r</span> <span class="o">+</span> <span class="p">(</span><span class="n">r_dot_new</span> <span class="o">/</span> <span class="n">r_dot_old</span><span class="p">)</span> <span class="o">*</span> <span class="n">p</span>
+            <span class="n">r_dot_old</span> <span class="o">=</span> <span class="n">r_dot_new</span>
+            <span class="k">if</span> <span class="n">r_dot_new</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vector_to_parameters</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">shape</span>  <span class="c1"># type: ignore</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+        <span class="n">policy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">policy</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">maml_epoch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">maml_epochs</span><span class="p">:</span>
+            <span class="n">iteration_reward</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">iteration_replays</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">iteration_policies</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">maml_tasks</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">maml_tasks</span><span class="p">:</span>
+                    <span class="n">task_replay</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">policy</span><span class="p">)</span>
+                    <span class="c1"># TODO: adjust steps</span>
+                    <span class="n">training_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">task</span><span class="p">,</span> <span class="n">num_steps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span><span class="p">)</span>
+                    <span class="n">clone</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">policy</span><span class="p">)</span>
+                    <span class="n">task_replay</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">training_metrics</span><span class="p">)</span>
+
+                    <span class="c1"># Compute Validation Loss</span>
+                    <span class="n">eval_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+                    <span class="n">task_replay</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eval_results</span><span class="p">)</span>
+                    <span class="n">iteration_reward</span> <span class="o">+=</span> <span class="n">eval_results</span><span class="p">[</span><span class="s2">&quot;mean_eval_reward&quot;</span><span class="p">]</span>
+                    <span class="n">iteration_replays</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_replay</span><span class="p">)</span>
+                    <span class="n">iteration_policies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clone</span><span class="p">)</span>
+
+                <span class="c1"># Print statistics</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Iteration&quot;</span><span class="p">,</span> <span class="n">maml_epoch</span><span class="p">)</span>
+                <span class="n">adaptation_reward</span> <span class="o">=</span> <span class="n">iteration_reward</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maml_tasks</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;adaptation_reward&quot;</span><span class="p">,</span> <span class="n">adaptation_reward</span><span class="p">)</span>
+
+                <span class="c1"># TRPO meta-optimization</span>
+                <span class="n">backtrack_factor</span> <span class="o">=</span> <span class="mf">0.5</span>
+                <span class="n">ls_max_steps</span> <span class="o">=</span> <span class="mi">15</span>
+                <span class="n">max_kl</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+                <span class="c1"># Compute CG step direction</span>
+                <span class="n">old_loss</span><span class="p">,</span> <span class="n">old_kl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_surrogate_loss</span><span class="p">(</span>
+                    <span class="n">iteration_replays</span><span class="p">,</span>
+                    <span class="n">iteration_policies</span><span class="p">,</span>
+                    <span class="n">policy</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">grad</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">old_loss</span><span class="p">,</span> <span class="n">policy</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">retain_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">grad</span> <span class="o">=</span> <span class="n">parameters_to_vector</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">grad</span><span class="p">])</span>  <span class="c1"># type: ignore</span>
+                <span class="n">Fvp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hessian_vector_product</span><span class="p">(</span><span class="n">old_kl</span><span class="p">,</span> <span class="n">policy</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+                <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conjugate_gradient</span><span class="p">(</span><span class="n">Fvp</span><span class="p">,</span> <span class="n">grad</span><span class="p">)</span>
+                <span class="n">shs</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">Fvp</span><span class="p">(</span><span class="n">step</span><span class="p">))</span>
+                <span class="n">lagrange_multiplier</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">shs</span> <span class="o">/</span> <span class="n">max_kl</span><span class="p">)</span>
+                <span class="n">step</span> <span class="o">=</span> <span class="n">step</span> <span class="o">/</span> <span class="n">lagrange_multiplier</span>
+                <span class="n">step_</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">policy</span><span class="o">.</span><span class="n">parameters</span><span class="p">()]</span>
+                <span class="n">vector_to_parameters</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">step_</span><span class="p">)</span>
+                <span class="n">step</span> <span class="o">=</span> <span class="n">step_</span>  <span class="c1"># type: ignore</span>
+                <span class="k">del</span> <span class="n">old_kl</span><span class="p">,</span> <span class="n">Fvp</span><span class="p">,</span> <span class="n">grad</span>
+                <span class="n">old_loss</span><span class="o">.</span><span class="n">detach_</span><span class="p">()</span>
+
+                <span class="c1"># Line-search</span>
+                <span class="k">for</span> <span class="n">ls_step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ls_max_steps</span><span class="p">):</span>
+                    <span class="n">stepsize</span> <span class="o">=</span> <span class="n">backtrack_factor</span><span class="o">**</span><span class="n">ls_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_lr</span>
+                    <span class="n">clone</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">policy</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">clone</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">step</span><span class="p">):</span>
+                        <span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="o">-</span><span class="n">stepsize</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                    <span class="n">new_loss</span><span class="p">,</span> <span class="n">kl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_surrogate_loss</span><span class="p">(</span>
+                        <span class="n">iteration_replays</span><span class="p">,</span>
+                        <span class="n">iteration_policies</span><span class="p">,</span>
+                        <span class="n">clone</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">new_loss</span> <span class="o">&lt;</span> <span class="n">old_loss</span> <span class="ow">and</span> <span class="n">kl</span> <span class="o">&lt;</span> <span class="n">max_kl</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">policy</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">step</span><span class="p">):</span>
+                            <span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="o">-</span><span class="n">stepsize</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                        <span class="k">break</span>
+        <span class="n">eval_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="c1"># TODO: make pretty results</span>
+        <span class="n">train_results</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: ignore</span>
+        <span class="k">return</span> <span class="n">train_results</span><span class="p">,</span> <span class="n">eval_results</span></div>
+
+</pre></div>
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <script src="../../../_static/js/index.9ea38e314b9e6d9dab77.js"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright Copyright 2024, AutoML.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a>
+8.0.2. Template is modified version of <a
+href="https://pydata-sphinx-theme.readthedocs.io">PyData Sphinx Theme</a>. <br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,12 @@
+mighty.mighty\_exploration.epsilon\_greedy
+==========================================
+
+.. automodule:: mighty.mighty_exploration.epsilon_greedy
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      EpsilonGreedy
+   

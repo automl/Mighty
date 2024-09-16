@@ -1,0 +1,12 @@
+mighty.mighty\_update.ppo\_update
+=================================
+
+.. automodule:: mighty.mighty_update.ppo_update
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      PPOUpdate
+   

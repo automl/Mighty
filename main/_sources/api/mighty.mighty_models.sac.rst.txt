@@ -1,0 +1,12 @@
+mighty.mighty\_models.sac
+=========================
+
+.. automodule:: mighty.mighty_models.sac
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      SACModel
+   
