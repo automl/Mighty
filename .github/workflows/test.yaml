@@ -60,7 +60,7 @@ jobs:
 
     - name: Tests
       run: |
-        pytest ${{ env.pytest-args }} ${{ env.test-dir }}
+        make test
 
     - name: Check for files left behind by test
       run: |
