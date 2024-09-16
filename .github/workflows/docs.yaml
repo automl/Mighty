@@ -39,6 +39,8 @@ jobs:
     - name: Make docs
       run: |
         make clean
+        ls
+        ls examples
         make doc
     - name: Pull latest gh-pages
       if: (contains(github.ref, 'version_0.2.0') || contains(github.ref, 'main')) && github.event_name == 'push'
