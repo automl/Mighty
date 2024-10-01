@@ -60,6 +60,8 @@ jobs:
 
     - name: Tests
       run: |
+        python -m "import carl"
+        python -m "from carl.envs import CARLBraxAnt"
         make test
 
     - name: Check for files left behind by test
