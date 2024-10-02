@@ -255,16 +255,21 @@ class TestEnvCreation:
             elif k == "instance_set" or k == "test_set":
                 for i in range(len(env.envs[0].config[k])):
                     assert (
-                        env.envs[0].config[k][i].functions[0].a == benchmark_env.config[k][i].functions[0].a
+                        env.envs[0].config[k][i].functions[0].a
+                        == benchmark_env.config[k][i].functions[0].a
                     ), f"Environment should have matching instances, mismatch for function parameter a at instance {i}: {env.envs[0].config[k][i].functions[0].a} != {benchmark_env.config[k][i].functions[0].a}"
                     assert (
-                        env.envs[0].config[k][i].functions[0].b == benchmark_env.config[k][i].functions[0].b
+                        env.envs[0].config[k][i].functions[0].b
+                        == benchmark_env.config[k][i].functions[0].b
                     ), f"Environment should have matching instances, mismatch for function parameter b at instance {i}: {env.envs[0].config[k][i].functions[0].b} != {benchmark_env.config[k][i].functions[0].b}"
                     assert (
-                        env.envs[0].config[k][i].omit_instance_type == benchmark_env.config[k][i].omit_instance_type
+                        env.envs[0].config[k][i].omit_instance_type
+                        == benchmark_env.config[k][i].omit_instance_type
                     ), f"Environment should have matching instances, mismatch for omit_instance_type at instance {i}: {env.envs[0].config[k][i].omit_instance_type} != {benchmark_env.config[k][i].omit_instance_type}"
-            else:    
-                assert (env.envs[0].config[k] == benchmark_env.config[k]), f"Environment should have correct config, mismatch at {k}: {env.envs[0].config[k]} != {benchmark_env.config[k]}"
+            else:
+                assert (
+                    env.envs[0].config[k] == benchmark_env.config[k]
+                ), f"Environment should have correct config, mismatch at {k}: {env.envs[0].config[k]} != {benchmark_env.config[k]}"
 
     def test_make_carl_env(self):
         """Test env creation with make_carl_env."""

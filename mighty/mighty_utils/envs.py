@@ -121,7 +121,11 @@ def make_carl_env(
                 )
             elif dist_args[0] == "normal":
                 dist = carl.context.context_space.NormalFloatContextFeature(
-                    context_feature, mu=dist_args[3], sigma=dist_args[4], lower=dist_args[1], upper=dist_args[2]
+                    context_feature,
+                    mu=dist_args[3],
+                    sigma=dist_args[4],
+                    lower=dist_args[1],
+                    upper=dist_args[2],
                 )
             elif dist_args[0] == "categorical":
                 dist = carl.context.context_space.CategoricalContextFeature(

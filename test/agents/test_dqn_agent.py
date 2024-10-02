@@ -10,7 +10,7 @@ from utils import DummyEnv, clean
 from mighty.mighty_agents.dqn import MightyDQNAgent
 from mighty.mighty_exploration.epsilon_greedy import EpsilonGreedy
 from mighty.mighty_models.dqn import DQN
-from mighty.mighty_replay import PrioritizedReplay, TransitionBatch
+from mighty.mighty_replay import PrioritizedReplay
 from mighty.mighty_update.q_learning import DoubleQLearning, QLearning
 from mighty.mighty_utils.logger import Logger
 

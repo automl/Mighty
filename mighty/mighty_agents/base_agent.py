@@ -20,7 +20,6 @@ from rich.progress import BarColumn, Progress, TimeElapsedColumn, TimeRemainingC
 if TYPE_CHECKING:
     from mighty.mighty_utils.logger import Logger
     from mighty.mighty_utils.types import TypeKwargs
-    
 
 
 class MightyAgent(ABC):
