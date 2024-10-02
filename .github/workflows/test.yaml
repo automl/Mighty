@@ -51,6 +51,7 @@ jobs:
         python -m pip install wheel
         python -m pip install dacbench
         python -m pip install -e ".${{ env.extra-requires }}"
+        python -m pip show carl-bench
 
     - name: Store git status
       id: status-before
@@ -60,8 +61,8 @@ jobs:
 
     - name: Tests
       run: |
-        python -m "import carl"
-        python -m "from carl.envs import CARLBraxAnt"
+        python -m pip show carl-bench
+        python test_carl_import.py
         make test
 
     - name: Check for files left behind by test
