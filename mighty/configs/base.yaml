@@ -22,3 +22,9 @@ eval_every_n_steps: 1e4  # After how many steps to evaluate.
 n_episodes_eval: 10
 checkpoint: null  # Path to load model checkpoint
 save_model_every_n_steps: 5e5
+
+hydra:
+  run:
+    dir: ${experiment_name}_${seed}
+  sweep:
+    dir: ${experiment_name}_${seed}

@@ -132,7 +132,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-runs
+runs/*
 docs/build/*
 docs/api/*
 docs/examples/*

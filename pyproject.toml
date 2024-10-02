@@ -41,7 +41,9 @@ dependencies = [
     "torch",
     "dill",
     "imageio",
-    "evosax==0.1.6"
+    "evosax==0.1.6",
+    "rliable",
+    "seaborn"
 ]
 
 [project.optional-dependencies]
