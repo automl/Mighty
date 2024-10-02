@@ -34,7 +34,7 @@ dependencies = [
     "hydra-core~=1.2",
     "hydra-colorlog~=1.2",
     "hydra-submitit-launcher~=1.2",
-    "pandas~=1.4",
+    "pandas",
     "scipy~=1.8",
     "rich~=12.4",
     "wandb~=0.12",
