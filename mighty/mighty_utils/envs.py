@@ -90,6 +90,7 @@ def make_carl_env(
 ) -> Tuple[type[CARLVectorEnvSimulator], Callable, int]:
     """Make carl environment."""
     import carl
+    from carl import envs
     from carl.context.sampler import ContextSampler
 
     env_kwargs = OmegaConf.to_container(cfg.env_kwargs, resolve=True)
@@ -105,7 +106,7 @@ def make_carl_env(
     if "evaluation_context_sample_seed" not in env_kwargs:  # type: ignore
         env_kwargs["evaluation_context_sample_seed"] = 1  # type: ignore
 
-    env_class = getattr(carl.envs, cfg.env)
+    env_class = getattr(envs, cfg.env)
 
     if len(env_kwargs["context_feature_args"].keys()) > 0:  # type: ignore
         context_distributions = []

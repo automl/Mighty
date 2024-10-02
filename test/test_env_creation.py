@@ -46,7 +46,7 @@ class TestEnvCreation:
     )
     dacbench_config_benchmark = OmegaConf.create(
         {
-            "env": "SigmoidBenchmark",
+            "env": "FunctionApproximationBenchmark",
             "env_kwargs": {
                 "benchmark": True,
                 "dimension": 1,
@@ -59,12 +59,10 @@ class TestEnvCreation:
     )
     dacbench_config = OmegaConf.create(
         {
-            "env": "SigmoidBenchmark",
+            "env": "FunctionApproximationBenchmark",
             "env_kwargs": {
-                "instance_set_path": "../instance_sets/sigmoid/sigmoid_1D3M_train.csv",
-                "test_set_path": "../instance_sets/sigmoid/sigmoid_1D3M_train.csv",
-                "action_space_args": [3],
-                "action_values": [3],
+                "instance_set_path": "sigmoid_2D3M_train.csv",
+                "test_set_path": "sigmoid_2D3M_train.csv",
             },
             "env_wrappers": ["mighty.utils.wrappers.MultiDiscreteActionWrapper"],
             "num_envs": 1,
@@ -210,22 +208,6 @@ class TestEnvCreation:
             == self.dacbench_config.env_kwargs.instance_set_path
         ), "Environment should have correct instance set."
         assert eval_env().envs[0].test, "Eval environment should be in test mode."
-        assert (
-            env.envs[0].config.action_space_args
-            == self.dacbench_config.env_kwargs.action_space_args
-        ), "Environment should have correct action space args."
-        assert (
-            eval_env().envs[0].config.action_space_args
-            == self.dacbench_config.env_kwargs.action_space_args
-        ), "Eval environment should have correct action space args."
-        assert (
-            env.envs[0].config.action_values
-            == self.dacbench_config.env_kwargs.action_values
-        ), "Environment should have correct action values."
-        assert (
-            eval_env().envs[0].config.action_values
-            == self.dacbench_config.env_kwargs.action_values
-        ), "Eval environment should have correct action values."
 
     def test_make_dacbench_benchmark_mode(self):
         """Test env creation with make_dacbench_env in benchmark mode."""
@@ -270,9 +252,19 @@ class TestEnvCreation:
         for k in env.envs[0].config.keys():
             if k == "observation_space_args":
                 continue
-            assert (
-                env.envs[0].config[k] == benchmark_env.config[k]
-            ), f"Environment should have correct config, mismatch at {k}: {env.envs[0].config[k]} != {benchmark_env.config[k]}"
+            elif k == "instance_set" or k == "test_set":
+                for i in range(len(env.envs[0].config[k])):
+                    assert (
+                        env.envs[0].config[k][i].functions[0].a == benchmark_env.config[k][i].functions[0].a
+                    ), f"Environment should have matching instances, mismatch for function parameter a at instance {i}: {env.envs[0].config[k][i].functions[0].a} != {benchmark_env.config[k][i].functions[0].a}"
+                    assert (
+                        env.envs[0].config[k][i].functions[0].b == benchmark_env.config[k][i].functions[0].b
+                    ), f"Environment should have matching instances, mismatch for function parameter b at instance {i}: {env.envs[0].config[k][i].functions[0].b} != {benchmark_env.config[k][i].functions[0].b}"
+                    assert (
+                        env.envs[0].config[k][i].omit_instance_type == benchmark_env.config[k][i].omit_instance_type
+                    ), f"Environment should have matching instances, mismatch for omit_instance_type at instance {i}: {env.envs[0].config[k][i].omit_instance_type} != {benchmark_env.config[k][i].omit_instance_type}"
+            else:    
+                assert (env.envs[0].config[k] == benchmark_env.config[k]), f"Environment should have correct config, mismatch at {k}: {env.envs[0].config[k]} != {benchmark_env.config[k]}"
 
     def test_make_carl_env(self):
         """Test env creation with make_carl_env."""
