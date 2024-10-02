@@ -18,7 +18,7 @@ on:
 env:
   package-name: "mighty"
   test-dir: test
-  extra-requires: "[dev,carl,pufferlib,dacbench]"  # "" for no extra_requires
+  extra-requires: "[dev,carl,dacbench]"  # "" for no extra_requires
 
   # Arguments used for pytest
   pytest-args: >-
@@ -49,6 +49,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install wheel
+        python -m pip install pufferlib==1.0.0
         python -m pip install -e ".${{ env.extra-requires }}"
 
     - name: Store git status
