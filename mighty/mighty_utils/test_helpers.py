@@ -8,6 +8,7 @@ from pathlib import Path
 
 class DummyEnv(gym.Env):
     """Simple dummy discrete environment for testing."""
+
     def __init__(self):
         super().__init__()
         self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(3,))
@@ -34,8 +35,10 @@ class DummyEnv(gym.Env):
         tr = np.random.default_rng().choice([0, 1], p=[0.9, 0.1])
         return self.observation_space.sample(), 0, False, tr, {}
 
+
 class DummyContinuousEnv(gym.Env):
     """Simple dummy continuous environment for testing."""
+
     def __init__(self):
         super().__init__()
         self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(3,))
@@ -62,6 +65,7 @@ class DummyContinuousEnv(gym.Env):
         tr = np.random.default_rng().choice([0, 1], p=[0.9, 0.1])
         return self.observation_space.sample(), np.random.rand(), False, tr, {}
 
+
 class DummyModel:
     def __init__(self, action=1):
         self.action = action
@@ -70,6 +74,7 @@ class DummyModel:
         fake_qs = np.zeros((len(s), 5))
         fake_qs[:, self.action] = 1
         return torch.tensor(fake_qs)
+
 
 def clean(path):
     """Helper function to clean up test directories."""

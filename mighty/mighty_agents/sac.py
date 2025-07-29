@@ -21,6 +21,7 @@ class MightySACAgent(MightyAgent):
         seed: Optional[int] = None,
         # --- PPO-style network sizes ---
         n_policy_units: int = 64,
+        # FIXME: not currently used, will be integrated
         n_critic_units: int = 64,
         soft_update_weight: float = 0.005,
         # --- Replay & update scheduling ---
@@ -59,6 +60,8 @@ class MightySACAgent(MightyAgent):
     ):
         """Initialize SAC agent with tunable hyperparameters and backward-compatible names."""
         # Map PPO-style units to hidden_sizes if not provided
+        # FIXME: This should be replaced by a more flexible architecture definition like in DQN
+        # See https://github.com/automl/Mighty/issues/57
         if hidden_sizes is None:
             hidden_sizes = [n_policy_units, n_policy_units]
         tau = soft_update_weight
@@ -87,9 +90,11 @@ class MightySACAgent(MightyAgent):
         self.update_fn: SACUpdate | None = None
 
         # Exploration policy class
-        self.policy_class = retrieve_class(cls=policy_class, default_cls=StochasticPolicy)
+        self.policy_class = retrieve_class(
+            cls=policy_class, default_cls=StochasticPolicy
+        )
         self.policy_kwargs = policy_kwargs or {
-            'discrete': False   # Default to continuous SAC
+            "discrete": False  # Default to continuous SAC
         }
 
         super().__init__(
@@ -179,13 +184,9 @@ class MightySACAgent(MightyAgent):
         for k in metrics_acc:
             metrics_acc[k] /= self.n_gradient_steps
 
-        # Log to buffer and wandb
+        # Log to buffer
         stats = {**metrics_acc, "step": self.steps}
         self.loss_buffer = update_buffer(self.loss_buffer, stats)
-        if self.log_wandb:
-            import wandb
-
-            wandb.log(stats, step=self.steps)
 
         return metrics_acc
 
@@ -215,9 +216,8 @@ class MightySACAgent(MightyAgent):
     @property
     def value_function(self) -> torch.nn.Module:
         """Value function for compatibility: V(s) = min(Q1,Q2)(s, a_policy) - alpha * log_pi(a|s)."""
-        # Lazily create a wrapper module
-        import torch
 
+        # Lazily create a wrapper module
         class _ValueFunction(torch.nn.Module):
             def __init__(self, agent):
                 super().__init__()

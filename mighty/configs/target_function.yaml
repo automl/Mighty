@@ -1,2 +1,0 @@
-# configs/target_function.yaml
-_target_: run_mighty          # or fully‑qualified: mighty.run_mighty.run_mighty

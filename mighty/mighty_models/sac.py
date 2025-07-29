@@ -26,6 +26,9 @@ class SACModel(nn.Module):
         self.hidden_sizes = hidden_sizes
         self.activation = activation
 
+        # This model is continuous only
+        self.continuous_action = True
+
         # Shared feature extractor for policy and Q-networks
         extractor, out_dim = make_feature_extractor(
             architecture="mlp",
@@ -89,22 +92,6 @@ class SACModel(nn.Module):
             z = mean + std * torch.randn_like(mean)
         action = torch.tanh(z)
         return action, z, mean, log_std
-
-    def policy_log_prob(
-        self, z: torch.Tensor, mean: torch.Tensor, log_std: torch.Tensor
-    ) -> torch.Tensor:
-        """
-        Compute log-prob of action a = tanh(z), correcting for tanh transform.
-        """
-        std = torch.exp(log_std)
-        dist = torch.distributions.Normal(mean, std)
-        log_pz = dist.log_prob(z).sum(dim=-1, keepdim=True)
-        eps = 1e-6  # small constant to avoid numerical issues
-        log_correction = (torch.log(1 - torch.tanh(z).pow(2) + eps)).sum(
-            dim=-1, keepdim=True
-        )
-        log_pa = log_pz - log_correction
-        return log_pa
 
     def forward_q1(self, state_action: torch.Tensor) -> torch.Tensor:
         return self.q_net1(state_action)

@@ -1,3 +1,4 @@
+""""Stochastic Policy for Entropy-Based Exploration."""
 from __future__ import annotations
 
 from typing import Tuple
@@ -6,8 +7,7 @@ import numpy as np
 import torch
 from torch.distributions import Categorical, Normal
 
-from mighty.mighty_exploration.mighty_exploration_policy import MightyExplorationPolicy
-from mighty.mighty_models import SACModel
+from mighty.mighty_exploration.mighty_exploration_policy import MightyExplorationPolicy, sample_nondeterministic_logprobs
 
 
 class StochasticPolicy(MightyExplorationPolicy):
@@ -25,19 +25,6 @@ class StochasticPolicy(MightyExplorationPolicy):
         super().__init__(algo, model, discrete)
         self.entropy_coefficient = entropy_coefficient
         self.discrete = discrete
-
-        # --- override sample_action only for continuous SAC ---
-        if not discrete and isinstance(model, SACModel):
-            # for evaluation use deterministic=True; training will go through .explore()
-            def _sac_sample(state_np):
-                state = torch.as_tensor(state_np, dtype=torch.float32)
-                # forward returns (action, z, mean, log_std)
-                action, z, mean, log_std = model(state, deterministic=True)
-                logp = model.policy_log_prob(z, mean, log_std)
-
-                return action.detach().cpu().numpy(), logp
-
-            self.sample_action = _sac_sample
 
     def explore(self, s, return_logp, metrics=None) -> Tuple[np.ndarray, torch.Tensor]:
         """
@@ -64,34 +51,11 @@ class StochasticPolicy(MightyExplorationPolicy):
                 action, z, mean, log_std = self.model(
                     state
                 )  # each: [batch, action_dim]
-                std = torch.exp(log_std)  # [batch, action_dim]
-                dist = Normal(mean, std)
-
-                # 2) Compute log_prob of "z" under N(mean, std)
-                log_pz = dist.log_prob(z).sum(dim=-1, keepdim=True)  # [batch, 1]
-
-                # 3) Tanh Jacobian‐correction: sum_i log(1 − tanh(z_i)^2 + ε)
-                eps = 1e-6
-                log_correction = torch.log(1.0 - torch.tanh(z).pow(2) + eps).sum(
-                    dim=-1, keepdim=True
-                )  # [batch, 1]
-
-                # 4) Final log_prob of a = tanh(z)
-                log_prob = log_pz - log_correction  # [batch, 1]
-
-                # 5) (Optional) multiply by entropy_coeff to get “weighted log_prob”
+                log_prob = sample_nondeterministic_logprobs(
+                    action=action, z=z, mean=mean, log_std=log_std, keepdim=self.algo == "sac"
+                )
                 weighted_log_prob = log_prob * self.entropy_coefficient
 
-                return action.detach().cpu().numpy(), weighted_log_prob
-
-            # If it’s actually a SACModel, fallback (should only happen in training if model∈SACModel)
-            elif isinstance(self.model, SACModel):
-                action, z, mean, log_std = self.model(state, deterministic=False)
-                std = torch.exp(log_std)
-                dist = Normal(mean, std)
-
-                log_pz = dist.log_prob(z).sum(dim=-1, keepdim=True)
-                weighted_log_prob = log_pz * self.entropy_coefficient
                 return action.detach().cpu().numpy(), weighted_log_prob
 
             # If it’s “mean, std”‐style continuous (rare in our code), handle that case
@@ -101,12 +65,7 @@ class StochasticPolicy(MightyExplorationPolicy):
                 z = dist.rsample()  # [batch, action_dim]
                 action = torch.tanh(z)  # [batch, action_dim]
 
-                log_pz = dist.log_prob(z).sum(dim=-1, keepdim=True)
-                eps = 1e-6
-                log_correction = torch.log(1.0 - action.pow(2) + eps).sum(
-                    dim=-1, keepdim=True
-                )
-                log_prob = log_pz - log_correction  # [batch, 1]
+                log_prob = sample_nondeterministic_logprobs(z=z, mean=mean, log_std=torch.log(std), keepdim=True)
                 entropy = dist.entropy().sum(dim=-1, keepdim=True)  # [batch, 1]
                 weighted_log_prob = log_prob * entropy
 

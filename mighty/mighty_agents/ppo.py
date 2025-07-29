@@ -29,16 +29,13 @@ class MightyPPOAgent(MightyAgent):
         learning_starts: int = 1,
         render_progress: bool = True,
         log_wandb: bool = False,
-        wandb_kwargs: Optional[Dict] = {
-            "project": "mighty",
-            "entity": "amsks",
-            "name": "ppo",
-            "group": "ppo",
-        },
+        wandb_kwargs: dict | None = None,
         rollout_buffer_class: Optional[
             str | DictConfig | Type[MightyRolloutBuffer]
         ] = MightyRolloutBuffer,
-        rollout_buffer_kwargs: Optional[TypeKwargs] = {"buffer_size": 256,},
+        rollout_buffer_kwargs: Optional[TypeKwargs] = {
+            "buffer_size": 256,
+        },
         meta_methods: Optional[List[str | type]] = None,
         meta_kwargs: Optional[List[TypeKwargs]] = None,
         n_policy_units: int = 8,
@@ -61,8 +58,8 @@ class MightyPPOAgent(MightyAgent):
         use_value_clip: bool = True,
         value_clip_eps: float = 0.2,
         total_timesteps: int = 1_000_000,
-        normalize_obs: bool = False,  # ← NEW
-        normalize_reward: bool = False,  # ← NEW (optional)
+        normalize_obs: bool = False,
+        normalize_reward: bool = False,
     ):
         """Initialize the PPO agent.
 
@@ -253,10 +250,6 @@ class MightyPPOAgent(MightyAgent):
         last_values = self.value_function(
             torch.as_tensor(update_kwargs["next_s"], dtype=torch.float32)
         ).detach()
-
-        # steps_recorded = self.buffer.pos
-        # total_trans = steps_recorded * self.buffer.n_envs
-        # print(f"[DEBUG] buffer.pos = {steps_recorded}, n_envs = {self.buffer.n_envs}, total = {total_trans}")
 
         self.buffer.compute_returns_and_advantage(last_values, update_kwargs["dones"])  # type: ignore
         if "rollout_values" in metrics:

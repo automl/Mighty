@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import torch
 import wandb
+import json
 from omegaconf import DictConfig
 from rich import print
 from rich.layout import Layout
@@ -110,6 +111,43 @@ def log_to_file(output_dir, result_buffer, hp_buffer, eval_buffer, loss_buffer):
     if (Path(output_dir) / "eval_results.csv").exists():
         (Path(output_dir) / "eval_results.csv").unlink()
     eval_df.to_csv(Path(output_dir) / "eval_results.csv")
+
+
+def log_to_wandb(metrics: Dict) -> None:
+    """Wandb logging"""
+    # Only log relevant, serializable keys
+    log_keys = [
+        "step",
+        "episode_reward",
+        "Update/policy_loss",
+        "Update/value_loss",
+        "Update/entropy",
+        "Update/approx_kl",
+    ]
+    serializable_metrics = {}
+    for k in log_keys:
+        if k in metrics:
+            v = metrics[k]
+            # Convert numpy arrays to scalars or lists
+            if isinstance(v, np.ndarray):
+                if v.size == 1:
+                    v = v.item()
+                else:
+                    v = v.tolist()
+            # Convert torch tensors to scalars or lists
+            if isinstance(v, torch.Tensor):
+                if v.numel() == 1:
+                    v = v.item()
+                else:
+                    v = v.cpu().numpy().tolist()
+            # Try to serialize, skip if not possible
+            try:
+                json.dumps(v)
+                serializable_metrics[k] = v
+            except TypeError:
+                print(f"Skipping non-serializable metric: {k}")
+
+    wandb.log(serializable_metrics, step=metrics["step"])
 
 
 class MightyAgent(ABC):
@@ -231,14 +269,10 @@ class MightyAgent(ABC):
             if eval_env is not None:
                 eval_env = NormalizeReward(eval_env)
 
-        # self.env = SeedWrapper(env=env,seed=self.seed)
         self.env = env
         if eval_env is None:
-            # self.eval_env = SeedWrapper(env=env,seed=self.seed)
             self.eval_env = self.env
-
         else:
-            # self.eval_env = SeedWrapper(env=eval_env,seed=self.seed)
             self.eval_env = eval_env
 
         self.render_progress = render_progress
@@ -250,9 +284,9 @@ class MightyAgent(ABC):
         self.meta_modules = {}
         for i, m in enumerate(meta_methods):
             meta_class = retrieve_class(cls=m, default_cls=None)  # type: ignore
-            assert meta_class is not None, (
-                f"Class {m} not found, did you specify the correct loading path?"
-            )
+            assert (
+                meta_class is not None
+            ), f"Class {m} not found, did you specify the correct loading path?"
             kwargs: Dict = {}
             if len(meta_kwargs) > i:
                 kwargs = meta_kwargs[i]
@@ -385,8 +419,8 @@ class MightyAgent(ABC):
             "hp/learning_starts": self._learning_starts,
             "meta_modules": list(self.meta_modules.keys()),
         }
-        # FIXME: EWRL: Can we naively compare dictoinaries like this?
-        if old_hps != updated_hps:
+
+        if any(old_hps[k] != updated_hps[k] for k in old_hps.keys()):
             self.hp_buffer = update_buffer(self.hp_buffer, updated_hps)
 
     def make_checkpoint_dir(self, t: int) -> None:
@@ -427,52 +461,11 @@ class MightyAgent(ABC):
                 transition_batch=batch, batches_left=batches_left, **update_kwargs
             )
 
-            # FIXME: EWRL: Move logging out of gradient steps
-
             metrics.update(agent_update_metrics)
-
-            metrics = {k: np.array(v) for k, v in metrics.items()}
             metrics["step"] = self.steps
 
-            # Wandb logging
             if self.log_wandb:
-                import json
-
-                import wandb
-
-                # Only log relevant, serializable keys
-                log_keys = [
-                    "step",
-                    "episode_reward",
-                    "Update/policy_loss",
-                    "Update/value_loss",
-                    "Update/entropy",
-                    "Update/approx_kl",
-                ]
-                serializable_metrics = {}
-                for k in log_keys:
-                    if k in metrics:
-                        v = metrics[k]
-                        # Convert numpy arrays to scalars or lists
-                        if isinstance(v, np.ndarray):
-                            if v.size == 1:
-                                v = v.item()
-                            else:
-                                v = v.tolist()
-                        # Convert torch tensors to scalars or lists
-                        if isinstance(v, torch.Tensor):
-                            if v.numel() == 1:
-                                v = v.item()
-                            else:
-                                v = v.cpu().numpy().tolist()
-                        # Try to serialize, skip if not possible
-                        try:
-                            json.dumps(v)
-                            serializable_metrics[k] = v
-                        except TypeError:
-                            print(f"Skipping non-serializable metric: {k}")
-
-                wandb.log(serializable_metrics, step=self.steps)
+                log_to_wandb(metrics=metrics)
 
             metrics["env"] = self.env
             metrics["vf"] = self.value_function  # type: ignore
@@ -535,18 +528,7 @@ class MightyAgent(ABC):
             )
         )
 
-    def run(  # noqa: PLR0915
-        self,
-        n_steps: int,
-        eval_every_n_steps: int = 1_000,
-        save_model_every_n_steps: int | None = 5000,
-        env: MIGHTYENV = None,  # type: ignore
-    ) -> Dict:
-        """Run agent."""
-        episodes = 0
-        if env is not None:
-            self.env = env
-
+    def make_logging_layout(self, n_steps: int) -> Layout:
         logging_layout = Layout()
         logging_layout.split_column(
             Layout(name="upper"), Layout(name="middle"), Layout(name="lower")
@@ -600,13 +582,25 @@ class MightyAgent(ABC):
             ),
         )
         logging_layout["upper"].update(progress_table)
+        return logging_layout, progress, steps_task
+
+    def run(  # noqa: PLR0915
+        self,
+        n_steps: int,
+        eval_every_n_steps: int = 1_000,
+        save_model_every_n_steps: int | None = 5000,
+        env: MIGHTYENV = None,  # type: ignore
+    ) -> Dict:
+        """Run agent."""
+        episodes = 0
+        if env is not None:
+            self.env = env
+
+        logging_layout, progress, steps_task = self.make_logging_layout(n_steps)
         update_multiplier = 0
 
-        # FIXME: Get this back -- Aditya
         with Live(logging_layout, refresh_per_second=10, vertical_overflow="visible"):
             steps_since_eval = 0
-            # FIXME: this is more of a question: are there cases where we don't want to reset this completely?
-            # I can't think of any, can you? If yes, we should maybe add this as an optional argument
             metrics = {
                 "env": self.env,
                 "vf": self.value_function,  # type: ignore
@@ -628,14 +622,17 @@ class MightyAgent(ABC):
             last_episode_reward = episode_reward
             if not torch.is_tensor(last_episode_reward):
                 last_episode_reward = torch.tensor(last_episode_reward).float()
-            progress.update(steps_task, visible=True)
+
             recent_episode_reward = []
             recent_step_reward = []
             recent_actions = []
             evaluation_reward = []
+
+            # Start logging
             eval_curve = [0]
             learning_curve = [0]
             curve_xs = [0]
+            progress.update(steps_task, visible=True)
             logging_layout["lower"]["left"].update(
                 self.get_plot(curve_xs, learning_curve, "Training Reward")
             )
@@ -690,7 +687,6 @@ class MightyAgent(ABC):
                     metrics,
                 )
                 metrics.update(transition_metrics)
-
                 self.result_buffer = update_buffer(self.result_buffer, t)
 
                 if self.log_wandb:
@@ -701,6 +697,7 @@ class MightyAgent(ABC):
                 steps_since_eval += len(action)
                 for _ in range(len(action)):
                     progress.advance(steps_task)
+
                 # Update agent
                 if (
                     len(self.buffer) >= self._batch_size  # type: ignore
@@ -719,7 +716,7 @@ class MightyAgent(ABC):
                     eval_metrics = self.evaluate()
                     evaluation_reward = eval_metrics["eval_rewards"]
 
-                # Log to command line
+                # Log to command line via rich layout
                 if self.steps >= 1000 * update_multiplier:
                     metrics_table = self.make_logging_table(
                         self.steps,
@@ -741,7 +738,7 @@ class MightyAgent(ABC):
                     )
                     update_multiplier += 1
 
-                # Save
+                # Save model & metrics
                 if (
                     save_model_every_n_steps
                     and self.steps % save_model_every_n_steps == 0
@@ -755,6 +752,7 @@ class MightyAgent(ABC):
                         self.loss_buffer,
                     )
 
+                # Perform resets as necessary
                 if np.any(dones):
                     last_episode_reward = np.where(  # type: ignore
                         dones, episode_reward, last_episode_reward
@@ -787,6 +785,8 @@ class MightyAgent(ABC):
                     # Meta Module hooks
                     for k in self.meta_modules:
                         self.meta_modules[k].pre_episode(metrics)
+
+        # Final logging
         log_to_file(
             self.output_dir,
             self.result_buffer,

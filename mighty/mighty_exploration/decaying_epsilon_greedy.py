@@ -14,7 +14,6 @@ class DecayingEpsilonGreedy(EpsilonGreedy):
         self,
         algo,
         model,
-        epsilon: float | None = None,
         epsilon_start: float = 1.0,
         epsilon_final: float = 0.01,
         epsilon_decay_steps: int = 10000,

@@ -78,12 +78,12 @@ class QLearning:
             1, batch.actions.to(torch.int64).unsqueeze(-1)
         )
         return preds.to(torch.float32), targets.to(torch.float32)
-    
+
     def td_error(self, batch, q_net, target_net=None):
         """Compute the TD error for the Q-learning update."""
         preds, targets = self.get_targets(batch, q_net, target_net)
         # td_errors = (targets - preds).squeeze(-1).detach()
-        td_errors =  F.mse_loss(preds, targets, reduction="none").detach().mean(axis=1)
+        td_errors = F.mse_loss(preds, targets, reduction="none").detach().mean(axis=1)
         return td_errors
 
 

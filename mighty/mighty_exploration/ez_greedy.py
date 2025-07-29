@@ -1,4 +1,4 @@
-"""Epsilon Greedy Exploration."""
+"""EZ-Greedy Exploration."""
 
 from __future__ import annotations
 

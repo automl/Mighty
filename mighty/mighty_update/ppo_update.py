@@ -105,7 +105,7 @@ class PPOUpdate:
             0,
         )
 
-        # ───────────────────────── main PPO loop ────────────────────────────        
+        # ───────────────────────── main PPO loop ────────────────────────────
         for epoch in range(self.n_epochs):
             epoch_kls = []
             for i, mb in enumerate(batch.minibatches):
@@ -219,7 +219,7 @@ class PPOUpdate:
 
         # final averaged metrics
         for k in metrics:
-            metrics[k] /= (mb_updates if mb_updates > 0 else 1)
+            metrics[k] /= mb_updates if mb_updates > 0 else 1
 
         metrics["approx_kl"] = mean_kl.item()  # final KL of the run
 

@@ -233,7 +233,7 @@ def plot_final_performance_comparison(
 ):
     set_rc_params()
 
-    if type(aggregation) is str:
+    if isinstance(aggregation, str):
         aggregation = [aggregation]
 
     aggregation_funcs = []
@@ -410,7 +410,7 @@ def plot_deepcave(
     print(inputs)
     outputs = plugin.generate_outputs(run, inputs)
     fig = plugin.load_outputs(run, inputs, outputs)
-    if type(fig) is list:
+    if isinstance(fig, list):
         imgs = []
         for i, f in enumerate(fig):
             if save_path is not None:
