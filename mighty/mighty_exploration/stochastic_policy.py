@@ -45,7 +45,7 @@ class StochasticPolicy(MightyExplorationPolicy):
             log_prob = dist.log_prob(action).unsqueeze(-1)
             return action.detach().cpu().numpy(), log_prob * self.entropy_coefficient
         else:
-            # If model has attribute continuous_action=True, we know:
+            # If model output style is "squashed_gaussian":
             #   model(state) → (action, z, mean, log_std)
             if self.model.output_style == "squashed_gaussian":
                 # 1) Forward pass: get (action, z, mean, log_std)
@@ -53,7 +53,6 @@ class StochasticPolicy(MightyExplorationPolicy):
                     state
                 )  # each: [batch, action_dim]
                 log_prob = sample_nondeterministic_logprobs(
-                    action=action,
                     z=z,
                     mean=mean,
                     log_std=log_std,
@@ -64,7 +63,8 @@ class StochasticPolicy(MightyExplorationPolicy):
                 else:
                     weighted_log_prob = log_prob * self.entropy_coefficient
                     return action.detach().cpu().numpy(), weighted_log_prob
-            # If it’s “mean, std”‐style continuous (rare in our code), handle that case
+            # Alternatively, if model output style is "mean_std":
+            #   model(state) → (mean, std)
             elif self.model.output_style == "mean_std":
                 mean, std = self.model(state)
                 dist = Normal(mean, std)

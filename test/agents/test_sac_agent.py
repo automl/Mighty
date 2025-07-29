@@ -14,11 +14,11 @@ from mighty.mighty_utils.test_helpers import DummyEnv, DummyContinuousEnv, clean
 from mighty.mighty_replay.mighty_rollout_buffer import MaxiBatch, RolloutBatch
 
 
-class TestPPOAgent:
+class TestSACAgent:
     def test_init_continuous(self):
-        """Test PPO agent initialization with continuous actions."""
+        """Test SAC agent initialization with continuous actions."""
         env = gym.vector.SyncVectorEnv([DummyContinuousEnv for _ in range(1)])
-        output_dir = Path("test_ppo_agent_continuous")
+        output_dir = Path("test_sac_agent_continuous")
         output_dir.mkdir(parents=True, exist_ok=True)
         
         agent = MightySACAgent(

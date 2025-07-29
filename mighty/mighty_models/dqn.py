@@ -161,47 +161,6 @@ class IQN(DQN):
         return self.last_taus
 
 
-class SPRQN(nn.Module):
-    """SPRQN network."""
-
-    def __init__(self, num_actions, *head_kwargs, **feature_extractor_kwargs):
-        """Initialize the network."""
-        super().__init__(num_actions, *head_kwargs, **feature_extractor_kwargs)
-        # TODO: init
-        self.projection = MLP()
-        self.predictor = MLP()
-        # TODO: not an MLP
-        self.transition_model = MLP()
-
-    @jit.script_method
-    def forward(self, x, actions=None):
-        """Forward pass."""
-        encoding = self.feature_extractor(x)
-        x = encoding.reshape(-1)
-        projection = self.projection(x)
-        x = nn.relu(projection)
-        x = self.head(x)
-        if actions is not None:
-            spr_pred = self.transition_model(encoding, actions)
-            spr_pred = self.projection(x)
-            spr_pred = self.predictor(x)
-            output = (x, spr_pred)
-        else:
-            output = x
-        return output
-
-    @jit.script_method
-    def project(self, x):
-        """Feature projection."""
-        encoding = self.feature_extractor(x)
-        x = encoding.reshape(-1)
-        return self.projection(x)
-
-    @property
-    def agent_type(self):
-        return "DQN"
-
-
 def make_q_head(in_size, num_actions, hidden_sizes=None):
     """Make Q head network."""
     # Make fully connected layers

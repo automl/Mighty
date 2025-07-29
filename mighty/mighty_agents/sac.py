@@ -6,6 +6,7 @@ from omegaconf import DictConfig
 
 from mighty.mighty_agents.base_agent import MightyAgent, retrieve_class, update_buffer
 from mighty.mighty_exploration import MightyExplorationPolicy, StochasticPolicy
+from mighty.mighty_exploration.mighty_exploration_policy import sample_nondeterministic_logprobs
 from mighty.mighty_models.sac import SACModel
 from mighty.mighty_replay import MightyReplay, TransitionBatch
 from mighty.mighty_update import SACUpdate
@@ -228,7 +229,7 @@ class MightySACAgent(MightyAgent):
                 with torch.no_grad():
                     # deterministic policy action
                     a, z, mean, log_std = self.agent.model(state_t, deterministic=True)
-                    logp = self.agent.model.policy_log_prob(z, mean, log_std)
+                    logp = sample_nondeterministic_logprobs(z, mean, log_std, sac=True)
                     sa = torch.cat([state_t, a], dim=-1)
                     q1 = self.agent.model.q_net1(sa)
                     q2 = self.agent.model.q_net2(sa)

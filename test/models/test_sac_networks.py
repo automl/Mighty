@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 from mighty.mighty_models.sac import SACModel
-from mighty.mighty_models.networks import MLP
+from mighty.mighty_exploration.mighty_exploration_policy import sample_nondeterministic_logprobs
 
 
 class TestSACModel:
@@ -159,27 +159,6 @@ class TestSACModel:
         # Note: There's a tiny chance they could be the same, but extremely unlikely
         assert not torch.allclose(z_stoch, mean_stoch), (
             "Stochastic z should be different from mean"
-        )
-
-    def test_policy_log_prob(self):
-        """Test policy log probability calculation."""
-        sac = SACModel(obs_size=4, action_size=2)
-        dummy_state = torch.rand((6, 4))
-        
-        action, z, mean, log_std = sac(dummy_state, deterministic=False)
-        log_prob = sac.policy_log_prob(z, mean, log_std)
-        
-        # Check shape
-        assert log_prob.shape == (6, 1), "Log prob should have shape (6, 1)"
-        
-        # Check that log probabilities are finite and reasonable
-        assert torch.all(torch.isfinite(log_prob)), "Log probs should be finite"
-        assert torch.all(log_prob <= 0.0), "Log probs should be <= 0"
-        
-        # Test with deterministic actions (z = mean)
-        log_prob_det = sac.policy_log_prob(mean, mean, log_std)
-        assert torch.all(torch.isfinite(log_prob_det)), (
-            "Deterministic log probs should be finite"
         )
 
     def test_q_networks(self):
@@ -374,10 +353,10 @@ class TestSACModel:
         
         # Test with extreme values
         dummy_state = torch.tensor([[10.0, -10.0], [0.0, 0.0]])
-        action, z, mean, log_std = sac(dummy_state, deterministic=False)
+        _, z, mean, log_std = sac(dummy_state, deterministic=False)
         
         # Test log probability calculation doesn't produce NaN or inf
-        log_prob = sac.policy_log_prob(z, mean, log_std)
+        log_prob = sample_nondeterministic_logprobs(z, mean, log_std, sac=True)
         assert torch.all(torch.isfinite(log_prob)), (
             "Log probabilities should be finite even with extreme inputs"
         )
@@ -387,7 +366,7 @@ class TestSACModel:
         boundary_mean = torch.zeros_like(boundary_z)
         boundary_log_std = torch.zeros_like(boundary_z)
         
-        boundary_log_prob = sac.policy_log_prob(boundary_z, boundary_mean, boundary_log_std)
+        boundary_log_prob = sample_nondeterministic_logprobs(boundary_z, boundary_mean, boundary_log_std, sac=True)
         assert torch.all(torch.isfinite(boundary_log_prob)), (
             "Log probabilities should be finite for boundary actions"
         )

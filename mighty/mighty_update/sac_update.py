@@ -7,6 +7,7 @@ import torch.optim as optim
 from mighty.mighty_models.sac import SACModel
 from mighty.mighty_replay.mighty_replay_buffer import TransitionBatch
 from mighty.mighty_utils.update_utils import polyak_update
+from mighty.mighty_exploration.mighty_exploration_policy import sample_nondeterministic_logprobs
 
 
 class SACUpdate:
@@ -68,7 +69,7 @@ class SACUpdate:
             _, z_next, mean_next, log_std_next = self.model(
                 torch.as_tensor(transition.next_obs, dtype=torch.float32)
             )
-            logp_next = self.model.policy_log_prob(z_next, mean_next, log_std_next)
+            logp_next = sample_nondeterministic_logprobs(z_next, mean_next, log_std_next, sac=True)
             sa_next = torch.cat(
                 [
                     torch.as_tensor(transition.next_obs, dtype=torch.float32),
@@ -117,7 +118,7 @@ class SACUpdate:
         with torch.no_grad():
             # BUG: this uses `states` but should use `next_states`
             a_next, z_next, mean_next, log_std_next = self.model(next_states)
-            logp_next = self.model.policy_log_prob(z_next, mean_next, log_std_next)
+            logp_next = sample_nondeterministic_logprobs(z_next, mean_next, log_std_next, sac=True)
             sa_next = torch.cat([next_states, a_next], dim=-1)
             q1_t = self.model.target_q_net1(sa_next)
             q2_t = self.model.target_q_net2(sa_next)
@@ -135,7 +136,7 @@ class SACUpdate:
 
         # --- Policy update ---
         a, z, mean, log_std = self.model(states)
-        logp = self.model.policy_log_prob(z, mean, log_std)
+        logp = sample_nondeterministic_logprobs(z, mean, log_std, sac=True)
         sa_pi = torch.cat([states, a], dim=-1)
         q1_pi = self.model.q_net1(sa_pi)
         q2_pi = self.model.q_net2(sa_pi)
