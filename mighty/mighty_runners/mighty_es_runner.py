@@ -6,21 +6,6 @@ from typing import TYPE_CHECKING, Dict, Tuple
 import numpy as np
 import torch
 
-# FIXME: This is a hack around our current JAX version not having these functions.
-# Remove this once we upgrade JAX to a version that has these functions.
-try:
-    import scipy.linalg
-
-    # Patch missing functions that JAX expects
-    if not hasattr(scipy.linalg, "tril"):
-        scipy.linalg.tril = np.tril
-    if not hasattr(scipy.linalg, "triu"):
-        scipy.linalg.triu = np.triu
-    if not hasattr(scipy.linalg, "tri"):
-        scipy.linalg.tri = np.tri
-except ImportError:
-    pass
-
 from mighty.mighty_agents.base_agent import retrieve_class
 from mighty.mighty_runners.mighty_runner import MightyRunner
 

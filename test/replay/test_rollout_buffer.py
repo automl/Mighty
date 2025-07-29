@@ -11,34 +11,6 @@ from mighty.mighty_replay.mighty_rollout_buffer import (MaxiBatch,
                                                         MightyRolloutBuffer,
                                                         RolloutBatch)
 
-# FIXME: MAJOR BUFFER REFACTOR NEEDED
-# =======================================================
-# The current MightyRolloutBuffer has significant design issues that require a major refactor:
-#
-# 1. SHAPE INCONSISTENCY PROBLEMS:
-#    - RolloutBatch._promote() limits inputs to 1D/2D tensors but buffer storage expects different shapes
-#    - Discrete actions: buffer expects (timesteps, n_envs) but _promote creates (1, timesteps)
-#    - Continuous actions: buffer expects (timesteps, n_envs, action_dim) but _promote creates (timesteps, action_dim)
-#    - This forces users to provide data in unintuitive pre-transposed formats
-#
-# 2. LOG_PROBS TRANSPOSE QUIRK:
-#    - Only log_probs gets transposed (.T) during add(), making it inconsistent with other fields
-#    - Requires log_probs to be provided in transposed format compared to other arrays
-#    - See "FIXME" comments throughout tests for examples of this inconsistency
-#
-# 3. MULTI-STEP BATCH FAILURE:
-#    - Multi-step RolloutBatch additions fail due to shape mismatches
-#    - Forces inefficient single-step workarounds in all tests and likely in real usage
-#    - Breaks the intended design of efficient batch processing
-#
-# PROPOSED SOLUTION:
-# - Remove or redesign _promote() function to handle multi-env data correctly
-# - Eliminate log_probs transpose quirk for consistency
-# - Standardize on single tensor format throughout pipeline: (timesteps, n_envs, feature_dim)
-# - Ensure multi-step batch additions work properly for PPO efficiency
-# - Make API more intuitive so users don't need shape gymnastics
-# TODO: PRIORITY: High - affects core functionality
-
 
 rng = np.random.default_rng(12345)
 
@@ -557,26 +529,6 @@ class TestMightyRolloutBuffer:
             buffer.latents[0, 0], torch.tensor([0.3, 0.4], dtype=torch.float32)
         ), "Latents not stored correctly"
 
-    # FIXME: This test is currently disabled due to the way the buffer handles multi-step additions
-    # might need to be reworked to handle multi-step additions properly
-    # def test_add_multi_step(self):
-    #     """Test adding multiple steps at once"""
-    #     buffer = self.get_buffer(buffer_size=5)
-
-    #     rb = RolloutBatch(
-    #         observations=np.array([[[1, 2, 3, 4]], [[5, 6, 7, 8]], [[9, 10, 11, 12]]]),  # 3D: (3, 1, 4)
-    #         actions=np.array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]]),  # 2D: (3, 2) -> will stay (3, 2)
-    #         rewards=np.array([[1.0], [0.5], [-0.3]]),  # 2D: (3, 1)
-    #         advantages=np.array([[0.1], [-0.2], [0.05]]),  # 2D: (3, 1)
-    #         returns=np.array([[1.1], [0.3], [-0.25]]),  # 2D: (3, 1)
-    #         episode_starts=np.array([[1], [0], [0]]),  # 2D: (3, 1)
-    #         log_probs=np.array([[-0.5], [-0.8], [-0.3]]),  # 2D: (3, 1)
-    #         values=np.array([[1.0], [0.5], [-0.3]]),  # 2D: (3, 1)
-    #     )
-
-    #     buffer.add(rb)
-    #     assert buffer.pos == 3, "Position should be 3 after adding 3 steps"
-
     def test_add_multi_step(self):
         """Test adding multiple steps at once"""
         buffer = self.get_buffer(buffer_size=5, n_envs=1)
@@ -715,8 +667,6 @@ class TestMightyRolloutBuffer:
             log_probs=np.array(
                 [[-0.5], [-0.8]]
             ),  # (2, 1) - will be transposed to (1, 2)
-            # FIXME: The buffer does rb.log_probs.T in add() method, requiring log_probs to be
-            # provided in transposed format. This inconsistency should be fixed to match other fields.
             values=np.array([[1.0, 0.5]]),  # (1, 2) - 2D format directly
         )
 
@@ -816,8 +766,6 @@ class TestMightyRolloutBuffer:
                 returns=np.array(rets),  # (1, 2)
                 episode_starts=np.array(eps),  # (1, 2)
                 log_probs=np.array(lps),  # (1, 2)
-                # FIXME: The buffer does rb.log_probs.T in add() method, requiring log_probs to be
-                # provided in transposed format. This inconsistency should be fixed to match other fields.
                 values=np.array(vals),  # (1, 2)
             )
             buffer.add(rb)
@@ -922,8 +870,6 @@ class TestMightyRolloutBuffer:
             log_probs=np.array(
                 [[-0.5], [-0.8]]
             ),  # (2, 1) - will be transposed to (1, 2)
-            # FIXME: The buffer does rb.log_probs.T in add() method, requiring log_probs to be
-            # provided in transposed format. This inconsistency should be fixed to match other fields.
             values=np.array([[1.0, 0.5]]),  # (1, 2)
         )
 
@@ -1155,8 +1101,6 @@ class TestMightyRolloutBuffer:
             log_probs=np.array(
                 [[-0.5], [-0.8], [-0.3]]
             ),  # (3, 1) - will be transposed to (1, 3)
-            # FIXME: The buffer does rb.log_probs.T in add() method, requiring log_probs to be
-            # provided in transposed format. This inconsistency should be fixed to match other fields.
             values=np.array([[0.5, 1.0, 0.3]]),  # (1, 3)
         )
 
