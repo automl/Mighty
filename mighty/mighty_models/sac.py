@@ -8,7 +8,10 @@ from mighty.mighty_models.networks import make_feature_extractor
 
 class SACModel(nn.Module):
     """SAC Model with squashed Gaussian policy and twin Q-networks."""
-    output_style = "squashed_gaussian" # For continuous actions, we use squashed Gaussian output
+
+    output_style = (
+        "squashed_gaussian"  # For continuous actions, we use squashed Gaussian output
+    )
 
     def __init__(
         self,

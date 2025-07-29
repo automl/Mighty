@@ -24,7 +24,9 @@ def sample_nondeterministic_logprobs(
 
         # 2b) tanh‐correction = ∑ᵢ log(1 − tanh(zᵢ)² + ε)
         eps = 1e-6
-        log_correction = torch.log(1.0 - torch.tanh(z).pow(2) + eps).sum(dim=-1, keepdim=True)  # [batch, 1]
+        log_correction = torch.log(1.0 - torch.tanh(z).pow(2) + eps).sum(
+            dim=-1, keepdim=True
+        )  # [batch, 1]
 
         # 2c) final log_prob of a = tanh(z)
         log_prob = log_pz - log_correction  # [batch, 1]
@@ -94,7 +96,9 @@ class MightyExplorationPolicy:
         out = self.model(state)
         if isinstance(out, tuple) and len(out) == 4:
             action = out[0]  # [batch, action_dim]
-            log_prob = sample_nondeterministic_logprobs(z=out[1], mean=out[2], log_std=out[3], keepdim=self.algo=="sac")
+            log_prob = sample_nondeterministic_logprobs(
+                z=out[1], mean=out[2], log_std=out[3], sac=self.algo == "sac"
+            )
             return action.detach().cpu().numpy(), log_prob
 
         # ─── Fallback: if model(state) returns a Distribution ────────────────

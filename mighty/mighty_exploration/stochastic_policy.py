@@ -7,7 +7,10 @@ import numpy as np
 import torch
 from torch.distributions import Categorical, Normal
 
-from mighty.mighty_exploration.mighty_exploration_policy import MightyExplorationPolicy, sample_nondeterministic_logprobs
+from mighty.mighty_exploration.mighty_exploration_policy import (
+    MightyExplorationPolicy,
+    sample_nondeterministic_logprobs,
+)
 
 
 class StochasticPolicy(MightyExplorationPolicy):
@@ -50,7 +53,11 @@ class StochasticPolicy(MightyExplorationPolicy):
                     state
                 )  # each: [batch, action_dim]
                 log_prob = sample_nondeterministic_logprobs(
-                    action=action, z=z, mean=mean, log_std=log_std, keepdim=self.algo == "sac"
+                    action=action,
+                    z=z,
+                    mean=mean,
+                    log_std=log_std,
+                    sac=self.algo == "sac",
                 )
                 if return_logp:
                     return action.detach().cpu().numpy(), log_prob
@@ -64,7 +71,9 @@ class StochasticPolicy(MightyExplorationPolicy):
                 z = dist.rsample()  # [batch, action_dim]
                 action = torch.tanh(z)  # [batch, action_dim]
 
-                log_prob = sample_nondeterministic_logprobs(z=z, mean=mean, log_std=torch.log(std), keepdim=True)
+                log_prob = sample_nondeterministic_logprobs(
+                    z=z, mean=mean, log_std=torch.log(std), sac=self.algo == "sac"
+                )
                 entropy = dist.entropy().sum(dim=-1, keepdim=True)  # [batch, 1]
                 weighted_log_prob = log_prob * entropy
                 return action.detach().cpu().numpy(), weighted_log_prob
