@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from mighty.mighty_exploration.mighty_exploration_policy import MightyExplorationPolicy
+from mighty.mighty_exploration.mighty_exploration_policy import \
+    MightyExplorationPolicy
 
 
 class EpsilonGreedy(MightyExplorationPolicy):

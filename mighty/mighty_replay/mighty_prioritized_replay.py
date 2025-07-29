@@ -5,7 +5,8 @@ from typing import Tuple
 import numpy as np
 import torch
 
-from mighty.mighty_replay.mighty_replay_buffer import MightyReplay, TransitionBatch
+from mighty.mighty_replay.mighty_replay_buffer import (MightyReplay,
+                                                       TransitionBatch)
 
 
 class PrioritizedReplay(MightyReplay):

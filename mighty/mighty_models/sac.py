@@ -3,7 +3,7 @@ from typing import Tuple
 import torch
 from torch import nn
 
-from mighty.mighty_models.networks import make_feature_extractor, ACTIVATIONS
+from mighty.mighty_models.networks import ACTIVATIONS, make_feature_extractor
 
 
 class SACModel(nn.Module):
@@ -43,7 +43,9 @@ class SACModel(nn.Module):
             feature_extractor_kwargs.update(kwargs["feature_extractor_kwargs"])
 
         # Shared feature extractor for policy and Q-networks
-        self.feature_extractor, out_dim = make_feature_extractor(**feature_extractor_kwargs)
+        self.feature_extractor, out_dim = make_feature_extractor(
+            **feature_extractor_kwargs
+        )
 
         # Policy network outputs mean and log_std
         self.policy_net = nn.Linear(out_dim, action_size * 2)

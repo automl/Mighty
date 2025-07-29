@@ -9,12 +9,9 @@ from typing import TYPE_CHECKING, Any, Callable, Tuple
 import gymnasium as gym
 from omegaconf import OmegaConf
 
-from mighty.mighty_utils.wrappers import (
-    CARLVectorEnvSimulator,
-    ContextualVecEnv,
-    ProcgenVecEnv,
-    PufferlibToGymAdapter,
-)
+from mighty.mighty_utils.wrappers import (CARLVectorEnvSimulator,
+                                          ContextualVecEnv, ProcgenVecEnv,
+                                          PufferlibToGymAdapter)
 
 try:
     import envpool  # type: ignore

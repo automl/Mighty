@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from mighty.mighty_models.networks import make_feature_extractor, ACTIVATIONS
+from mighty.mighty_models.networks import ACTIVATIONS, make_feature_extractor
 
 
 class DQN(nn.Module):

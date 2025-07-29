@@ -9,6 +9,7 @@ from mighty.mighty_agents import MightyAgent
 from mighty.mighty_runners import MightyESRunner, MightyRunner
 from mighty.mighty_utils.wrappers import PufferlibToGymAdapter
 
+
 class TestMightyNESRunner:
     runner_config = OmegaConf.create(
         {

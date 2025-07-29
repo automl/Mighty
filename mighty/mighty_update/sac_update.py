@@ -4,12 +4,11 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
+from mighty.mighty_exploration.mighty_exploration_policy import \
+    sample_nondeterministic_logprobs
 from mighty.mighty_models.sac import SACModel
 from mighty.mighty_replay.mighty_replay_buffer import TransitionBatch
 from mighty.mighty_utils.update_utils import polyak_update
-from mighty.mighty_exploration.mighty_exploration_policy import (
-    sample_nondeterministic_logprobs,
-)
 
 
 class SACUpdate:

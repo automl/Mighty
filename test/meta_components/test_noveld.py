@@ -147,7 +147,6 @@ class TestNovelD:
             f"Intrinsic reward should be difference between current and last errors. Actual {abs(ppo.meta_modules['NovelD'].last_error - current_last_error) * ppo.meta_modules['NovelD'].internal_reward_weight}, assigned {updated_metrics['transition']['reward']}."
         )
         clean("test_NovelD")
-    
 
     def test_update(self) -> None:
         ppo = self.init_NovelD()

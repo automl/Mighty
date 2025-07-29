@@ -4,11 +4,11 @@ from typing import Dict, List, Optional, Type, Union
 import torch
 from omegaconf import DictConfig
 
-from mighty.mighty_agents.base_agent import MightyAgent, retrieve_class, update_buffer
+from mighty.mighty_agents.base_agent import (MightyAgent, retrieve_class,
+                                             update_buffer)
 from mighty.mighty_exploration import MightyExplorationPolicy, StochasticPolicy
-from mighty.mighty_exploration.mighty_exploration_policy import (
-    sample_nondeterministic_logprobs,
-)
+from mighty.mighty_exploration.mighty_exploration_policy import \
+    sample_nondeterministic_logprobs
 from mighty.mighty_models.sac import SACModel
 from mighty.mighty_replay import MightyReplay, TransitionBatch
 from mighty.mighty_update import SACUpdate

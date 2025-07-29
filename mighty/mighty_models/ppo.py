@@ -4,7 +4,7 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 
-from mighty.mighty_models.networks import make_feature_extractor, ACTIVATIONS
+from mighty.mighty_models.networks import ACTIVATIONS, make_feature_extractor
 
 
 class PPOModel(nn.Module):

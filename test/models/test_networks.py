@@ -5,14 +5,8 @@ from copy import deepcopy
 import pytest
 import torch
 
-from mighty.mighty_models.networks import (
-    ACTIVATIONS,
-    CNN,
-    MLP,
-    ComboNet,
-    ResNet,
-    make_feature_extractor,
-)
+from mighty.mighty_models.networks import (ACTIVATIONS, CNN, MLP, ComboNet,
+                                           ResNet, make_feature_extractor)
 
 test_mlps = [
     (3, 2, [5, 5], "relu"),

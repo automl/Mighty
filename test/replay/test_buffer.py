@@ -7,7 +7,8 @@ import numpy as np
 import pytest
 import torch
 
-from mighty.mighty_replay import MightyReplay, PrioritizedReplay, TransitionBatch
+from mighty.mighty_replay import (MightyReplay, PrioritizedReplay,
+                                  TransitionBatch)
 
 rng = np.random.default_rng(12345)
 

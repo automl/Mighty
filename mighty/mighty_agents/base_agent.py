@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import random
 from abc import ABC
@@ -12,19 +13,21 @@ import numpy as np
 import pandas as pd
 import torch
 import wandb
-import json
 from omegaconf import DictConfig
 from rich import print
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
-from rich.progress import BarColumn, Progress, TimeElapsedColumn, TimeRemainingColumn
+from rich.progress import (BarColumn, Progress, TimeElapsedColumn,
+                           TimeRemainingColumn)
 from rich.table import Table
 from uniplot import plot_to_string
 
 from mighty.mighty_exploration import MightyExplorationPolicy
-from mighty.mighty_replay import MightyReplay, MightyRolloutBuffer, PrioritizedReplay
-from mighty.mighty_utils.mighty_types import CARLENV, DACENV, MIGHTYENV, retrieve_class
+from mighty.mighty_replay import (MightyReplay, MightyRolloutBuffer,
+                                  PrioritizedReplay)
+from mighty.mighty_utils.mighty_types import (CARLENV, DACENV, MIGHTYENV,
+                                              retrieve_class)
 
 if TYPE_CHECKING:
     from mighty.mighty_utils.mighty_types import TypeKwargs

@@ -8,19 +8,11 @@ import gymnasium as gym
 from dacbench import benchmarks
 from omegaconf import OmegaConf
 
-from mighty.mighty_utils.envs import (
-    make_carl_env,
-    make_dacbench_env,
-    make_gym_env,
-    make_mighty_env,
-    make_procgen_env,
-    make_pufferlib_env,
-)
-from mighty.mighty_utils.wrappers import (
-    CARLVectorEnvSimulator,
-    ProcgenVecEnv,
-    PufferlibToGymAdapter,
-)
+from mighty.mighty_utils.envs import (make_carl_env, make_dacbench_env,
+                                      make_gym_env, make_mighty_env,
+                                      make_procgen_env, make_pufferlib_env)
+from mighty.mighty_utils.wrappers import (CARLVectorEnvSimulator,
+                                          ProcgenVecEnv, PufferlibToGymAdapter)
 
 try:
     import envpool

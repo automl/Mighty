@@ -10,7 +10,8 @@ import numpy as np
 import torch
 from omegaconf import OmegaConf
 
-from mighty.mighty_agents.base_agent import MightyAgent, retrieve_class, update_buffer
+from mighty.mighty_agents.base_agent import (MightyAgent, retrieve_class,
+                                             update_buffer)
 from mighty.mighty_exploration import EpsilonGreedy, MightyExplorationPolicy
 from mighty.mighty_models import DQN
 from mighty.mighty_replay import TransitionBatch

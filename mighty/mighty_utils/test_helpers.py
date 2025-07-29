@@ -1,9 +1,9 @@
 import shutil
+from pathlib import Path
 
 import gymnasium as gym
 import numpy as np
 import torch
-from pathlib import Path
 
 
 class DummyEnv(gym.Env):
