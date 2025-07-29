@@ -2,8 +2,8 @@ import datetime
 
 name = "Mighty"
 package_name = "mighty"
-author = "Todo"
-author_email = "Todo"
+author = "Aditya Mohan, Theresa Eimer"
+author_email = "a.mohan@ai.uni-hannover.de"
 description = "No description given"
 url = "https://www.automl.org"
 project_urls = {

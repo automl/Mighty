@@ -18,19 +18,23 @@ class TestPPOModel:
         assert ppo.obs_size == 4, "Obs size should be 4"
         assert ppo.action_size == 2, "Action size should be 2"
         assert ppo.continuous_action is False, "Should be discrete action"
-        assert ppo.hidden_sizes == [64, 64], "Default hidden sizes should be [64, 64]"
-        assert ppo.activation == "tanh", "Default activation should be tanh"
         
         # Check network structure
         assert isinstance(ppo.feature_extractor_policy, MLP), (
             "Policy feature extractor should be MLP"
         )
+        assert isinstance(ppo.feature_extractor_policy.layers[1], nn.Tanh), "Feature extractor should have tanh activation"
+        assert ppo.feature_extractor_policy.layers[0].in_features == 4, "First layer should take obs_size as input"
+        assert ppo.feature_extractor_policy.layers[-2].out_features == 64, "Last layer should output 64 features"
         assert isinstance(ppo.feature_extractor_value, MLP), (
             "Value feature extractor should be MLP"
         )
         assert isinstance(ppo.policy_head, nn.Sequential), (
             "Policy head should be Sequential"
         )
+        assert len(ppo.policy_head) == 4, "Policy head should have 2 layers, 1 activation layer and 1 normalization layer"
+        assert isinstance(ppo.policy_head[1], nn.LayerNorm), "Policy head should have LayerNorm"
+        assert isinstance(ppo.policy_head[2], nn.Tanh), "Policy head should have tanh activation"
         assert isinstance(ppo.value_head, nn.Sequential), (
             "Value head should be Sequential"
         )
@@ -49,17 +53,21 @@ class TestPPOModel:
             obs_shape=8, 
             action_size=3, 
             continuous_action=True,
-            hidden_sizes=[32, 32],
-            activation="tanh"
+            feature_extractor_kwargs={
+                "hidden_sizes": [32, 32],
+                "n_layers": 2,
+                "activation": "relu",
+            },
         )
         
         assert ppo.obs_size == 8, "Obs size should be 8"
         assert ppo.action_size == 3, "Action size should be 3"
         assert ppo.continuous_action is True, "Should be continuous action"
-        assert ppo.hidden_sizes == [32, 32], "Hidden sizes should be [32, 32]"
-        assert ppo.activation == "tanh", "Activation should be tanh"
         assert ppo.log_std_min == -20.0, "Default log_std_min should be -20.0"
         assert ppo.log_std_max == 2.0, "Default log_std_max should be 2.0"
+
+        assert ppo.feature_extractor_policy.layers[-2].out_features == 32, "Last layer should output 32 features"
+        assert isinstance(ppo.feature_extractor_policy.layers[1], nn.ReLU), "Feature extractor should have ReLU activation"
         
         # Test forward pass shapes for continuous actions
         dummy_input = torch.rand((5, 8))

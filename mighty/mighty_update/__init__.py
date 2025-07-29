@@ -3,7 +3,6 @@ from mighty.mighty_update.q_learning import (
     ClippedDoubleQLearning,
     DoubleQLearning,
     QLearning,
-    SPRQLearning,
 )
 from mighty.mighty_update.sac_update import SACUpdate
 
@@ -11,7 +10,6 @@ __all__ = [
     "QLearning",
     "DoubleQLearning",
     "ClippedDoubleQLearning",
-    "SPRQLearning",
     "SACUpdate",
     "PPOUpdate",
 ]

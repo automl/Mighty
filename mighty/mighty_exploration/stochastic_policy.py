@@ -1,4 +1,5 @@
-""""Stochastic Policy for Entropy-Based Exploration."""
+""" "Stochastic Policy for Entropy-Based Exploration."""
+
 from __future__ import annotations
 
 from typing import Tuple

@@ -38,8 +38,6 @@ class MightyPPOAgent(MightyAgent):
         },
         meta_methods: Optional[List[str | type]] = None,
         meta_kwargs: Optional[List[TypeKwargs]] = None,
-        n_policy_units: int = 8,
-        n_critic_units: int = 8,
         soft_update_weight: float = 0.01,
         policy_class: Optional[
             Union[str, DictConfig, Type[MightyExplorationPolicy]]
@@ -50,7 +48,6 @@ class MightyPPOAgent(MightyAgent):
         entropy_coef: float = 0.01,
         max_grad_norm: float = 0.5,
         n_gradient_steps: int = 10,
-        hidden_sizes: Optional[List[int]] = [64, 64],
         activation: Optional[str] = "tanh",
         n_epochs: int = 10,
         minibatch_size: int = 32,
@@ -80,8 +77,6 @@ class MightyPPOAgent(MightyAgent):
         :param rollout_buffer_kwargs: Arguments for the rollout buffer
         :param meta_methods: Meta methods for the agent
         :param meta_kwargs: Arguments for meta methods
-        :param n_policy_units: Number of units for the policy network
-        :param n_critic_units: Number of units for the critic network
         :param soft_update_weight: Size of soft updates for the target network
         :param policy_class: Policy class
         :param policy_kwargs: Arguments for the policy
@@ -94,14 +89,11 @@ class MightyPPOAgent(MightyAgent):
 
         self.total_timesteps = total_timesteps
         self.gamma = gamma
-        self.n_policy_units = n_policy_units
-        self.n_critic_units = n_critic_units
         self.soft_update_weight = soft_update_weight
         self.ppo_clip = ppo_clip
         self.value_loss_coef = value_loss_coef
         self.entropy_coef = entropy_coef
         self.max_grad_norm = max_grad_norm
-        self.hidden_sizes = hidden_sizes
         self.activation = activation
 
         self.n_epochs = n_epochs
@@ -209,7 +201,7 @@ class MightyPPOAgent(MightyAgent):
     @property
     def value_function(self) -> torch.nn.Module:
         """Return the value function model."""
-        return self.model.value_head  # type: ignore
+        return self.model.forward_value  # type: ignore
 
     def update_agent(
         self, transition_batch, batches_left, next_s, dones, **kwargs

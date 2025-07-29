@@ -6,9 +6,9 @@ from copy import deepcopy
 
 import numpy as np
 import torch
-from torch import jit, nn
+from torch import nn
 
-from mighty.mighty_models.networks import MLP, make_feature_extractor
+from mighty.mighty_models.networks import make_feature_extractor, ACTIVATIONS
 
 
 class DQN(nn.Module):
@@ -161,7 +161,7 @@ class IQN(DQN):
         return self.last_taus
 
 
-def make_q_head(in_size, num_actions, hidden_sizes=None):
+def make_q_head(in_size, num_actions, hidden_sizes=None, activation="relu"):
     """Make Q head network."""
     # Make fully connected layers
     if hidden_sizes is None:
@@ -173,6 +173,7 @@ def make_q_head(in_size, num_actions, hidden_sizes=None):
 
     for size in hidden_sizes:
         layers.append(nn.Linear(last_size, size))
+        layers.append(ACTIVATIONS[activation]())
         last_size = size
 
     # Make value layer

@@ -55,10 +55,6 @@ class PPOUpdate:
         if getattr(model, "continuous_action", False) and hasattr(model, "log_std"):
             extra_params.append(model.log_std)
 
-        print(f"[DEBUG] Initial Policy LR: {policy_lr:.2e}, Value LR: {value_lr:.2e}")
-        print(f"[DEBUG] PPO clip ε = {self.epsilon}")
-        print(f"[DEBUG] KL target = {self.kl_target}")
-
         self.optimizer = optim.Adam(
             [
                 {"params": policy_params, "lr": policy_lr},

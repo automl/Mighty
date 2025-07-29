@@ -55,7 +55,7 @@ class TestDQN:
             "First convolution should have 32 output channels"
         )
         assert dqn.head[0].out_features == 32, "Head layer 1 should have hidden size 32"
-        assert dqn.head[1].out_features == 32, "Head layer 2 should have hidden size 32"
+        assert dqn.head[2].out_features == 32, "Head layer 2 should have hidden size 32"
         assert dqn.value.out_features == 1, "Value layer should have 1 output feature"
         assert dqn.advantage.out_features == 2, (
             "Advantage layer should have 2 output features"

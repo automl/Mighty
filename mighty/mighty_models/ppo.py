@@ -4,7 +4,7 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 
-from mighty.mighty_models.networks import make_feature_extractor
+from mighty.mighty_models.networks import make_feature_extractor, ACTIVATIONS
 
 
 class PPOModel(nn.Module):
@@ -18,38 +18,38 @@ class PPOModel(nn.Module):
         self,
         obs_shape: int,
         action_size: int,
-        hidden_sizes: list[int] = [64, 64],
-        activation: str = "tanh",
         continuous_action: bool = False,
         log_std_min: float = -20.0,
         log_std_max: float = 2.0,
+        **kwargs,
     ):
         """Initialize the PPO model."""
         super().__init__()
 
         self.obs_size = int(obs_shape)
         self.action_size = int(action_size)
-        self.hidden_sizes = hidden_sizes
-        self.activation = activation
         self.continuous_action = continuous_action
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
 
-        # Make feature extractor
-        self.feature_extractor_policy, feat_dim = make_feature_extractor(
-            architecture="mlp",
-            obs_shape=obs_shape,
-            n_layers=len(hidden_sizes),
-            hidden_sizes=hidden_sizes,
-            activation=activation,
-        )
+        head_kwargs = {"hidden_sizes": [64], "layer_norm": True, "activation": "tanh"}
+        feature_extractor_kwargs = {
+            "obs_shape": self.obs_size,
+            "activation": "tanh",
+            "hidden_sizes": [64, 64],
+            "n_layers": 2,
+        }
+        if "head_kwargs" in kwargs:
+            head_kwargs.update(kwargs["head_kwargs"])
+        if "feature_extractor_kwargs" in kwargs:
+            feature_extractor_kwargs.update(kwargs["feature_extractor_kwargs"])
 
+        # Make feature extractors
+        self.feature_extractor_policy, feat_dim = make_feature_extractor(
+            **feature_extractor_kwargs
+        )
         self.feature_extractor_value, _ = make_feature_extractor(
-            architecture="mlp",
-            obs_shape=obs_shape,
-            n_layers=len(hidden_sizes),
-            hidden_sizes=hidden_sizes,
-            activation=activation,
+            **feature_extractor_kwargs
         )
 
         if self.continuous_action:
@@ -63,22 +63,10 @@ class PPOModel(nn.Module):
         # https://github.com/DLR-RM/stable-baselines3/blob/master/stable_baselines3/common/policies.py)
 
         # Policy network
-        self.policy_head = nn.Sequential(
-            self.feature_extractor_policy,  # [batch, feat_dim]
-            nn.Linear(feat_dim, hidden_sizes[0]),  # [batch, hidden_sizes[0]]
-            nn.LayerNorm(hidden_sizes[0]),  # (optional normalization)
-            getattr(nn, activation.capitalize())(),  # e.g. tanh or ReLU
-            nn.Linear(hidden_sizes[0], final_out_dim),  # [batch, final_out_dim]
-        )
+        self.policy_head = make_ppo_head(feat_dim, final_out_dim, **head_kwargs)
 
         # Value network
-        self.value_head = nn.Sequential(
-            self.feature_extractor_value,  # [batch, feat_dim]
-            nn.Linear(feat_dim, hidden_sizes[0]),  # [batch, hidden_sizes[0]]
-            nn.LayerNorm(hidden_sizes[0]),
-            getattr(nn, activation.capitalize())(),
-            nn.Linear(hidden_sizes[0], 1),  # [batch, 1]
-        )
+        self.value_head = make_ppo_head(feat_dim, 1, **head_kwargs)
 
         # Orthogonal initialization
         def _init_weights(m: nn.Module):
@@ -105,7 +93,8 @@ class PPOModel(nn.Module):
         """Forward pass through the policy network."""
 
         if self.continuous_action:
-            raw = self.policy_head(x)  # [batch, 2 * action_size]
+            feats = self.feature_extractor_policy(x)
+            raw = self.policy_head(feats)  # [batch, 2 * action_size]
             mean, log_std = raw.chunk(2, dim=-1)  # each [batch, action_size]
             log_std = torch.clamp(log_std, self.log_std_min, self.log_std_max)
             std = torch.exp(log_std)  # [batch, action_size]
@@ -119,9 +108,38 @@ class PPOModel(nn.Module):
             return action, z, mean, log_std
 
         else:
-            logits = self.policy_head(x)  # [batch, action_size]
+            feats = self.feature_extractor_policy(x)
+            print("feats", feats)
+            print(self.policy_head)
+            logits = self.policy_head(feats)  # [batch, action_size]
             return logits
 
     def forward_value(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through the value network."""
-        return self.value_head(x)
+        feats = self.feature_extractor_value(x)
+        return self.value_head(feats)  # [batch, 1]
+
+
+def make_ppo_head(
+    in_size, outsize, hidden_sizes=None, layer_norm=True, activation="relu"
+):
+    """Make PPO head network."""
+
+    # Make fully connected layers
+    if hidden_sizes is None:
+        hidden_sizes = []
+
+    layers = []
+    last_size = in_size
+    if isinstance(last_size, list):
+        last_size = last_size[0]
+
+    for size in hidden_sizes:
+        layers.append(nn.Linear(last_size, size))
+        if layer_norm:
+            layers.append(nn.LayerNorm(size))
+        layers.append(ACTIVATIONS[activation]())
+        last_size = size
+    layers.append(nn.Linear(last_size, outsize))
+
+    return nn.Sequential(*layers)

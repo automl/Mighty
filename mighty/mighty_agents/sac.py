@@ -6,7 +6,9 @@ from omegaconf import DictConfig
 
 from mighty.mighty_agents.base_agent import MightyAgent, retrieve_class, update_buffer
 from mighty.mighty_exploration import MightyExplorationPolicy, StochasticPolicy
-from mighty.mighty_exploration.mighty_exploration_policy import sample_nondeterministic_logprobs
+from mighty.mighty_exploration.mighty_exploration_policy import (
+    sample_nondeterministic_logprobs,
+)
 from mighty.mighty_models.sac import SACModel
 from mighty.mighty_replay import MightyReplay, TransitionBatch
 from mighty.mighty_update import SACUpdate
@@ -20,10 +22,6 @@ class MightySACAgent(MightyAgent):
         env: MIGHTYENV,
         eval_env: Optional[MIGHTYENV] = None,
         seed: Optional[int] = None,
-        # --- PPO-style network sizes ---
-        n_policy_units: int = 64,
-        # FIXME: not currently used, will be integrated
-        n_critic_units: int = 64,
         soft_update_weight: float = 0.005,
         # --- Replay & update scheduling ---
         batch_size: int = 256,
@@ -60,11 +58,6 @@ class MightySACAgent(MightyAgent):
         normalize_reward: bool = False,  # ← NEW (optional)
     ):
         """Initialize SAC agent with tunable hyperparameters and backward-compatible names."""
-        # Map PPO-style units to hidden_sizes if not provided
-        # FIXME: This should be replaced by a more flexible architecture definition like in DQN
-        # See https://github.com/automl/Mighty/issues/57
-        if hidden_sizes is None:
-            hidden_sizes = [n_policy_units, n_policy_units]
         tau = soft_update_weight
 
         # Save hyperparameters

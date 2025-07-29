@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 import torch
 from pathlib import Path
+from typing import Callable
 
 # Import the classes to test
 from mighty.mighty_agents.ppo import MightyPPOAgent
@@ -249,6 +250,6 @@ class TestPPOAgent:
         
         # Test value_function property
         value_fn = ppo.value_function
-        assert value_fn is ppo.model.value_head, "Value function should be model's value head"
+        assert isinstance(value_fn, Callable), "Value function should be callable"
         
         clean(output_dir)

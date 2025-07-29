@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Dict, Tuple
 import numpy as np
 import torch
 
-# FIXME: THis is a hack around our current JAX version not having these functions.
+# FIXME: This is a hack around our current JAX version not having these functions.
 # Remove this once we upgrade JAX to a version that has these functions.
 try:
     import scipy.linalg

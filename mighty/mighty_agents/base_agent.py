@@ -284,9 +284,9 @@ class MightyAgent(ABC):
         self.meta_modules = {}
         for i, m in enumerate(meta_methods):
             meta_class = retrieve_class(cls=m, default_cls=None)  # type: ignore
-            assert (
-                meta_class is not None
-            ), f"Class {m} not found, did you specify the correct loading path?"
+            assert meta_class is not None, (
+                f"Class {m} not found, did you specify the correct loading path?"
+            )
             kwargs: Dict = {}
             if len(meta_kwargs) > i:
                 kwargs = meta_kwargs[i]

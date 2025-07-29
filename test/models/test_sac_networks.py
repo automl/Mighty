@@ -6,6 +6,7 @@ import math
 import torch
 import torch.nn as nn
 
+from mighty.mighty_models.networks import MLP
 from mighty.mighty_models.sac import SACModel
 from mighty.mighty_exploration.mighty_exploration_policy import sample_nondeterministic_logprobs
 
@@ -17,28 +18,41 @@ class TestSACModel:
         
         assert sac.obs_size == 8, "Obs size should be 8"
         assert sac.action_size == 3, "Action size should be 3"
-        assert sac.hidden_sizes == [256, 256], "Default hidden sizes should be [256, 256]"
-        assert sac.activation == "tanh", "Passed activation should be tanh"
         assert sac.log_std_min == -20, "Default log_std_min should be -20"
         assert sac.log_std_max == 2, "Default log_std_max should be 2"
         
         # Check network structure
-        assert isinstance(sac.policy_net, nn.Sequential), (
-            "Policy network should be Sequential"
+        assert isinstance(sac.feature_extractor, MLP), "Feature extractor should be Sequential"
+        assert len(sac.feature_extractor.layers) == 4, "Feature extractor should have 2 layers + 2 activation layers"
+        assert sac.feature_extractor.layers[0].in_features == 8, "First layer should take obs_size as input"
+        assert isinstance(sac.feature_extractor.layers[1], nn.ReLU), "Feature extractor should have ReLU activation"
+        assert sac.feature_extractor.layers[-2].out_features == 256, "Last layer should output 256 features"
+        assert isinstance(sac.policy_net, nn.Linear), (
+            "Policy network should be Linear"
         )
+        assert sac.policy_net.out_features == 6, "Last layer should output action_size*2"
+
         assert isinstance(sac.q_net1, nn.Sequential), (
             "Q-network 1 should be Sequential"
         )
+        assert len(sac.q_net1) == 5, "Q-network 1 should have 3 layers + 2 activation layers"
+        assert sac.q_net1[0].in_features == 11, "Q-network should take obs_size + action_size as input"
+        assert sac.q_net1[0].out_features == 256, "Q-network first layer should output 256 features"
+        assert sac.q_net1[-1].out_features == 1, "Q-network should output a single value"
+
         assert isinstance(sac.q_net2, nn.Sequential), (
             "Q-network 2 should be Sequential"
         )
+        assert len(sac.q_net2) == 5, "Q-network 2 should have 3 layers + 2 activation layers"
         assert isinstance(sac.target_q_net1, nn.Sequential), (
             "Target Q-network 1 should be Sequential"
         )
+        assert len(sac.target_q_net1) == 5, "Target Q-network 1 should have 3 layers + 2 activation layers"
         assert isinstance(sac.target_q_net2, nn.Sequential), (
             "Target Q-network 2 should be Sequential"
         )
-        
+        assert len(sac.target_q_net2) == 5, "Target Q-network 2 should have 3 layers + 2 activation layers"
+
         # Check that target networks have gradients disabled
         for param in sac.target_q_net1.parameters():
             assert not param.requires_grad, (
@@ -61,21 +75,38 @@ class TestSACModel:
 
     def test_init_custom_params(self):
         """Test initialization with custom parameters."""
+        feature_extractor_kwargs = {
+            "activation": "tanh",
+            "hidden_sizes": [128, 64],
+            "n_layers": 2,
+        }
+        head_kwargs = {
+            "hidden_sizes": [64],
+            "activation": "tanh",
+        }
         sac = SACModel(
             obs_size=4,
             action_size=2,
-            hidden_sizes=[128, 64],
-            activation="tanh",
             log_std_min=-10.0,
-            log_std_max=1.0
+            log_std_max=1.0,
+            feature_extractor_kwargs=feature_extractor_kwargs,
+            head_kwargs=head_kwargs
         )
         
         assert sac.obs_size == 4, "Custom obs size should be 4"
         assert sac.action_size == 2, "Custom action size should be 2"
-        assert sac.hidden_sizes == [128, 64], "Custom hidden sizes should be [128, 64]"
-        assert sac.activation == "tanh", "Custom activation should be tanh"
         assert sac.log_std_min == -10.0, "Custom log_std_min should be -10.0"
         assert sac.log_std_max == 1.0, "Custom log_std_max should be 1.0"
+
+        assert sac.feature_extractor.layers[0].in_features == 4, "Feature extractor should take obs_size as input"
+        assert sac.feature_extractor.layers[0].out_features == 128, "Feature extractor first layer should output 128 features"
+        assert isinstance(sac.feature_extractor.layers[1], nn.Tanh), "Feature extractor should have tanh activation"
+        assert sac.feature_extractor.layers[2].out_features == 64, "Feature extractor second layer should output 64 features"
+
+        assert len(sac.q_net1) == 3, "Q-network 1 should have 2 layers + 1 activation layer"
+        assert sac.q_net1[0].in_features == 6, "Q-network should take obs_size + action_size as input"
+        assert sac.q_net1[0].out_features == 64, "Q-network first layer should output 64 features"
+        assert sac.q_net1[-1].out_features == 1, "Q-network should output a single value"
 
     def test_forward_stochastic(self):
         """Test forward pass with stochastic policy."""
@@ -212,19 +243,6 @@ class TestSACModel:
         assert sac.target_q_net1 is not sac.target_q_net2, (
             "Target Q-networks should be separate objects"
         )
-
-    def test_make_q_net(self):
-        """Test Q-network creation method."""
-        sac = SACModel(obs_size=4, action_size=2)
-        
-        # Test that _make_q_net creates proper network
-        q_net = sac._make_q_net()
-        assert isinstance(q_net, nn.Sequential), "Q-network should be Sequential"
-        
-        # Test input/output dimensions
-        dummy_input = torch.rand((5, 6))  # obs_size + action_size = 4 + 2 = 6
-        q_output = q_net(dummy_input)
-        assert q_output.shape == (5, 1), "Q-network output should have shape (5, 1)"
 
     def test_log_std_bounds_enforcement(self):
         """Test that log_std bounds are properly enforced."""

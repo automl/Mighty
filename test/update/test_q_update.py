@@ -12,7 +12,6 @@ from mighty.mighty_update import (
     ClippedDoubleQLearning,
     DoubleQLearning,
     QLearning,
-    SPRQLearning,
 )
 
 RANDOM = 0.5
@@ -226,14 +225,3 @@ class TestClippedDoubleQLearning:
         assert torch.allclose(
             targets.detach(), torch.as_tensor(correct_targets, dtype=torch.float32)
         ), "Wrong targets (weight 3)."
-
-
-class TestSPRQLearning:
-    """Test SPR Q-learning update."""
-
-    def get_update(self):
-        """Return an instance of SPR Q-learning."""
-        return SPRQLearning(model=DummyModel(), gamma=0.99)
-
-    def test_update(self):
-        """Test SPR Q-learning update."""
