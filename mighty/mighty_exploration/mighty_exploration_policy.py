@@ -10,21 +10,25 @@ from torch.distributions import Categorical, Normal
 
 
 def sample_nondeterministic_logprobs(
-    z: torch.Tensor, mean: torch.Tensor, log_std: torch.Tensor, keepdim: bool = False
+    z: torch.Tensor, mean: torch.Tensor, log_std: torch.Tensor, sac: bool = False
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     std = torch.exp(log_std)  # [batch, action_dim]
     dist = Normal(mean, std)
 
-    # 2a) log_pz = ∑ᵢ log N(zᵢ; μᵢ, σᵢ)
-    log_pz = dist.log_prob(z).sum(dim=-1, keepdim=keepdim)  # [batch]
+    # For SAC, don't apply correction
+    if sac:
+        return dist.log_prob(z).sum(dim=-1, keepdim=True)  # [batch, 1]
+    # If not SAC, we need to apply the tanh correction
+    else:
+        log_pz = dist.log_prob(z).sum(dim=-1, keepdim=True)  # [batch, 1]
 
-    # 2b) tanh‐correction = ∑ᵢ log(1 − tanh(zᵢ)² + ε)
-    eps = 1e-6
-    log_correction = torch.log(1.0 - torch.tanh(z).pow(2) + eps).sum(dim=-1, keepdim=keepdim)  # [batch]
+        # 2b) tanh‐correction = ∑ᵢ log(1 − tanh(zᵢ)² + ε)
+        eps = 1e-6
+        log_correction = torch.log(1.0 - torch.tanh(z).pow(2) + eps).sum(dim=-1, keepdim=True)  # [batch, 1]
 
-    # 2c) final log_prob of a = tanh(z)
-    log_prob = log_pz - log_correction  # [batch]
-    return log_prob
+        # 2c) final log_prob of a = tanh(z)
+        log_prob = log_pz - log_correction  # [batch, 1]
+        return log_prob
 
 
 class MightyExplorationPolicy:

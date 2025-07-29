@@ -44,9 +44,7 @@ class StochasticPolicy(MightyExplorationPolicy):
         else:
             # If model has attribute continuous_action=True, we know:
             #   model(state) → (action, z, mean, log_std)
-            if hasattr(self.model, "continuous_action") and getattr(
-                self.model, "continuous_action"
-            ):
+            if self.model.output_style == "squashed_gaussian":
                 # 1) Forward pass: get (action, z, mean, log_std)
                 action, z, mean, log_std = self.model(
                     state
@@ -54,12 +52,13 @@ class StochasticPolicy(MightyExplorationPolicy):
                 log_prob = sample_nondeterministic_logprobs(
                     action=action, z=z, mean=mean, log_std=log_std, keepdim=self.algo == "sac"
                 )
-                weighted_log_prob = log_prob * self.entropy_coefficient
-
-                return action.detach().cpu().numpy(), weighted_log_prob
-
+                if return_logp:
+                    return action.detach().cpu().numpy(), log_prob
+                else:
+                    weighted_log_prob = log_prob * self.entropy_coefficient
+                    return action.detach().cpu().numpy(), weighted_log_prob
             # If it’s “mean, std”‐style continuous (rare in our code), handle that case
-            else:
+            elif self.model.output_style == "mean_std":
                 mean, std = self.model(state)
                 dist = Normal(mean, std)
                 z = dist.rsample()  # [batch, action_dim]
@@ -68,8 +67,12 @@ class StochasticPolicy(MightyExplorationPolicy):
                 log_prob = sample_nondeterministic_logprobs(z=z, mean=mean, log_std=torch.log(std), keepdim=True)
                 entropy = dist.entropy().sum(dim=-1, keepdim=True)  # [batch, 1]
                 weighted_log_prob = log_prob * entropy
-
                 return action.detach().cpu().numpy(), weighted_log_prob
+            else:
+                raise RuntimeError(
+                    "StochasticPolicy: cannot interpret model(state) output of type "
+                    f"{type(self.model(state))}"
+                )
 
     def forward(self, s):
         """
