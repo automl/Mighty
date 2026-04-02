@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 import gymnasium as gym
 from gymnasium.wrappers import RescaleAction
-from gymnasium.wrappers.normalize import NormalizeObservation, NormalizeReward
+from gymnasium.wrappers.vector import NormalizeObservation, NormalizeReward
 
 try:
     import logging
@@ -53,10 +53,6 @@ def seed_env_spaces(env: gym.VectorEnv, seed: int) -> None:
     env.single_action_space.seed(seed)
     env.observation_space.seed(seed)
     env.single_observation_space.seed(seed)
-    for i in range(len(env.envs)):
-        env.envs[i].action_space.seed(seed)
-        env.envs[i].observation_space.seed(seed)
-
 
 def update_buffer(buffer, new_data):
     for k in buffer.keys():
@@ -446,7 +442,7 @@ class MightyAgent(ABC):
     def __del__(self) -> None:
         """Close wandb upon deletion."""
         self.env.close()  # type: ignore
-        if self.log_wandb:
+        if hasattr(self, "log_wandb") and self.log_wandb:
             wandb.finish()
 
     def step(self, observation: torch.Tensor, metrics: Dict) -> torch.Tensor:
@@ -656,6 +652,7 @@ class MightyAgent(ABC):
             )
 
             # Main loop: rollouts, training and evaluation
+            autoresets = np.zeros(self.env.num_envs)
             while self.steps < n_steps:
                 metrics["episode_reward"] = episode_reward
 
@@ -663,17 +660,16 @@ class MightyAgent(ABC):
                 # step the env as usual
                 next_s, reward, terminated, truncated, infos = self.env.step(action)
 
+                # For envs that have had an autoreset, don't add initial transition to the buffer
+                reset_envs = []
+                for j in range(self.env.num_envs):
+                    if autoresets[j]:
+                        reset_envs.append(j)
+
                 # decide which samples are true “done”
                 replay_dones = terminated  # physics‐failure only
                 dones = np.logical_or(terminated, truncated)
 
-                # Overwrite next_s on truncation
-                # Based on https://github.com/DLR-RM/stable-baselines3/issues/284
-                real_next_s = next_s.copy()
-                # infos["final_observation"] is a list/array of the last real obs
-                for i, tr in enumerate(truncated):
-                    if tr:
-                        real_next_s[i] = infos["final_observation"][i]
                 episode_reward += reward
 
                 # Log everything
@@ -683,7 +679,7 @@ class MightyAgent(ABC):
                     "reward": reward,
                     "action": action,
                     "state": curr_s,
-                    "next_state": real_next_s,
+                    "next_state": next_s,
                     "terminated": terminated.astype(int),
                     "truncated": truncated.astype(int),
                     "dones": replay_dones.astype(int),
@@ -721,6 +717,13 @@ class MightyAgent(ABC):
                 for k in self.meta_modules:
                     self.meta_modules[k].post_step(metrics)
 
+                # Replace transitions from autoreset envs with nans so they don't get learned from
+                for k in ["state", "action", "reward", "next_state", "dones", "log_prob"]:
+                    if k in metrics["transition"]:
+                        metrics["transition"][k] = np.array(metrics["transition"][k]).astype(float)
+                        for j in reset_envs:
+                            metrics["transition"][k][j] = np.ones_like(metrics["transition"][k][0]) * np.nan
+
                 transition_metrics = self.process_transition(
                     metrics["transition"]["state"],
                     metrics["transition"]["action"],
@@ -732,7 +735,7 @@ class MightyAgent(ABC):
                 )
                 metrics.update(transition_metrics)
                 self.result_buffer = update_buffer(self.result_buffer, t)
-
+                
                 if self.log_wandb:
                     log_to_wandb(metrics)
 
@@ -743,6 +746,7 @@ class MightyAgent(ABC):
                 for _ in range(len(action)):
                     progress.advance(steps_task)
 
+                print(len(self.buffer))
                 # Update agent
                 if (
                     len(self.buffer) >= self._batch_size  # type: ignore
@@ -754,6 +758,7 @@ class MightyAgent(ABC):
                 # End step
                 self.last_state = curr_s
                 curr_s = next_s
+                autoresets = np.logical_or(terminated, truncated)
 
                 # Evaluate
                 if eval_every_n_steps and steps_since_eval >= eval_every_n_steps:

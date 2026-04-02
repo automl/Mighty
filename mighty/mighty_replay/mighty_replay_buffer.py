@@ -126,7 +126,17 @@ class MightyReplay(MightyBuffer):
                 list(flatten_infos(transition_batch.extra_info))
             ]
 
-        self.index += transition_batch.size
+        # Remove nan values from transitions (from autoreset envs) so they don't get learned from
+        transition_batch.observations = transition_batch.observations[~torch.any(transition_batch.observations.isnan(), dim=1)]
+        transition_batch.next_obs = transition_batch.next_obs[~torch.any(transition_batch.next_obs.isnan(), dim=1)]
+        if transition_batch.actions.ndim > 1:
+            transition_batch.actions = transition_batch.actions[~torch.any(transition_batch.actions.isnan(), dim=1)]
+        else:
+            transition_batch.actions = transition_batch.actions[~transition_batch.actions.isnan()]
+        transition_batch.rewards = transition_batch.rewards[~transition_batch.rewards.isnan()]
+        transition_batch.dones = transition_batch.dones[~transition_batch.dones.isnan()]
+
+        self.index += transition_batch.observations.size(0)
         if len(self.obs) == 0:
             self.obs = transition_batch.observations
             self.next_obs = transition_batch.next_obs
@@ -169,7 +179,7 @@ class MightyReplay(MightyBuffer):
         self.index = 0
 
     def __len__(self):
-        return len(self.obs)
+        return len(self.actions)
 
     def __bool__(self):
         return bool(len(self))

@@ -33,7 +33,7 @@ class DummyEnv(gym.Env):
         return self.observation_space.sample(), {}
 
     def step(self, action):
-        tr = self._np_random.choice([0, 1], p=[0.9, 0.1])
+        tr = self._np_random.choice([0, 1], p=[0.95, 0.05])
         return self.observation_space.sample(), self._np_random.random(), False, tr, {}
 
 

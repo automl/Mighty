@@ -268,6 +268,8 @@ class MightyDQNAgent(MightyAgent):
     ) -> Dict:
         # convert into a transition object
         transition = TransitionBatch(curr_s, action, reward, next_s, dones)
+        if len(transition.observations) == 0:
+            return metrics
 
         if "rollout_values" not in metrics:
             metrics["rollout_values"] = np.empty((0, self.env.single_action_space.n))  # type: ignore
@@ -278,14 +280,12 @@ class MightyDQNAgent(MightyAgent):
         )
 
         # Compute and add rollout values to metrics
-        values = (
-            self.value_function(
-                torch.as_tensor(transition.observations, dtype=torch.float32)
-            )
-            .detach()
-            .numpy()
-            .reshape((transition.observations.shape[0], -1))
-        )
+        values = self.value_function(
+            torch.as_tensor(transition.observations, dtype=torch.float32)
+        ).detach().numpy()
+
+        if (values.shape[0] != 1 or len(values.shape) != 2):
+            values = values.reshape((transition.observations.shape[0], -1))
 
         metrics["rollout_values"] = np.append(metrics["rollout_values"], values, axis=0)
 

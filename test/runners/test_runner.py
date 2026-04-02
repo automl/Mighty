@@ -9,7 +9,7 @@ from omegaconf import OmegaConf
 from mighty.mighty_agents import MightyAgent
 from mighty.mighty_runners import MightyOnlineRunner, MightyRunner
 from mighty.mighty_utils.test_helpers import DummyEnv
-from mighty.mighty_utils.wrappers import PufferlibToGymAdapter
+from mighty.mighty_utils.wrappers import PufferWrapperEnv
 
 
 class TestMightyRunner:
@@ -27,7 +27,7 @@ class TestMightyRunner:
             "checkpoint": None,
             "save_model_every_n_steps": 5e5,
             "num_steps": 100,
-            "env": "pufferlib.ocean.bandit",
+            "env": "pufferlib.ocean.puffer_squared",
             "env_kwargs": {},
             "env_wrappers": [],
             "num_envs": 1,
@@ -63,8 +63,8 @@ class TestMightyRunner:
         assert isinstance(runner.agent, MightyAgent), (
             "MightyOnlineRunner should have a MightyAgent"
         )
-        assert isinstance(runner.agent.eval_env, PufferlibToGymAdapter), (
-            "Eval env should be a PufferlibToGymAdapter"
+        assert isinstance(runner.agent.eval_env, PufferWrapperEnv), (
+            "Eval env should be a PufferWrapperEnv"
         )
         assert runner.agent.env is not None, "Env should not be None"
         assert runner.eval_every_n_steps == self.runner_config.eval_every_n_steps, (

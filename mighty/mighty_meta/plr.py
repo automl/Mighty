@@ -186,6 +186,14 @@ class PrioritizedLevelReplay(MightyMetaComponent):
         :param logits: Rollout logits
         :return: score
         """
+        reward = np.array(reward)
+        reward[np.isnan(reward)] = 0.0  # treat NaN rewards (from autoreset) as zero
+        values= np.array(values)
+        values[np.isnan(values)] = 0.0  # treat NaN values (from autoreset) as zero
+        logits = np.array(logits) if logits is not None else None
+        if logits is not None:
+            logits[np.isnan(logits)] = 0.0  # treat NaN logits (from autoreset) as zero
+
         if self.sample_strategy == "random":
             score = 1
         elif self.sample_strategy == "policy_entropy":
@@ -260,6 +268,7 @@ class PrioritizedLevelReplay(MightyMetaComponent):
             * np.log(1.0 / self.num_actions)
             * self.num_actions
         )
+
         return (
             np.mean(np.sum(-np.exp(episode_logits) * episode_logits, axis=-1))
             / max_entropy

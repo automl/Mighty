@@ -26,8 +26,8 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy<2",
-    "gymnasium<1",
+    "numpy>2",
+    "gymnasium>1",
     "matplotlib~=3.4",
     "seaborn~=0.11",
     "tensorboard",
@@ -51,9 +51,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["ruff", "mypy", "build", "pytest", "pytest-cov"]
-carl = ["carl_bench[brax]==1.1.1"]
-dacbench = ["dacbench==0.4.0", "torchvision"]
-pufferlib = ["pufferlib==2.0.6"]
+carl = ["carl_bench[brax]"]
+dacbench = ["dacbench", "torchvision"]
+pufferlib = ["pufferlib"]
 docs = ["mkdocs", "mkdocs-material", "mkdocs-autorefs",
         "mkdocs-gen-files", "mkdocs-literate-nav",
         "mkdocs-glightbox", "mkdocs-glossary-plugin",

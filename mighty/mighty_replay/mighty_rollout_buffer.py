@@ -265,7 +265,9 @@ class MightyRolloutBuffer(MightyBuffer):
                 next_val = val_slice[step + 1]  # [n_envs]
 
             r_t = rew_slice[step]  # shape = [n_envs]
+            r_t[r_t.isnan()] = 0.0  # treat NaN rewards (from autoreset) as zero
             v_t = val_slice[step]  # shape = [n_envs]
+            v_t[v_t.isnan()] = 0.0  # treat NaN values (from autoreset) as zero
 
             # standard TD residual
             delta = r_t + self.gamma * next_val * next_non_term - v_t  # [n_envs]

@@ -222,7 +222,7 @@ class TestDQNAgent:
         dqn = MightyDQNAgent(output_dir, env, batch_size=2, seed=42)
         init_params = deepcopy(list(dqn.q.parameters()))
         dqn.run(20, 1)
-        original_batch = dqn.buffer.sample(20)
+        original_batch = dqn.buffer.sample(10)
         original_metrics = dqn.update_agent(original_batch, 0)
         original_params = deepcopy(list(dqn.q.parameters()))
 
@@ -238,7 +238,7 @@ class TestDQNAgent:
                     "Parameter initialization should be the same with same seed"
                 )
             dqn.run(20, 1)
-            batch = dqn.buffer.sample(20)
+            batch = dqn.buffer.sample(10)
 
             for old, new in zip(
                 original_batch.observations, batch.observations, strict=False

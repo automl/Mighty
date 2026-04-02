@@ -14,7 +14,7 @@ from mighty.mighty_utils.wrappers import (
     CARLVectorEnvSimulator,
     ContextualVecEnv,
     ProcgenVecEnv,
-    PufferlibToGymAdapter,
+    PufferWrapperEnv
 )
 
 try:
@@ -89,6 +89,7 @@ def make_carl_env(
     """Make carl environment."""
 
     import carl
+    import carl.envs  # type: ignore
     from carl.context.sampler import ContextSampler
 
     env_kwargs = OmegaConf.to_container(cfg.env_kwargs, resolve=True)
@@ -205,7 +206,7 @@ def make_procgen_env(cfg: DictConfig) -> Tuple[type[ProcgenVecEnv], Callable, in
     return env, eval_env, eval_default
 
 
-def make_pufferlib_env(cfg: DictConfig) -> Tuple[PufferlibToGymAdapter, Callable, int]:
+def make_pufferlib_env(cfg: DictConfig) -> Tuple[PufferWrapperEnv, Callable, int]:
     """Make pufferlib environment."""
     import pufferlib  # type: ignore
     import pufferlib.vector  # type: ignore
@@ -218,15 +219,15 @@ def make_pufferlib_env(cfg: DictConfig) -> Tuple[PufferlibToGymAdapter, Callable
         backend = getattr(pufferlib.vector, cfg.env_kwargs["backend"])
     else:
         backend = pufferlib.vector.Serial
-    env = PufferlibToGymAdapter(
+    env = PufferWrapperEnv(
         pufferlib.vector.make(make_env, num_envs=cfg.num_envs, backend=backend)
     )
 
-    def get_eval() -> PufferlibToGymAdapter:
+    def get_eval() -> PufferWrapperEnv:
         env = pufferlib.vector.make(
             make_env, num_envs=cfg.n_episodes_eval, backend=backend
         )
-        return PufferlibToGymAdapter(env)
+        return PufferWrapperEnv(env)
 
     eval_default = cfg.n_episodes_eval
     return env, get_eval, eval_default
@@ -236,11 +237,8 @@ def make_gym_env(
     cfg: DictConfig,
 ) -> Tuple[gym.vector.SyncVectorEnv, partial[gym.vector.SyncVectorEnv], int]:
     """Make gymnasium environment."""
-    make_env = partial(gym.make, cfg.env, **cfg.env_kwargs)
-    env = gym.vector.SyncVectorEnv([make_env for _ in range(cfg.num_envs)])
-    eval_env = partial(
-        gym.vector.SyncVectorEnv, [make_env for _ in range(cfg.n_episodes_eval)]
-    )
+    env = gym.make_vec(cfg.env, cfg.num_envs, **cfg.env_kwargs)
+    eval_env = partial(gym.make_vec, cfg.env, cfg.n_episodes_eval, **cfg.env_kwargs)
     eval_default = cfg.n_episodes_eval
     return env, eval_env, eval_default
 
@@ -257,10 +255,7 @@ def make_mighty_env(cfg: DictConfig) -> Tuple[ContextualVecEnv, Callable, int]:
         env, eval_env, eval_default = make_pufferlib_env(cfg)  # type: ignore
     elif ENVPOOL:
         env = envpool.make(cfg.env, env_type="gym", **cfg.env_kwargs)
-        make_env = partial(gym.make, cfg.env, **cfg.env_kwargs)
-        eval_env = partial(
-            gym.vector.SyncVectorEnv, [make_env for _ in range(cfg.n_episodes_eval)]
-        )
+        eval_env = partial(gym.make_vec, cfg.env, cfg.n_episodes_eval, **cfg.env_kwargs)
         eval_default = cfg.n_episodes_eval
     else:
         env, eval_env, eval_default = make_gym_env(cfg)  # type: ignore

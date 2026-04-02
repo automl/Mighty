@@ -1,7 +1,7 @@
 # @package _global_
 
 num_steps: 50_000 
-env: pufferlib.ocean.squared
+env: pufferlib.ocean.puffer_squared
 env_kwargs: {}
 env_wrappers: [mighty.mighty_utils.wrappers.FlattenVecObs]
 num_envs: 64
