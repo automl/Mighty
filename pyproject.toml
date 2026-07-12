@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Mighty-RL"
-version = "1.0.0"
+version = "1.0.1"
 description = "A modular, meta-learning-ready RL library."
 authors = [{ name = "AutoRL@LUHAI", email = "a.mohan@ai.uni-hannover.de" }]
 readme = "README.md"
