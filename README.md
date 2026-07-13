@@ -28,7 +28,7 @@
 # Mighty
 
 Welcome to Mighty, hopefully your future one-stop shop for everything cRL.
-Currently Mighty is still in its early stages with support for normal gym envs, DACBench and CARL.
+Mighty supports standard Gymnasium environments as well as DACBench and CARL for contextual RL.
 The interface is controlled through hydra and we provide DQN, PPO and SAC algorithms.
 We log training and regular evaluations to file and optionally also to wandb.
 If you have any questions or feedback, please tell us, ideally via the GitHub issues!
