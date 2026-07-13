@@ -183,7 +183,7 @@ Mighty is meant to be a platform to build upon and not a large collection of met
 - **Theresa Eimer:** Designed the system architecture, Built the environment interfaces and data pipelines, contributed to architectural decisions, and implemented the meta-learning components and their evaluation setups.
 - **Carolin Benjamins:** Reviewed the architecture, conducted focused code audits, and improved interface design and modular structure.
 - **Marius Lindauer:** Guided the overall research direction, supervised the project, and refined the methodological setup.
-- **Andre Biedenkapp:** Provided project supervision, contributed to research design, and advised on algorithmic methodology and experimentation.
+- **André Biedenkapp:** Provided project supervision, contributed to research design, and advised on algorithmic methodology and experimentation.
 
 ## Cite Us
 

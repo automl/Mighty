@@ -23,7 +23,7 @@ authors:
   - name: Marius Lindauer
     orcid: 0000-0002-9675-3175
     affiliation: "1, 3"
-  - name: Andre Biedenkapp
+  - name: André Biedenkapp
     orcid: 0000-0002-8703-8559
     affiliation: 2
 affiliations:
