@@ -109,7 +109,7 @@ The trends that broadly align are: PPO and DQN on CartPole closely track Open RL
 
 ## Acknowledgements
 
-We acknowledge contributions from the AutoML community and thank the developers of CARL, DACBench, and other integrated frameworks that make Mighty's unified interface possible.
+We acknowledge contributions from the AutoML community and thank the developers of CARL, DACBench, and other integrated frameworks that make Mighty's unified interface possible. Theresa Eimer, Aditya Mohan, and Marius Lindauer acknowledge funding by the German Research Foundation (DFG) under LI 2801/10-1. Carolin Benjamins and Marius Lindauer acknowledge funding by the German Research Foundation (DFG) under LI 2801/7-1. André Biedenkapp acknowledges funding through the research network “Responsive and Scalable Learning for Robots Assisting Humans” (ReScaLe) of the University of Freiburg. The ReScaLe project is funded by the Carl Zeiss Foundation.
 
 ## AI Usage Disclosure
 
