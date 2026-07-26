@@ -1,5 +1,5 @@
 ---
-title: 'Mighty: A Comprehensive Tool for studying Generalization, Meta-RL and AutoRL'
+title: 'Mighty: A Comprehensive Tool for Studying Generalization, Meta-RL and AutoRL'
 tags:
   - Python
   - reinforcement learning
@@ -71,7 +71,7 @@ Mighty is organized around three abstractions: (i) an Agent assembled from modul
 **Meta-Learning Framework:** Mighty's support for meta-methods is unique in the RL landscape. It offers two key abstractions: *runners* and *meta-components*. Runners control training lifecycles, interacting with agents and environments while accessing artifacts like performance metrics and policy weights. This supports use cases such as hyperparameter optimization, policy search with evolutionary methods (e.g., our evosax [@evosax2022github] runner), and more complex-to-implement Meta-RL algorithms like MAML [@finn-icml17a], which jointly adapts policy and environment. Meta-components operate within a single run, with access to six hook points and full training context. They can implement curriculum generation, intrinsic rewards, or dynamic hyperparameter schedules. Both runners and meta-components are modular, composable, and compatible across base agents.
 
 **Currently Implemented Methods:** Mighty is primarily a platform to implement new research, but comes with several built-in options that demonstrate Mighty's functionality (a full overview can be found [in our documentation](https://automl.github.io/Mighty/)).
-The $\epsilon$z-greedy [@dabney-iclr21] exploration, prioritized replay buffer [@schaul-iclr16a], and DDQN [@hasselt-aaai16a] update each expand upon the core agents.
+The $\epsilon z$-greedy exploration of @dabney-iclr21 (the temporally-extended variant of $\epsilon$-greedy, where each exploratory step also samples a duration $z$ for which the chosen action is repeated), prioritized replay buffer [@schaul-iclr16a], and DDQN [@hasselt-aaai16a] update each expand upon the core agents.
 In addition to our evosax runner, the meta-components show online interactions with hyperparameters (cosine annealing; [@loshchilov-iclr17a]), transitions (RND and NovelD; [@burda-iclr19a; @zhang-neurips21]) and contextual environments (PLR and SPaCE; [@jiang-icml21a; @eimer-icml21a]).
 
 ## Usage Example
