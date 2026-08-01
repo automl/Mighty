@@ -11,6 +11,7 @@
 ![License](https://img.shields.io/badge/License-BSD3-orange)
 [![Test](https://github.com/automl/Mighty/actions/workflows/test.yaml/badge.svg)](https://github.com/automl/Mighty/actions/workflows/test.yaml)
 [![Doc Status](https://github.com/automl/Mighty/actions/workflows/docs_test.yaml/badge.svg)](https://github.com/automl/Mighty/actions/workflows/docs_test.yaml)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.10439/status.svg)](https://doi.org/10.21105/joss.10439)
     
 </div>
 
@@ -28,7 +29,7 @@
 # Mighty
 
 Welcome to Mighty, hopefully your future one-stop shop for everything cRL.
-Currently Mighty is still in its early stages with support for normal gym envs, DACBench and CARL.
+Mighty supports standard Gymnasium environments as well as DACBench and CARL for contextual RL.
 The interface is controlled through hydra and we provide DQN, PPO and SAC algorithms.
 We log training and regular evaluations to file and optionally also to wandb.
 If you have any questions or feedback, please tell us, ideally via the GitHub issues!
@@ -177,15 +178,29 @@ Mighty is meant to be a platform to build upon and not a large collection of met
 - **Meta Components**: RND, NovelD, SPaCE, PLR
 - **Runners**: online RL runner, ES runner
 
+## Contributions
+
+- **Aditya Mohan:** Implemented the core agent stack (training loop, model interfaces, evaluation tools), ran the experiments and evaluation, and maintained the codebase, including integration of new modules and cross-component consistency.
+- **Theresa Eimer:** Designed the system architecture, Built the environment interfaces and data pipelines, contributed to architectural decisions, and implemented the meta-learning components and their evaluation setups.
+- **Carolin Benjamins:** Reviewed the architecture, conducted focused code audits, and improved interface design and modular structure.
+- **Marius Lindauer:** Guided the overall research direction, supervised the project, and refined the methodological setup.
+- **André Biedenkapp:** Provided project supervision, contributed to research design, and advised on algorithmic methodology and experimentation.
+
 ## Cite Us
 
-If you use Mighty in your work, please cite us:
+If you use Mighty in your work, please cite our JOSS paper:
 
 ```bibtex
-@misc{mohaneimer24,
-  author    = {A. Mohan and T. Eimer and C. Benjamins and M. Lindauer and A. Biedenkapp},
-  title     = {Mighty},
-  year      = {2024},
-  url = {https://github.com/automl/mighty}
+@article{mohan2026mighty,
+  author    = {Aditya Mohan and Theresa Eimer and Carolin Benjamins and Marius Lindauer and Andr\'{e} Biedenkapp},
+  title     = {Mighty: A Comprehensive Tool for Studying Generalization, Meta-RL and AutoRL},
+  journal   = {Journal of Open Source Software},
+  year      = {2026},
+  volume    = {11},
+  number    = {123},
+  pages     = {10439},
+  publisher = {The Open Journal},
+  doi       = {10.21105/joss.10439},
+  url       = {https://doi.org/10.21105/joss.10439}
 }
 ```
