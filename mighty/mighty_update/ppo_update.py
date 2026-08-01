@@ -83,8 +83,11 @@ class PPOUpdate:
 
         # ─────────────────── cache old values & log-probs ───────────────────
         with torch.no_grad():
+            # squeeze(-1): value head outputs (..., 1); returns/advantages are (..., ),
+            # so without it (returns - values) broadcasts to a (B, B) matrix.
             old_values = [
-                self.model.forward_value(mb.observations) for mb in batch.minibatches
+                self.model.forward_value(mb.observations).squeeze(-1)
+                for mb in batch.minibatches
             ]
             old_log_probs = [mb.log_probs.clone() for mb in batch.minibatches]
 
@@ -108,7 +111,7 @@ class PPOUpdate:
                 adv = ((mb.advantages - adv_mean) / adv_std).detach()
 
                 # ---- value loss ---------------------------------------------------
-                values = self.model.forward_value(mb.observations)
+                values = self.model.forward_value(mb.observations).squeeze(-1)
                 if self.use_value_clip:
                     clipped = old_values[i] + (values - old_values[i]).clamp(
                         -self.value_clip_eps, self.value_clip_eps

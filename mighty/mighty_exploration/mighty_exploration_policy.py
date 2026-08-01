@@ -9,27 +9,36 @@ from torch.distributions import Categorical, Normal
 
 
 def sample_nondeterministic_logprobs(
-    z: torch.Tensor, mean: torch.Tensor, log_std: torch.Tensor, sac: bool = False
+    z: torch.Tensor,
+    mean: torch.Tensor,
+    log_std: torch.Tensor,
+    tanh_squash: bool = False,
 ) -> torch.Tensor:
     """
-    Compute log-prob of a Gaussian sample z ~ N(mean, exp(log_std)),
-    and if sac=True apply the tanh-squash correction to get log π(a).
+    Compute log-prob of a Gaussian sample z ~ N(mean, exp(log_std)).
+
+    If tanh_squash=True, applies the change-of-variables correction for
+    the squashed action a = tanh(z):
+
+        log π(a) = log N(z | mean, std) − ∑ log(1 − tanh(z)²)
+
+    Both old and new log-probs must use the same value of tanh_squash so
+    the correction cancels correctly in the PPO importance-sampling ratio.
     """
     std = torch.exp(log_std)  # [batch, action_dim]
     dist = Normal(mean, std)
     # base Gaussian log‐prob of z
     log_pz = dist.log_prob(z).sum(dim=-1, keepdim=True)  # [batch, 1]
 
-    if sac:
+    if tanh_squash:
         # subtract the ∑_i log(d tanh/dz_i) = ∑ log(1 - tanh(z)^2)
-        eps = 1e-4
+        eps = 1e-6
         log_correction = torch.log(1.0 - torch.tanh(z).pow(2) + eps).sum(
             dim=-1, keepdim=True
         )  # [batch, 1]
         return log_pz - log_correction
-    else:
-        # PPO-style or other: no squash correction
-        return log_pz
+
+    return log_pz
 
 
 class MightyExplorationPolicy:
@@ -111,7 +120,8 @@ class MightyExplorationPolicy:
         elif isinstance(out, tuple) and len(out) == 4:
             action = out[0]  # [batch, action_dim]
             log_prob = sample_nondeterministic_logprobs(
-                z=out[1], mean=out[2], log_std=out[3], sac=self.ago == "sac"
+                z=out[1], mean=out[2], log_std=out[3],
+                tanh_squash=getattr(self.model, "tanh_squash", False),
             )
             return action.detach().cpu().numpy(), log_prob
 

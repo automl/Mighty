@@ -12,6 +12,7 @@ class SACModel(nn.Module):
     output_style = (
         "squashed_gaussian"  # For continuous actions, we use squashed Gaussian output
     )
+    tanh_squash: bool = True  # SAC always uses tanh squashing
 
     def __init__(
         self,

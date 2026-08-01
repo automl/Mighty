@@ -87,16 +87,10 @@ class StochasticPolicy(MightyExplorationPolicy):
             # 4-tuple case (Tanh squashing): (action, z, mean, log_std)
             elif isinstance(model_output, tuple) and len(model_output) == 4:
                 action, z, mean, log_std = model_output
-
-                if not self.algo == "sac":
-                    log_prob = sample_nondeterministic_logprobs(
-                        z=z,
-                        mean=mean,
-                        log_std=log_std,
-                        sac=False,
-                    )
-                else:
-                    log_prob = self.model.policy_log_prob(z, mean, log_std)
+                log_prob = sample_nondeterministic_logprobs(
+                    z=z, mean=mean, log_std=log_std,
+                    tanh_squash=getattr(self.model, "tanh_squash", False),
+                )
 
                 if return_logp:
                     return action.detach().cpu().numpy(), log_prob
@@ -119,15 +113,10 @@ class StochasticPolicy(MightyExplorationPolicy):
                 elif len(model_output) == 4:
                     # Tanh squashing mode: (action, z, mean, log_std)
                     action, z, mean, log_std = model_output
-                    if not self.algo == "sac":
-                        log_prob = sample_nondeterministic_logprobs(
-                            z=z,
-                            mean=mean,
-                            log_std=log_std,
-                            sac=False,
-                        )
-                    else:
-                        log_prob = self.model.policy_log_prob(z, mean, log_std)
+                    log_prob = sample_nondeterministic_logprobs(
+                        z=z, mean=mean, log_std=log_std,
+                        tanh_squash=getattr(self.model, "tanh_squash", False),
+                    )
                 else:
                     raise ValueError(
                         f"Unexpected model output length: {len(model_output)}"
@@ -144,15 +133,10 @@ class StochasticPolicy(MightyExplorationPolicy):
                 if self.model.output_style == "squashed_gaussian":
                     # Should be 4-tuple: (action, z, mean, log_std)
                     action, z, mean, log_std = model_output
-                    if not self.algo == "sac":
-                        log_prob = sample_nondeterministic_logprobs(
-                            z=z,
-                            mean=mean,
-                            log_std=log_std,
-                            sac=False,
-                        )
-                    else:
-                        log_prob = self.model.policy_log_prob(z, mean, log_std)
+                    log_prob = sample_nondeterministic_logprobs(
+                        z=z, mean=mean, log_std=log_std,
+                        tanh_squash=getattr(self.model, "tanh_squash", False),
+                    )
 
                     if return_logp:
                         return action.detach().cpu().numpy(), log_prob
@@ -166,16 +150,11 @@ class StochasticPolicy(MightyExplorationPolicy):
                     dist = Normal(mean, std)
                     z = dist.rsample()
                     action = torch.tanh(z)
-
-                    if not self.algo == "sac":
-                        log_prob = sample_nondeterministic_logprobs(
-                            z=z,
-                            mean=mean,
-                            log_std=log_std,
-                            sac=False,
-                        )
-                    else:
-                        log_prob = self.model.policy_log_prob(z, mean, log_std)
+                    log_std = torch.log(std)
+                    log_prob = sample_nondeterministic_logprobs(
+                        z=z, mean=mean, log_std=log_std,
+                        tanh_squash=getattr(self.model, "tanh_squash", False),
+                    )
 
                     entropy = dist.entropy().sum(dim=-1, keepdim=True)
                     weighted_log_prob = log_prob * entropy

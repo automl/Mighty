@@ -286,13 +286,29 @@ class MightyPPOAgent(MightyAgent):
         if log_prob is not None and log_prob.shape[-1] == 1:
             log_prob = log_prob.squeeze(-1)  # (64, 1) → (64,)
 
+        # `dones` only carries terminations; time-limit truncations must also cut
+        # the GAE trajectory, and their reward is bootstrapped with V(final_obs)
+        # (next_s holds the real final observation on truncation).
+        episode_starts = dones
+        if metrics is not None and "transition" in metrics:
+            truncated = np.asarray(metrics["transition"]["truncated"])
+            episode_starts = np.logical_or(dones, truncated).astype(np.float32)
+            if truncated.any():
+                next_values = (
+                    self.value_function(torch.as_tensor(next_s, dtype=torch.float32))
+                    .detach()
+                    .numpy()
+                    .reshape((next_s.shape[0],))
+                )
+                reward = reward + self.gamma * next_values * truncated
+
         rollout_batch = RolloutBatch(
             observations=curr_s,
             actions=action,
             rewards=reward,
             advantages=np.zeros_like(reward),  # Placeholder, compute later
             returns=np.zeros_like(reward),  # Placeholder, compute later
-            episode_starts=dones,
+            episode_starts=episode_starts,
             log_probs=log_prob,
             values=values,
             latents=latents,

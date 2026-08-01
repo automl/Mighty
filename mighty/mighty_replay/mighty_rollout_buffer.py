@@ -260,8 +260,10 @@ class MightyRolloutBuffer(MightyBuffer):
                 next_non_term = 1.0 - dones_t  # [n_envs], 0 if done, 1 otherwise
                 next_val = lv  # bootstrap from V(sₜ₊₁)
             else:
-                # On intermediate steps, look at "episode_starts" for whether step+1 was a new episode
-                next_non_term = 1.0 - eps_slice[step + 1]  # [n_envs]
+                # episode_starts[t] holds the done flag of transition t itself,
+                # so the boundary after step t is 1 - episode_starts[step]
+                # (matches the last-row case, which uses the final step's dones).
+                next_non_term = 1.0 - eps_slice[step]  # [n_envs]
                 next_val = val_slice[step + 1]  # [n_envs]
 
             r_t = rew_slice[step]  # shape = [n_envs]
