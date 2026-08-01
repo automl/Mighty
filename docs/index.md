@@ -71,18 +71,24 @@ mindmap
 
 ### Where Is Mighty Going?
 
-Mighty currently supports DQN, PPO, and SAC with a range of contextual RL benchmarks and evaluation mechanisms. Future work will deepen support for Meta-RL and AutoRL — stay tuned.
+Mighty currently supports DQN, PPO, and SAC with a range of contextual RL benchmarks and evaluation mechanisms. Future work will deepen support for Meta-RL and AutoRL.
 
 ### Contact & Citation
 Mighty is developed at [LUHAI Hannover]() by members of [AutoRL.org](). Your first contact is lead maintainer [Aditya Mohan](). If you found issues or want to contribute new features, it's best to visit our [GitHub page](https://github.com/automl/Mighty) page and start a discussion.
 
-If you use Mighty for your research, please cite us:
+If you use Mighty for your research, please cite our JOSS paper:
 
 ```bibtex
-@misc{mohaneimer24,
-  author    = {A. Mohan and T. Eimer and C. Benjamins and M. Lindauer and A. Biedenkapp},
-  title     = {Mighty},
-  year      = {2024},
-  url = {https://github.com/automl/mighty}
+@article{mohan2026mighty,
+  author    = {Aditya Mohan and Theresa Eimer and Carolin Benjamins and Marius Lindauer and Andr\'{e} Biedenkapp},
+  title     = {Mighty: A Comprehensive Tool for Studying Generalization, Meta-RL and AutoRL},
+  journal   = {Journal of Open Source Software},
+  year      = {2026},
+  volume    = {11},
+  number    = {123},
+  pages     = {10439},
+  publisher = {The Open Journal},
+  doi       = {10.21105/joss.10439},
+  url       = {https://doi.org/10.21105/joss.10439}
 }
 ```

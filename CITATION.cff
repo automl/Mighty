@@ -1,0 +1,56 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Mohan
+  given-names: Aditya
+  orcid: "https://orcid.org/0000-0003-0092-3780"
+- family-names: Eimer
+  given-names: Theresa
+  orcid: "https://orcid.org/0000-0001-5561-5908"
+- family-names: Benjamins
+  given-names: Carolin
+  orcid: "https://orcid.org/0009-0007-4643-3564"
+- family-names: Lindauer
+  given-names: Marius
+  orcid: "https://orcid.org/0000-0002-9675-3175"
+- family-names: Biedenkapp
+  given-names: André
+  orcid: "https://orcid.org/0000-0002-8703-8559"
+contact:
+- family-names: Mohan
+  given-names: Aditya
+  orcid: "https://orcid.org/0000-0003-0092-3780"
+doi: 10.5281/zenodo.21329992
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Mohan
+    given-names: Aditya
+    orcid: "https://orcid.org/0000-0003-0092-3780"
+  - family-names: Eimer
+    given-names: Theresa
+    orcid: "https://orcid.org/0000-0001-5561-5908"
+  - family-names: Benjamins
+    given-names: Carolin
+    orcid: "https://orcid.org/0009-0007-4643-3564"
+  - family-names: Lindauer
+    given-names: Marius
+    orcid: "https://orcid.org/0000-0002-9675-3175"
+  - family-names: Biedenkapp
+    given-names: André
+    orcid: "https://orcid.org/0000-0002-8703-8559"
+  date-published: 2026-07-28
+  doi: 10.21105/joss.10439
+  issn: 2475-9066
+  issue: 123
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 10439
+  title: "Mighty: A Comprehensive Tool for Studying Generalization,
+    Meta-RL and AutoRL"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.10439"
+  volume: 11
+title: "Mighty: A Comprehensive Tool for Studying Generalization,
+  Meta-RL and AutoRL"

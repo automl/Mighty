@@ -11,6 +11,7 @@
 ![License](https://img.shields.io/badge/License-BSD3-orange)
 [![Test](https://github.com/automl/Mighty/actions/workflows/test.yaml/badge.svg)](https://github.com/automl/Mighty/actions/workflows/test.yaml)
 [![Doc Status](https://github.com/automl/Mighty/actions/workflows/docs_test.yaml/badge.svg)](https://github.com/automl/Mighty/actions/workflows/docs_test.yaml)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.10439/status.svg)](https://doi.org/10.21105/joss.10439)
     
 </div>
 
@@ -187,13 +188,19 @@ Mighty is meant to be a platform to build upon and not a large collection of met
 
 ## Cite Us
 
-If you use Mighty in your work, please cite us:
+If you use Mighty in your work, please cite our JOSS paper:
 
 ```bibtex
-@misc{mohaneimer24,
-  author    = {A. Mohan and T. Eimer and C. Benjamins and M. Lindauer and A. Biedenkapp},
-  title     = {Mighty},
-  year      = {2024},
-  url = {https://github.com/automl/mighty}
+@article{mohan2026mighty,
+  author    = {Aditya Mohan and Theresa Eimer and Carolin Benjamins and Marius Lindauer and Andr\'{e} Biedenkapp},
+  title     = {Mighty: A Comprehensive Tool for Studying Generalization, Meta-RL and AutoRL},
+  journal   = {Journal of Open Source Software},
+  year      = {2026},
+  volume    = {11},
+  number    = {123},
+  pages     = {10439},
+  publisher = {The Open Journal},
+  doi       = {10.21105/joss.10439},
+  url       = {https://doi.org/10.21105/joss.10439}
 }
 ```
