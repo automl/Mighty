@@ -15,6 +15,48 @@ from mighty.mighty_replay.mighty_rollout_buffer import (
 
 rng = np.random.default_rng(12345)
 
+
+@pytest.mark.parametrize("n_steps", [1, 3])
+@pytest.mark.parametrize("n_envs", [1, 2])
+@pytest.mark.parametrize("act_dim", [1, 2])
+def test_continuous_rollout_preserves_latents(n_steps, n_envs, act_dim):
+    shape = (n_steps, n_envs)
+    observations = np.arange(n_steps * n_envs).reshape(*shape, 1)
+    latents = np.linspace(-3, 3, n_steps * n_envs * act_dim, dtype=np.float32).reshape(
+        *shape, act_dim
+    )
+    batch = RolloutBatch(
+        observations=observations,
+        actions=np.tanh(latents),
+        latents=latents,
+        rewards=np.zeros(shape),
+        advantages=np.zeros(shape),
+        returns=np.zeros(shape),
+        episode_starts=np.zeros(shape),
+        log_probs=np.zeros(shape),
+        values=np.zeros(shape),
+    )
+    buffer = MightyRolloutBuffer(
+        buffer_size=n_steps,
+        obs_shape=(1,),
+        act_dim=act_dim,
+        n_envs=n_envs,
+        use_latents=True,
+    )
+    buffer.add(batch)
+    assert len(buffer) == n_steps * n_envs
+    torch.testing.assert_close(buffer.latents, torch.from_numpy(latents))
+
+    sampled = buffer.sample(batch_size=n_steps * n_envs)
+    indices = sampled.observations.reshape(-1).long()
+    sampled_latents = sampled.latents.reshape(-1, act_dim)
+    expected_latents = torch.from_numpy(latents).reshape(-1, act_dim)[indices]
+    torch.testing.assert_close(sampled_latents, expected_latents)
+    torch.testing.assert_close(
+        sampled.actions.reshape(-1, act_dim), sampled_latents.tanh()
+    )
+
+
 # Test data for rollout buffer
 test_rollout_data = [
     # (obs, actions, rewards, advantages, returns, episode_starts, log_probs, values, size, discrete)
