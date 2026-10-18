@@ -112,6 +112,7 @@ class RolloutBatch:
                 return x
             elif x.dim() == 3 and name in [
                 "actions",
+                "latents",
                 "observations",
             ]:  # (timesteps, n_envs, features)
                 return x
